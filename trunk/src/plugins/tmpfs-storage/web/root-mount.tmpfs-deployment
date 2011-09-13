@@ -73,9 +73,9 @@ fi
 
 # define wget to use with https
 if [ "$openqrm_web_protocol" == "https" ]; then
-    export WGET="wget --no-check-certificate -q"
+	export WGET="wget --no-check-certificate -q"
 else
-    export WGET="wget -q"
+	export WGET="wget -q"
 fi
 
 
@@ -89,10 +89,10 @@ IMAGE_SIZE=$image_rootdevice"M"
 
 function mount_rootfs() {
 
-    mkdir -p /mnt
-    mount -t tmpfs -o rw,size=$IMAGE_SIZE none /mnt
-    echo "tmpfs-storage: Mounted tmpfs at /mnt rw using $IMAGE_SIZE of memory"
-	
+	mkdir -p /mnt
+	mount -t tmpfs -o rw,size=$IMAGE_SIZE none /mnt
+	echo "tmpfs-storage: Mounted tmpfs at /mnt rw using $IMAGE_SIZE of memory"
+
 	if  [ "$IMAGE_INSTALL_FROM_NFS" != "" ]; then
 		install_rootfs_from_nfs
 	else
@@ -118,7 +118,7 @@ function mount_rootfs() {
 
 function remount_rootfs() {
 
-    mount -o remount,ro,size=$IMAGE_SIZE /mnt
+	mount -o remount,ro,size=$IMAGE_SIZE /mnt
 	echo "tmpfs-storage: Re-mounted tmpfs ro"
 }
 

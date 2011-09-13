@@ -25,6 +25,7 @@ NFS_MGMT_LOCK_DELAY=5
 NFS_MGMT_LOCK_RETRY=100
 NFS_MGMT_LOCK_TIMEOUT=500
 NFS_STORAGE_SERVER_IMAGE_DIRECTORY="/exports"
+NFSEXPORTS="/etc/exports"
 
 ################ common nfs-storage functions
 
@@ -41,7 +42,7 @@ function nfs_storage_log() {
 function nfs_storage_lock() {
 	local COMMAND=$1
 	local RET=1
-	
+
 	if [ ! -d `dirname $NFS_MGMT_LOCK_FILE` ]; then
 		mkdir -p `dirname $NFS_MGMT_LOCK_FILE`
 	fi
@@ -61,7 +62,7 @@ function nfs_storage_lock() {
 		*)
 			nfs_storage_log nfs_storage_lock "No such command. Try 'aquire' or 'release'"
 			return 1
-			;;	
+			;;
 	esac
 }
 
@@ -75,25 +76,31 @@ function manage_nfs() {
 		add)
 			OPENQRM_SERVER=$2
 			mkdir -p $NFS_STORAGE_SERVER_IMAGE_DIRECTORY/$NFS_IMAGE_NAME
-			echo "$NFS_STORAGE_SERVER_IMAGE_DIRECTORY/$NFS_IMAGE_NAME	$OPENQRM_SERVER(rw,insecure,no_root_squash,async)" >> /etc/exports
-			sed -i '/^$/d' /etc/exports
+			echo "$NFS_STORAGE_SERVER_IMAGE_DIRECTORY/$NFS_IMAGE_NAME	$OPENQRM_SERVER(rw,insecure,no_root_squash,async)" >> $NFSEXPORTS
+			sed -i '/^$/d' $NFSEXPORTS
 			if [ -x /etc/init.d/nfs ]; then
 				/etc/init.d/nfs reload
 			elif [ -x /etc/init.d/nfs-kernel-server ]; then
 				/etc/init.d/nfs-kernel-server reload
+			elif [ -x /etc/init.d/nfsserver ]; then
+				/etc/init.d/nfsserver reload
 			else
-				echo "WARNING: Could not find nfs-server init script !"
+				openqrm_post_event 0 "add" 3 "nfs-storage" "Could not find nfs-server init script!"
 			fi
 			;;
 		remove)
-			sed -i -e "s#^$NFS_STORAGE_SERVER_IMAGE_DIRECTORY/$NFS_IMAGE_NAME.*##g" /etc/exports
-			sed -i '/^$/d' /etc/exports
+			# tabs and spaces
+			sed -i -e "s#^$NFS_STORAGE_SERVER_IMAGE_DIRECTORY/$NFS_IMAGE_NAME .*##g" $NFSEXPORTS
+			sed -i -e "s#^$NFS_STORAGE_SERVER_IMAGE_DIRECTORY/$NFS_IMAGE_NAME	.*##g" $NFSEXPORTS
+			sed -i '/^$/d' $NFSEXPORTS
 			if [ -x /etc/init.d/nfs ]; then
 				/etc/init.d/nfs reload
 			elif [ -x /etc/init.d/nfs-kernel-server ]; then
 				/etc/init.d/nfs-kernel-server reload
+			elif [ -x /etc/init.d/nfsserver ]; then
+				/etc/init.d/nfsserver reload
 			else
-				echo "WARNING: Could not find nfs-server init script !"
+				openqrm_post_event 0 "remove" 3 "nfs-storage" "Could not find nfs-server init script!"
 			fi
 			rm -rf $NFS_STORAGE_SERVER_IMAGE_DIRECTORY/$NFS_IMAGE_NAME/*
 			rmdir $NFS_STORAGE_SERVER_IMAGE_DIRECTORY/$NFS_IMAGE_NAME
@@ -101,14 +108,18 @@ function manage_nfs() {
 
 		auth)
 			AUTH_IP=$2
-			sed -i -e "s#^$NFS_IMAGE_ROOTDEVICE.*#$NFS_IMAGE_ROOTDEVICE	$AUTH_IP(rw,insecure,no_root_squash,async)#g" /etc/exports
-			sed -i '/^$/d' /etc/exports
+			# tabs and spaces
+			sed -i -e "s#^$NFS_IMAGE_ROOTDEVICE .*#$NFS_IMAGE_ROOTDEVICE	$AUTH_IP(rw,insecure,no_root_squash,async)#g" $NFSEXPORTS
+			sed -i -e "s#^$NFS_IMAGE_ROOTDEVICE	.*#$NFS_IMAGE_ROOTDEVICE	$AUTH_IP(rw,insecure,no_root_squash,async)#g" $NFSEXPORTS
+			sed -i '/^$/d' $NFSEXPORTS
 			if [ -x /etc/init.d/nfs ]; then
 				/etc/init.d/nfs reload
 			elif [ -x /etc/init.d/nfs-kernel-server ]; then
 				/etc/init.d/nfs-kernel-server reload
+			elif [ -x /etc/init.d/nfsserver ]; then
+				/etc/init.d/nfsserver reload
 			else
-				echo "WARNING: Could not find nfs-server init script !"
+				openqrm_post_event 0 "auth" 3 "nfs-storage" "Could not find nfs-server init script!"
 			fi
 			;;
 

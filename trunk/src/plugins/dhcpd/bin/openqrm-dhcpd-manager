@@ -21,48 +21,58 @@ OPENQRM_SERVER_BASE_DIR=$(dirname $0)/../../../..
 OPENQRM_SERVER_BASE_DIR=$(pushd $OPENQRM_SERVER_BASE_DIR > /dev/null && echo $PWD && popd > /dev/null)
 . $OPENQRM_SERVER_BASE_DIR/openqrm/include/openqrm-functions
 . $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/dhcpd/include/openqrm-plugin-dhcpd-functions
+. $OPENQRM_SERVER_BASE_DIR/openqrm/etc/openqrm-server.conf
+. $OPENQRM_SERVER_BASE_DIR/openqrm/include/openqrm-server-functions
+openqrm_server_get_config
+OPENQRM_SERVER_IP=$OPENQRM_SERVER_IP_ADDRESS
+resource_id=0
+resource_openqrmserver=$OPENQRM_SERVER_IP_ADDRESS
+openqrm_web_protocol=$OPENQRM_WEB_PROTOCOL
+
 DHCPD_CONF="$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/dhcpd/etc/dhcpd.conf"
 DHCPD_HOST_TEMPLATE="$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/dhcpd/etc/templates/openqrm-plugin-dhcpd-host.template"
 DHCPD_CMD=$1
 RESOURCE_ID=$2
 RESOURCE_MAC=$3
 RESOURCE_IP=$4
+OPENQRM_USERNAME=$5
+OPENQRM_PASSWORD=$6
 HOSTNAME="resource$RESOURCE_ID"
 export LANG=C
+
+# define wget to use with https
+if [ "$openqrm_web_protocol" == "https" ]; then
+	WGET_NO_CERT_CHECK="--no-check-certificate"
+fi
 
 
 # TODO: make this function support class b + class a
 # currently it only supports class c
 function guess_next_ip() {
-    RANGE_START_IP=`grep range.*\; $DHCPD_CONF | head -n1 | awk {' print $2 '}`
-    RANGE_START_FIRST_BYTES=`echo $RANGE_START_IP | cut -d'.' -f1-3`
-    RANGE_START_LAST_BYTE=`echo $RANGE_START_IP | cut -d'.' -f4`
-    RANGE_END_IP=`grep range.*\; $DHCPD_CONF | head -n1 | awk {' print $3 '} | sed -e "s/;//g"`
-    RANGE_END_FIRST_BYTES=`echo $RANGE_END_IP | cut -d'.' -f1-3`
-    RANGE_END_LAST_BYTE=`echo $RANGE_END_IP | cut -d'.' -f4`
-    GUESS_START=$RANGE_END_LAST_BYTE
-    while (true); do
-        if (( $GUESS_START <= $RANGE_START_LAST_BYTE )); then
-            dhcpd_log openqrm-dhcpd-manager "WARNING: Reached start of available ip-range! No free ips available any more"
-            return
-        fi
-        GUESSED_NEW_IP="$RANGE_START_FIRST_BYTES"".""$GUESS_START"
-        dhcpd_log openqrm-dhcpd-manager ".. trying $GUESSED_NEW_IP"
-        if ! grep $GUESSED_NEW_IP $DHCPD_CONF | grep fixed-address 1>/dev/null; then
-            dhcpd_log openqrm-dhcpd-manager "NOTICE: Found $GUESSED_NEW_IP free"
-            if ! ping -c 1 -i 1 -w 1 $GUESSED_NEW_IP 1>/dev/null; then
-                dhcpd_log openqrm-dhcpd-manager "NOTICE: Found $GUESSED_NEW_IP free and not pingable"
-                break
-            else
-                dhcpd_log openqrm-dhcpd-manager "NOTICE: Skipping $GUESSED_NEW_IP because it is pingable!"
-            fi
-        else
-            dhcpd_log openqrm-dhcpd-manager "NOTICE: Skipping $GUESSED_NEW_IP because it is not free any more"
-        fi
-
-        GUESS_START=$(( GUESS_START - 1 ))
-    done
-    echo "$GUESSED_NEW_IP"
+	RANGE_START_IP=`grep range.*\; $DHCPD_CONF | head -n1 | awk {' print $2 '}`
+	RANGE_START_FIRST_BYTES=`echo $RANGE_START_IP | cut -d'.' -f1-3`
+	RANGE_START_LAST_BYTE=`echo $RANGE_START_IP | cut -d'.' -f4`
+	RANGE_END_IP=`grep range.*\; $DHCPD_CONF | head -n1 | awk {' print $3 '} | sed -e "s/;//g"`
+	RANGE_END_FIRST_BYTES=`echo $RANGE_END_IP | cut -d'.' -f1-3`
+	RANGE_END_LAST_BYTE=`echo $RANGE_END_IP | cut -d'.' -f4`
+	GUESS_START=$RANGE_END_LAST_BYTE
+	while (true); do
+		if (( $GUESS_START <= $RANGE_START_LAST_BYTE )); then
+			dhcpd_log openqrm-dhcpd-manager "WARNING: Reached start of available ip-range! No free ips available any more"
+			return
+		fi
+		GUESSED_NEW_IP="$RANGE_START_FIRST_BYTES"".""$GUESS_START"
+		#dhcpd_log openqrm-dhcpd-manager ".. trying $GUESSED_NEW_IP"
+		if ! grep $GUESSED_NEW_IP $DHCPD_CONF | grep fixed-address 1>/dev/null; then
+			#dhcpd_log openqrm-dhcpd-manager "NOTICE: Found $GUESSED_NEW_IP free"
+			if ! ping -c 1 -i 1 -w 1 $GUESSED_NEW_IP 1>/dev/null; then
+				dhcpd_log openqrm-dhcpd-manager "NOTICE: Found $GUESSED_NEW_IP free and not pingable"
+				break
+			fi
+		fi
+		GUESS_START=$(( GUESS_START - 1 ))
+	done
+	echo "$GUESSED_NEW_IP"
 }
 
 
@@ -76,19 +86,19 @@ case "$DHCPD_CMD" in
 			dhcpd_lock release
 			exit 0
 		fi
-        if [ "$RESOURCE_IP" == "0.0.0.0" ]; then
-            # this is when a new virtual machine is added
-            # running via the new-resource hook
-            NEXT_RESOURCE_IP=`guess_next_ip`
-            if [ "$NEXT_RESOURCE_IP" == "" ]; then
-                dhcpd_log openqrm-dhcpd-manager "Failed to guess the next ip address for Resource $HOSTNAME $RESOURCE_ID $RESOURCE_MAC. Not adding it."
-                dhcpd_lock release
-                exit 0
-            else
-                RESOURCE_IP=$NEXT_RESOURCE_IP
-                dhcpd_log openqrm-dhcpd-manager "Guessed next ip address $RESOURCE_IP for Resource $HOSTNAME $RESOURCE_ID $RESOURCE_MAC."
-            fi
-        fi
+		if [ "$RESOURCE_IP" == "0.0.0.0" ]; then
+			# this is when a new virtual machine is added
+			# running via the new-resource hook
+			NEXT_RESOURCE_IP=`guess_next_ip`
+			if [ "$NEXT_RESOURCE_IP" == "" ]; then
+				dhcpd_log openqrm-dhcpd-manager "Failed to guess the next ip address for Resource $HOSTNAME $RESOURCE_ID $RESOURCE_MAC. Not adding it."
+				dhcpd_lock release
+				exit 0
+			else
+				RESOURCE_IP=$NEXT_RESOURCE_IP
+				dhcpd_log openqrm-dhcpd-manager "Guessed next ip address $RESOURCE_IP for Resource $HOSTNAME $RESOURCE_ID $RESOURCE_MAC."
+			fi
+		fi
 		dhcpd_log openqrm-dhcpd-manager "adding $HOSTNAME $RESOURCE_ID $RESOURCE_MAC $RESOURCE_IP"
 		cp -f $DHCPD_CONF $DHCPD_CONF.openqrm-dhcpd-manager
 		grep -B 1000000 "^# end_static_ips" $DHCPD_CONF | sed -e "s/^# end_static_ips.*//g" > $DHCPD_CONF.first_part
@@ -98,12 +108,22 @@ case "$DHCPD_CMD" in
 			sed -e "s/DHCPD_RESOURCE_MAC/$RESOURCE_MAC/g" |	\
 			sed -e "s/DHCPD_RESOURCE_IP/$RESOURCE_IP/g" > $DHCPD_CONF.host_part
 		cat $DHCPD_CONF.first_part $DHCPD_CONF.host_part $DHCPD_CONF.last_part > $DHCPD_CONF
-		$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/dhcpd/etc/init.d/openqrm-plugin-dhcpd stop
-		if ! $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/dhcpd/etc/init.d/openqrm-plugin-dhcpd start; then
-			dhcpd_log openqrm-dhcpd-manager "Adding Resource  $HOSTNAME $RESOURCE_ID $RESOURCE_MAC $RESOURCE_IP failed. Reverting dhcpd-configuration."
-			# restore previous version, better not to add it than to corrupt the config
-			cp -f $DHCPD_CONF.openqrm-dhcpd-manager $DHCPD_CONF
-			$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/dhcpd/etc/init.d/openqrm-plugin-dhcpd start
+
+		# is dhcpd running ? do we have to restart ?
+		if [ -e $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/base/plugins/dhcpd/.running ]; then
+			$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/dhcpd/etc/init.d/openqrm-plugin-dhcpd stop
+			if ! $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/dhcpd/etc/init.d/openqrm-plugin-dhcpd start; then
+				dhcpd_log openqrm-dhcpd-manager "Adding Resource  $HOSTNAME $RESOURCE_ID $RESOURCE_MAC $RESOURCE_IP failed. Reverting dhcpd-configuration."
+				# restore previous version, better not to add it than to corrupt the config
+				cp -f $DHCPD_CONF.openqrm-dhcpd-manager $DHCPD_CONF
+				$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/dhcpd/etc/init.d/openqrm-plugin-dhcpd start
+			fi
+		fi
+		# if we have a username + pass we send back the eventual new generated ip to update the resource_ip in the db
+		if [ "$OPENQRM_USERNAME" != "" ] && [ "$OPENQRM_PASSWORD" != "" ]; then
+			if ! wget -q $WGET_NO_CERT_CHECK -O /dev/null --http-user=$OPENQRM_USERNAME --http-password=$OPENQRM_PASSWORD "$openqrm_web_protocol://$OPENQRM_SERVER_IP/openqrm/base/plugins/dhcpd/dhcpd-action.php?dhcpd_command=post_ip&resource_id=$RESOURCE_ID&resource_ip=$RESOURCE_IP"; then
+				dhcpd_log openqrm-dhcpd-manager "ERROR: Could not post the logic volume status to the openQRM-server at $resource_openqrmserver!"
+			fi
 		fi
 		dhcpd_lock release
 		;;
@@ -121,12 +141,15 @@ case "$DHCPD_CMD" in
 		# after resource
 		grep -A 10000 "^host $HOSTNAME {" $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/dhcpd/etc/dhcpd.conf | sed '1,5d' > $DHCPD_CONF.last_part
 		cat $DHCPD_CONF.first_part $DHCPD_CONF.last_part > $DHCPD_CONF
-		$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/dhcpd/etc/init.d/openqrm-plugin-dhcpd stop
-		if ! $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/dhcpd/etc/init.d/openqrm-plugin-dhcpd start; then
-			dhcpd_log openqrm-dhcpd-manager "Removing Resource  $HOSTNAME $RESOURCE_ID $RESOURCE_MAC $RESOURCE_IP failed. Reverting dhcpd-configuration."
-			# restore previous version, better not to add it than to corrupt the config
-			cp -f $DHCPD_CONF.openqrm-dhcpd-manager $DHCPD_CONF
-			$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/dhcpd/etc/init.d/openqrm-plugin-dhcpd start
+		# is dhcpd running ? do we have to restart ?
+		if [ -e $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/base/plugins/dhcpd/.running ]; then
+			$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/dhcpd/etc/init.d/openqrm-plugin-dhcpd stop
+			if ! $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/dhcpd/etc/init.d/openqrm-plugin-dhcpd start; then
+				dhcpd_log openqrm-dhcpd-manager "Removing Resource  $HOSTNAME $RESOURCE_ID $RESOURCE_MAC $RESOURCE_IP failed. Reverting dhcpd-configuration."
+				# restore previous version, better not to add it than to corrupt the config
+				cp -f $DHCPD_CONF.openqrm-dhcpd-manager $DHCPD_CONF
+				$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/dhcpd/etc/init.d/openqrm-plugin-dhcpd start
+			fi
 		fi
 		dhcpd_lock release
 		;;

@@ -42,7 +42,7 @@ function openqrm_plugin_vmware_server2_uninstall() {
 	if [ "$USERNAME" == "" ] && [ "$PASSWORD" == "" ]; then
 		echo -n "vmware-server2: Please give a username to uninstall the plugin : "
 		read USERNAME
-		echo	
+		echo
 		echo -n "vmware-server2: Please give the password for user $USERNAME : "
 		read PASSWORD
 		echo
@@ -61,13 +61,13 @@ function openqrm_plugin_vmware_server2_init() {
 	if [ "$USERNAME" == "" ] && [ "$PASSWORD" == "" ]; then
 		echo -n "vmware-server2: Please give a username to init the plugin : "
 		read USERNAME
-		echo	
+		echo
 		echo -n "vmware-server2: Please give the password for user $USERNAME : "
 		read PASSWORD
 		echo
 	fi
 	echo "Initializing the openQRM vmware-server2-plugin"
-	# adding virtualization type	
+	# adding virtualization type
 	openqrm_server_add_virtualization_type $USERNAME $PASSWORD vmware-server2 "VMware-Server2 Host"
 	openqrm_server_add_virtualization_type $USERNAME $PASSWORD vmware-server2-vm "VMware-Server2 VM"
 	# linking the web dir
@@ -75,7 +75,7 @@ function openqrm_plugin_vmware_server2_init() {
 	# link the boot-service
 	ln -sf $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/vmware-server2/web/boot-service-vmware-server2.tgz $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/boot-service/boot-service-vmware-server2.tgz
 	mkdir -p $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/vmware-server2/web/vmware-server2-stat
-    chmod 777 $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/vmware-server2/web/vmware-server2-stat
+	chmod 777 $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/vmware-server2/web/vmware-server2-stat
 }
 
 USER=$2

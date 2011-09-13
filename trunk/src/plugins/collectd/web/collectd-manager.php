@@ -5,19 +5,19 @@
 /*
   This file is part of openQRM.
 
-    openQRM is free software: you can redistribute it and/or modify
-    it under the terms of the GNU General Public License version 2
-    as published by the Free Software Foundation.
+	openQRM is free software: you can redistribute it and/or modify
+	it under the terms of the GNU General Public License version 2
+	as published by the Free Software Foundation.
 
-    openQRM is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    GNU General Public License for more details.
+	openQRM is distributed in the hope that it will be useful,
+	but WITHOUT ANY WARRANTY; without even the implied warranty of
+	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+	GNU General Public License for more details.
 
-    You should have received a copy of the GNU General Public License
-    along with openQRM.  If not, see <http://www.gnu.org/licenses/>.
+	You should have received a copy of the GNU General Public License
+	along with openQRM.  If not, see <http://www.gnu.org/licenses/>.
 
-    Copyright 2009, Matthias Rechenburg <matt@openqrm.com>
+	Copyright 2009, Matthias Rechenburg <matt@openqrm.com>
 */
 
 
@@ -47,9 +47,9 @@ global $OPENQRM_SERVER_IP_ADDRESS;
 
 function collectd_select() {
 	global $OPENQRM_USER;
-    global $RootDir;
+	global $RootDir;
 	global $thisfile;
-    $table = new htmlobject_table_builder('appliance_id', '', '', '', 'select');
+	$table = new htmlobject_table_builder('appliance_id', '', '', '', 'select');
 
 
 	$arHead = array();
@@ -87,41 +87,41 @@ function collectd_select() {
 	foreach ($collectd_array as $index => $collectd_db) {
 		$collectd_app = new appliance();
 		$collectd_app->get_instance_by_id($collectd_db["appliance_id"]);
-		$collectd_app_resources=$collectd_db["appliance_resources"];		
+		$collectd_app_resources=$collectd_db["appliance_resources"];
 		$collectd_resource = new resource();
 		$collectd_resource->get_instance_by_id($collectd_app_resources);
 
-        // openqrm ?
-        $appliance_name = $collectd_app->name;
-        if ($collectd_app_resources == 0) {
-            $appliance_name="openqrm";
-        }
+		// openqrm ?
+		$appliance_name = $collectd_app->name;
+		if ($collectd_app_resources == 0) {
+			$appliance_name="openqrm";
+		}
 
 		// active or inactive
 		$active_state_icon="/openqrm/base/img/active.png";
 		$inactive_state_icon="/openqrm/base/img/idle.png";
 		$resource_icon_default="/openqrm/base/img/resource.png";
-        // graphs available already ?
-        $graph_html = "$RootDir/plugins/collectd/graphs/".$appliance_name."/index.html";
-        $graph_link = "/openqrm/base/plugins/collectd/graphs/".$appliance_name;
-        if (file_exists($graph_html)) {
-            $collectd_graph = "&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a href=\"$graph_link\"><img src=\"img/graphs.png\" border=\"0\" width=\"30\" height=\"30\" alt=\"System Graphs\" title=\"System Graphs\"/></a>";
-        } else {
-            $collectd_graph = "&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<img src=\"/openqrm/base/img/progress.gif\" width=\"30\" height=\"30\" alt=\"Collecting Data, Graphs will be available soon\" title=\"Collecting Data, Graphs will be available soon\"/>";
-        }
+		// graphs available already ?
+		$graph_html = "$RootDir/plugins/collectd/graphs/".$appliance_name."/index.html";
+		$graph_link = "/openqrm/base/plugins/collectd/graphs/".$appliance_name;
+		if (file_exists($graph_html)) {
+			$collectd_graph = "&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a href=\"$graph_link\"><img src=\"img/graphs.png\" border=\"0\" width=\"30\" height=\"30\" alt=\"System Graphs\" title=\"System Graphs\"/></a>";
+		} else {
+			$collectd_graph = "&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<img src=\"/openqrm/base/img/progress.gif\" width=\"30\" height=\"30\" alt=\"Collecting Data, Graphs will be available soon\" title=\"Collecting Data, Graphs will be available soon\"/>";
+		}
 
 		if ($collectd_app->stoptime == 0 || $collectd_app_resources == 0)  {
 			$state_icon=$active_state_icon;
-    		$collectd_count++;
-            $arBody[] = array(
-                'appliance_state' => "<img src=$state_icon>",
-                'appliance_icon' => "<img width=24 height=24 src=$resource_icon_default>",
-                'appliance_id' => $collectd_db["appliance_id"],
-                'appliance_name' => $collectd_db["appliance_name"],
-                'appliance_resource_id' => $collectd_resource->id,
-                'appliance_resource_ip' => $collectd_resource->ip,
-                'appliance_graph' => $collectd_graph,
-            );
+			$collectd_count++;
+			$arBody[] = array(
+				'appliance_state' => "<img src=$state_icon>",
+				'appliance_icon' => "<img width=24 height=24 src=$resource_icon_default>",
+				'appliance_id' => $collectd_db["appliance_id"],
+				'appliance_name' => $collectd_db["appliance_name"],
+				'appliance_resource_id' => $collectd_resource->id,
+				'appliance_resource_ip' => $collectd_resource->ip,
+				'appliance_graph' => $collectd_graph,
+			);
 		}
 	}
 
@@ -134,13 +134,13 @@ function collectd_select() {
 	$table->identifier_type = "radio";
 	$table->head = $arHead;
 	$table->body = $arBody;
-    $table->max = $collectd_tmp->get_count();
-    // set template
+	$table->max = $collectd_tmp->get_count();
+	// set template
 	$t = new Template_PHPLIB();
 	$t->debug = false;
 	$t->setFile('tplfile', './tpl/' . 'collectd-select.tpl.php');
 	$t->setVar(array(
-        'collectd_table' => $table->get_string(),
+		'collectd_table' => $table->get_string(),
 	));
 	$disp =  $t->parse('out', 'tplfile');
 	return $disp;

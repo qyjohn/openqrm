@@ -2,24 +2,24 @@
 <html lang="en">
 <head>
 	<title>NetApp Storage manager</title>
-    <link rel="stylesheet" type="text/css" href="../../css/htmlobject.css" />
-    <link rel="stylesheet" type="text/css" href="netapp-storage.css" />
-    <link type="text/css" href="/openqrm/base/js/jquery/development-bundle/themes/smoothness/ui.all.css" rel="stylesheet" />
-    <script type="text/javascript" src="/openqrm/base/js/jquery/js/jquery-1.3.2.min.js"></script>
-    <script type="text/javascript" src="/openqrm/base/js/jquery/js/jquery-ui-1.7.1.custom.min.js"></script>
+	<link rel="stylesheet" type="text/css" href="../../css/htmlobject.css" />
+	<link rel="stylesheet" type="text/css" href="netapp-storage.css" />
+	<link type="text/css" href="/openqrm/base/js/jquery/development-bundle/themes/smoothness/ui.all.css" rel="stylesheet" />
+	<script type="text/javascript" src="/openqrm/base/js/jquery/js/jquery-1.3.2.min.js"></script>
+	<script type="text/javascript" src="/openqrm/base/js/jquery/js/jquery-ui-1.7.1.custom.min.js"></script>
 
 <style type="text/css">
 
 .ui-progressbar-value {
-    background-image: url(/openqrm/base/img/progress.gif);
+	background-image: url(/openqrm/base/img/progress.gif);
 }
 
 #progressbar {
-    position: absolute;
-    left: 150px;
-    top: 250px;
-    width: 400px;
-    height: 20px;
+	position: absolute;
+	left: 150px;
+	top: 250px;
+	width: 400px;
+	height: 20px;
 }
 </style>
 </head>
@@ -32,19 +32,19 @@
 /*
   This file is part of openQRM.
 
-    openQRM is free software: you can redistribute it and/or modify
-    it under the terms of the GNU General Public License version 2
-    as published by the Free Software Foundation.
+	openQRM is free software: you can redistribute it and/or modify
+	it under the terms of the GNU General Public License version 2
+	as published by the Free Software Foundation.
 
-    openQRM is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    GNU General Public License for more details.
+	openQRM is distributed in the hope that it will be useful,
+	but WITHOUT ANY WARRANTY; without even the implied warranty of
+	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+	GNU General Public License for more details.
 
-    You should have received a copy of the GNU General Public License
-    along with openQRM.  If not, see <http://www.gnu.org/licenses/>.
+	You should have received a copy of the GNU General Public License
+	along with openQRM.  If not, see <http://www.gnu.org/licenses/>.
 
-    Copyright 2009, Matthias Rechenburg <matt@openqrm.com>
+	Copyright 2009, Matthias Rechenburg <matt@openqrm.com>
 */
 
 
@@ -91,278 +91,279 @@ function redirect($strMsg, $currenttab = 'tab0', $na_id) {
 
 
 function wait_for_statfile($sfile) {
-    global $refresh_delay;
-    global $refresh_loop_max;
-    $refresh_loop=0;
-    while (!file_exists($sfile)) {
-        sleep($refresh_delay);
-        $refresh_loop++;
-        flush();
-        if ($refresh_loop > $refresh_loop_max)  {
-            return false;
-        }
-    }
-    return true;
+	global $refresh_delay;
+	global $refresh_loop_max;
+	$refresh_loop=0;
+	while (!file_exists($sfile)) {
+		sleep($refresh_delay);
+		$refresh_loop++;
+		flush();
+		if ($refresh_loop > $refresh_loop_max)  {
+			return false;
+		}
+	}
+	return true;
 }
 
 
 function show_progressbar() {
 ?>
-    <script type="text/javascript">
-        $("#progressbar").progressbar({
+	<script type="text/javascript">
+		$("#progressbar").progressbar({
 			value: 100
 		});
-        var options = {};
-        $("#progressbar").effect("shake",options,2000,null);
+		var options = {};
+		$("#progressbar").effect("shake",options,2000,null);
 	</script>
 <?php
-        flush();
+		flush();
 }
 
 function validate_input($var, $type) {
-    switch ($type) {
-        case 'string':
-            // we need to special take care that the volume name does not contain special characters
-            $var = preg_replace("/\./", "", $var);
-            $var = preg_replace("/-/", "", $var);
-            $var = preg_replace("/_/", "", $var);
-            // and do not let the volume name start with a number
-            if(preg_match("/^[0-9].*/",$var)) {
-                $var = "na".$var
-            }
-            for ($i = 0; $i<strlen($var); $i++) {
-                if (!ctype_alpha($var[$i])) {
-                    if (!ctype_digit($var[$i])) {
-                        return false;
-                    }
-                }
-            }
-            return true;
-            break;
-        case 'number';
-            for ($i = 0; $i<strlen($var); $i++) {
-                if (!ctype_digit($var[$i])) {
-                    return false;
-                }
-            }
-            return true;
-            break;
-    }
+	switch ($type) {
+		case 'string':
+			// we need to special take care that the volume name does not contain special characters
+			$var = preg_replace("/\./", "", $var);
+			$var = preg_replace("/-/", "", $var);
+			$var = preg_replace("/_/", "", $var);
+			// and do not let the volume name start with a number
+			if(preg_match("/^[0-9].*/",$var)) {
+				$var = "na".$var;
+			}
+			for ($i = 0; $i<strlen($var); $i++) {
+				if (!ctype_alpha($var[$i])) {
+					if (!ctype_digit($var[$i])) {
+						return false;
+					}
+				}
+			}
+			return true;
+			break;
+		case 'number';
+			for ($i = 0; $i<strlen($var); $i++) {
+				if (!ctype_digit($var[$i])) {
+					return false;
+				}
+			}
+			return true;
+			break;
+	}
 }
 
 
 // run the actions
+$strMsg = '';
 if(htmlobject_request('redirect') != 'yes') {
-    if(htmlobject_request('action') != '') {
-        switch (htmlobject_request('action')) {
+	if(htmlobject_request('action') != '') {
+		switch (htmlobject_request('action')) {
 
-            case 'select':
-                if (isset($_REQUEST['identifier'])) {
-                    foreach($_REQUEST['identifier'] as $id) {
-                        // get the storage resource
-                        $storage = new storage();
-                        $storage->get_instance_by_id($id);
-                        $storage_resource = new resource();
-                        $storage_resource->get_instance_by_id($storage->resource_id);
-                        // get the password for the netapp-filer
-                        $na_storage = new netapp_storage();
-                        $na_storage->get_instance_by_storage_id($id);
-                        if (!strlen($na_storage->storage_id)) {
-                            $strMsg = "NetApp Storage server $id not configured yet<br>";
-                        } else {
-                            show_progressbar();
-                            $openqrm_server_command="$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/netapp-storage/bin/openqrm-netapp-storage post_luns -p \"$na_storage->storage_password\" -e \"$storage_resource->ip\"";
-                            // remove current stat file
-                            $storage_resource_id = $storage_resource->id;
-                            $statfile="storage/$storage_resource->ip.netapp_luns.stat";
-                            if (file_exists($statfile)) {
-                                unlink($statfile);
-                            }
-                            $cmd_output = shell_exec($openqrm_server_command);
-                            // and wait for the resulting statfile
-                            if (!wait_for_statfile($statfile)) {
-                                $strMsg = "Failed refreshing Luns on NetApp Storage server $id<br>";
-                            } else {
-                                $strMsg = "Refreshing Luns on NetApp Storage server $id<br>";
-                            }
-                        }
-                        redirect($strMsg, 'tab0', $id);
-                    }
-                }
-            break;
+			case 'select':
+				if (isset($_REQUEST['identifier'])) {
+					foreach($_REQUEST['identifier'] as $id) {
+						// get the storage resource
+						$storage = new storage();
+						$storage->get_instance_by_id($id);
+						$storage_resource = new resource();
+						$storage_resource->get_instance_by_id($storage->resource_id);
+						// get the password for the netapp-filer
+						$na_storage = new netapp_storage();
+						$na_storage->get_instance_by_storage_id($id);
+						if (!strlen($na_storage->storage_id)) {
+							$strMsg = "NetApp Storage server $id not configured yet<br>";
+						} else {
+							show_progressbar();
+							$openqrm_server_command="$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/netapp-storage/bin/openqrm-netapp-storage post_luns -p \"$na_storage->storage_password\" -e \"$storage_resource->ip\"";
+							// remove current stat file
+							$storage_resource_id = $storage_resource->id;
+							$statfile="storage/$storage_resource->ip.netapp_luns.stat";
+							if (file_exists($statfile)) {
+								unlink($statfile);
+							}
+							$cmd_output = shell_exec($openqrm_server_command);
+							// and wait for the resulting statfile
+							if (!wait_for_statfile($statfile)) {
+								$strMsg = "Failed refreshing Luns on NetApp Storage server $id<br>";
+							} else {
+								$strMsg = "Refreshing Luns on NetApp Storage server $id<br>";
+							}
+						}
+						redirect($strMsg, 'tab0', $id);
+					}
+				}
+			break;
 
-            case 'add':
-                if (isset($_REQUEST['identifier'])) {
-                    foreach($_REQUEST['identifier'] as $id) {
-                        // check if configuration already exists
-                        $na_storage = new netapp_storage();
-                        $na_storage->get_instance_by_storage_id($id);
-                        if (!strlen($na_storage->storage_id)) {
-                            $strMsg = "NetApp Storage server $id not configured yet<br>";
-                        } else {
-                            show_progressbar();
-                            $storage = new storage();
-                            $storage->get_instance_by_id($na_storage->storage_id);
-                            $resource = new resource();
-                            $resource->get_instance_by_id($storage->resource_id);
-                            $na_storage_ip = $resource->ip;
-                            $na_password = $na_storage->storage_password;
+			case 'add':
+				if (isset($_REQUEST['identifier'])) {
+					foreach($_REQUEST['identifier'] as $id) {
+						// check if configuration already exists
+						$na_storage = new netapp_storage();
+						$na_storage->get_instance_by_storage_id($id);
+						if (!strlen($na_storage->storage_id)) {
+							$strMsg = "NetApp Storage server $id not configured yet<br>";
+						} else {
+							show_progressbar();
+							$storage = new storage();
+							$storage->get_instance_by_id($na_storage->storage_id);
+							$resource = new resource();
+							$resource->get_instance_by_id($storage->resource_id);
+							$na_storage_ip = $resource->ip;
+							$na_password = $na_storage->storage_password;
 
-                            // size + name
-                            if (!strlen($netapp_storage_image_name)) {
-                                $strMsg = "Please provide a name for the new Lun<br>";
-                                redirect($strMsg, 'tab0', $id);
-                                exit(0);
-                            } else if (!validate_input($netapp_storage_image_name, 'string')) {
-                                $strMsg = "Got invalid NetApp volume name. Not adding ...<br>(allowed characters are [a-z][A-z][0-9] and volume name must not start with a number)";
-                                redirect($strMsg, 'tab0', $id);
-                                exit(0);
-                            }
-                            if (!strlen($netapp_storage_image_size)) {
-                                $strMsg = "Please provide a size for the new Lun<br>";
-                                redirect($strMsg, 'tab0', $id);
-                                exit(0);
-                            } else if (!validate_input($netapp_storage_image_size, 'number')) {
-                                $strMsg = "Got invalid NetApp volume size. Not adding ...";
-                                redirect($strMsg, 'tab0', $id);
-                                exit(0);
-                            }
-                            if (!strlen($netapp_aggregate)) {
-                                $strMsg = "Please provide an aggregate to add the Lun to<br>";
-                                redirect($strMsg, 'tab0', $id);
-                                exit(0);
-                            } else if (!validate_input($netapp_aggregate, 'string')) {
-                                $strMsg = "Got invalid NetApp aggregate name. Not adding ...<br>(allowed characters are [a-z][A-z][0-9] and volume name must not start with a number)";
-                                redirect($strMsg, 'tab0', $id);
-                                exit(0);
-                            }
-                            // generate an image password
-                            $image = new image();
-                            $netapp_storage_image_password = $image->generatePassword(14);
-                            $openqrm_server_command="$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/netapp-storage/bin/openqrm-netapp-storage  add -n $netapp_storage_image_name -a $netapp_aggregate -m $netapp_storage_image_size -i $netapp_storage_image_password -p $na_password -e $na_storage_ip";
-                            // remove current stat file
-                            $statfile="storage/$resource->ip.netapp_luns.stat";
-                            if (file_exists($statfile)) {
-                                unlink($statfile);
-                            }
-                            $output = shell_exec($openqrm_server_command);
-                            // and wait for the resulting statfile
-                            if (!wait_for_statfile($statfile)) {
-                                $strMsg = "Failed adding Lun $na_image_name ($netapp_storage_image_size MB) to the NetApp Storage server $id<br>";
-                            } else {
-                                $strMsg = "Adding Lun $na_image_name ($netapp_storage_image_size MB) to the NetApp Storage server $id<br>";
-                            }
-                        }
-                        redirect($strMsg, 'tab0', $id);
-                    }
-                }
-                break;
+							// size + name
+							if (!strlen($netapp_storage_image_name)) {
+								$strMsg = "Please provide a name for the new Lun<br>";
+								redirect($strMsg, 'tab0', $id);
+								exit(0);
+							} else if (!validate_input($netapp_storage_image_name, 'string')) {
+								$strMsg = "Got invalid NetApp volume name. Not adding ...<br>(allowed characters are [a-z][A-z][0-9] and volume name must not start with a number)";
+								redirect($strMsg, 'tab0', $id);
+								exit(0);
+							}
+							if (!strlen($netapp_storage_image_size)) {
+								$strMsg = "Please provide a size for the new Lun<br>";
+								redirect($strMsg, 'tab0', $id);
+								exit(0);
+							} else if (!validate_input($netapp_storage_image_size, 'number')) {
+								$strMsg = "Got invalid NetApp volume size. Not adding ...";
+								redirect($strMsg, 'tab0', $id);
+								exit(0);
+							}
+							if (!strlen($netapp_aggregate)) {
+								$strMsg = "Please provide an aggregate to add the Lun to<br>";
+								redirect($strMsg, 'tab0', $id);
+								exit(0);
+							} else if (!validate_input($netapp_aggregate, 'string')) {
+								$strMsg = "Got invalid NetApp aggregate name. Not adding ...<br>(allowed characters are [a-z][A-z][0-9] and volume name must not start with a number)";
+								redirect($strMsg, 'tab0', $id);
+								exit(0);
+							}
+							// generate an image password
+							$image = new image();
+							$netapp_storage_image_password = $image->generatePassword(14);
+							$openqrm_server_command="$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/netapp-storage/bin/openqrm-netapp-storage  add -n $netapp_storage_image_name -a $netapp_aggregate -m $netapp_storage_image_size -i $netapp_storage_image_password -p $na_password -e $na_storage_ip";
+							// remove current stat file
+							$statfile="storage/$resource->ip.netapp_luns.stat";
+							if (file_exists($statfile)) {
+								unlink($statfile);
+							}
+							$output = shell_exec($openqrm_server_command);
+							// and wait for the resulting statfile
+							if (!wait_for_statfile($statfile)) {
+								$strMsg = "Failed adding Lun $na_image_name ($netapp_storage_image_size MB) to the NetApp Storage server $id<br>";
+							} else {
+								$strMsg = "Adding Lun $na_image_name ($netapp_storage_image_size MB) to the NetApp Storage server $id<br>";
+							}
+						}
+						redirect($strMsg, 'tab0', $id);
+					}
+				}
+				break;
 
-            case 'remove':
-                if (isset($_REQUEST['identifier'])) {
-                    foreach($_REQUEST['identifier'] as $lun_name) {
-                        // check if configuration already exists
-                        $na_storage = new NetApp_storage();
-                        $na_storage->get_instance_by_storage_id($netapp_storage_id);
-                        if (!strlen($na_storage->storage_id)) {
-                            $strMsg = "NetApp Storage server $id not configured yet<br>";
-                        } else {
-                            show_progressbar();
-                            $storage = new storage();
-                            $storage->get_instance_by_id($na_storage->storage_id);
-                            $resource = new resource();
-                            $resource->get_instance_by_id($storage->resource_id);
-                            $na_storage_ip = $resource->ip;
-                            $na_user = $na_storage->storage_user;
-                            $na_password = $na_storage->storage_password;
-                            $lun_name = basename($lun_name);
-                            $openqrm_server_command="$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/netapp-storage/bin/openqrm-netapp-storage  remove -n $lun_name -p $na_password -e $na_storage_ip";
-                            // remove current stat file
-                            $statfile="storage/$resource->ip.netapp_luns.stat";
-                            if (file_exists($statfile)) {
-                                unlink($statfile);
-                            }
-                            $output = shell_exec($openqrm_server_command);
-                            // and wait for the resulting statfile
-                            if (!wait_for_statfile($statfile)) {
-                                $strMsg .= "Failed to remove Lun $lun_name from the NetApp Storage server $netapp_storage_id<br>";
-                            } else {
-                                $strMsg .= "Removing Lun $lun_name from the NetApp Storage server $netapp_storage_id<br>";
-                            }
-                        }
-                    }
-                    redirect($strMsg, 'tab0', $netapp_storage_id);
-                } else {
-                    $strMsg = "No Lun selected. Skipping removal ...<br>";
-                    redirect($strMsg, 'tab0', $netapp_storage_id);
-                }
-                break;
+			case 'remove':
+				if (isset($_REQUEST['identifier'])) {
+					foreach($_REQUEST['identifier'] as $lun_name) {
+						// check if configuration already exists
+						$na_storage = new NetApp_storage();
+						$na_storage->get_instance_by_storage_id($netapp_storage_id);
+						if (!strlen($na_storage->storage_id)) {
+							$strMsg = "NetApp Storage server $id not configured yet<br>";
+						} else {
+							show_progressbar();
+							$storage = new storage();
+							$storage->get_instance_by_id($na_storage->storage_id);
+							$resource = new resource();
+							$resource->get_instance_by_id($storage->resource_id);
+							$na_storage_ip = $resource->ip;
+							$na_user = $na_storage->storage_user;
+							$na_password = $na_storage->storage_password;
+							$lun_name = basename($lun_name);
+							$openqrm_server_command="$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/netapp-storage/bin/openqrm-netapp-storage  remove -n $lun_name -p $na_password -e $na_storage_ip";
+							// remove current stat file
+							$statfile="storage/$resource->ip.netapp_luns.stat";
+							if (file_exists($statfile)) {
+								unlink($statfile);
+							}
+							$output = shell_exec($openqrm_server_command);
+							// and wait for the resulting statfile
+							if (!wait_for_statfile($statfile)) {
+								$strMsg .= "Failed to remove Lun $lun_name from the NetApp Storage server $netapp_storage_id<br>";
+							} else {
+								$strMsg .= "Removing Lun $lun_name from the NetApp Storage server $netapp_storage_id<br>";
+							}
+						}
+					}
+					redirect($strMsg, 'tab0', $netapp_storage_id);
+				} else {
+					$strMsg = "No Lun selected. Skipping removal ...<br>";
+					redirect($strMsg, 'tab0', $netapp_storage_id);
+				}
+				break;
 
-            case 'clone':
-                if (strlen($netapp_storage_image_clone_name)) {
-                    $na_storage = new NetApp_storage();
-                    $na_storage->get_instance_by_storage_id($netapp_storage_id);
-                    if (!strlen($na_storage->storage_id)) {
-                        $strMsg = "NetApp Storage server $id not configured yet<br>";
-                        redirect($strMsg, 'tab0', $netapp_storage_id);
-                    } else {
-                        show_progressbar();
-                        if (!strlen($netapp_storage_image_name)) {
-                            $strMsg = "Please provide a name for the origin Lun<br>";
-                            redirect($strMsg, 'tab0', $netapp_storage_id);
-                            exit(0);
-                        } else if (!validate_input($netapp_storage_image_name, 'string')) {
-                            $strMsg = "Got invalid origin NetApp volume name. Not adding ...<br>(allowed characters are [a-z][A-z][0-9] and volume name must not start with a number)";
-                            redirect($strMsg, 'tab0', $netapp_storage_id);
-                            exit(0);
-                        }
+			case 'clone':
+				if (strlen($netapp_storage_image_clone_name)) {
+					$na_storage = new NetApp_storage();
+					$na_storage->get_instance_by_storage_id($netapp_storage_id);
+					if (!strlen($na_storage->storage_id)) {
+						$strMsg = "NetApp Storage server $id not configured yet<br>";
+						redirect($strMsg, 'tab0', $netapp_storage_id);
+					} else {
+						show_progressbar();
+						if (!strlen($netapp_storage_image_name)) {
+							$strMsg = "Please provide a name for the origin Lun<br>";
+							redirect($strMsg, 'tab0', $netapp_storage_id);
+							exit(0);
+						} else if (!validate_input($netapp_storage_image_name, 'string')) {
+							$strMsg = "Got invalid origin NetApp volume name. Not adding ...<br>(allowed characters are [a-z][A-z][0-9] and volume name must not start with a number)";
+							redirect($strMsg, 'tab0', $netapp_storage_id);
+							exit(0);
+						}
 
-                        if (!strlen($netapp_storage_image_clone_name)) {
-                            $strMsg = "Please provide a name for the cloned Lun<br>";
-                            redirect($strMsg, 'tab0', $netapp_storage_id);
-                            exit(0);
-                        } else if (!validate_input($netapp_storage_image_clone_name, 'string')) {
-                            $strMsg = "Got invalid NetApp volume clone name. Not adding ...<br>(allowed characters are [a-z][A-z][0-9] and volume name must not start with a number)";
-                            redirect($strMsg, 'tab0', $netapp_storage_id);
-                            exit(0);
-                        }
-                        // generate a new password
-                        $image = new image();
-                        $netapp_chap_password = $image->generatePassword(14);
-                        $netapp_storage_image_name = basename($netapp_storage_image_name);
-                        // snap
-                        $storage = new storage();
-                        $storage->get_instance_by_id($netapp_storage_id);
-                        $storage_resource = new resource();
-                        $storage_resource->get_instance_by_id($storage->resource_id);
-                        $na_storage_ip = $storage_resource->ip;
-                        $na_password = $na_storage->storage_password;
-                        $openqrm_server_command="$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/netapp-storage/bin/openqrm-netapp-storage snap -n $netapp_storage_image_name -s $netapp_storage_image_clone_name -i $netapp_chap_password -p $na_password -e $na_storage_ip";
-                        // remove current stat file
-                        $storage_resource_id = $storage_resource->id;
-                        $statfile="storage/$storage_resource->ip.netapp_luns.stat";
-                        if (file_exists($statfile)) {
-                            unlink($statfile);
-                        }
-                        // send command
-                        $output = shell_exec($openqrm_server_command);
-                        // and wait for the resulting statfile
-                        if (!wait_for_statfile($statfile)) {
-                            $strMsg = "Error during snapshotting volume $netapp_storage_image_name -> $netapp_storage_image_clone_name ! Please check the Event-Log";
-                        } else {
-                            $strMsg = "Created snapshot of volume $netapp_storage_image_name -> $netapp_storage_image_clone_name";
-                        }
-                        redirect($strMsg, 'tab0', $netapp_storage_id);
-                    }
-                } else {
-                    $strMsg = "Got emtpy volume snapshot name. Not starting cloning procedure ...";
-                    redirect($strMsg, 'tab0', $netapp_storage_id);
-                }
-                break;
+						if (!strlen($netapp_storage_image_clone_name)) {
+							$strMsg = "Please provide a name for the cloned Lun<br>";
+							redirect($strMsg, 'tab0', $netapp_storage_id);
+							exit(0);
+						} else if (!validate_input($netapp_storage_image_clone_name, 'string')) {
+							$strMsg = "Got invalid NetApp volume clone name. Not adding ...<br>(allowed characters are [a-z][A-z][0-9] and volume name must not start with a number)";
+							redirect($strMsg, 'tab0', $netapp_storage_id);
+							exit(0);
+						}
+						// generate a new password
+						$image = new image();
+						$netapp_chap_password = $image->generatePassword(14);
+						$netapp_storage_image_name = basename($netapp_storage_image_name);
+						// snap
+						$storage = new storage();
+						$storage->get_instance_by_id($netapp_storage_id);
+						$storage_resource = new resource();
+						$storage_resource->get_instance_by_id($storage->resource_id);
+						$na_storage_ip = $storage_resource->ip;
+						$na_password = $na_storage->storage_password;
+						$openqrm_server_command="$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/netapp-storage/bin/openqrm-netapp-storage snap -n $netapp_storage_image_name -s $netapp_storage_image_clone_name -i $netapp_chap_password -p $na_password -e $na_storage_ip";
+						// remove current stat file
+						$storage_resource_id = $storage_resource->id;
+						$statfile="storage/$storage_resource->ip.netapp_luns.stat";
+						if (file_exists($statfile)) {
+							unlink($statfile);
+						}
+						// send command
+						$output = shell_exec($openqrm_server_command);
+						// and wait for the resulting statfile
+						if (!wait_for_statfile($statfile)) {
+							$strMsg = "Error during snapshotting volume $netapp_storage_image_name -> $netapp_storage_image_clone_name ! Please check the Event-Log";
+						} else {
+							$strMsg = "Created snapshot of volume $netapp_storage_image_name -> $netapp_storage_image_clone_name";
+						}
+						redirect($strMsg, 'tab0', $netapp_storage_id);
+					}
+				} else {
+					$strMsg = "Got emtpy volume snapshot name. Not starting cloning procedure ...";
+					redirect($strMsg, 'tab0', $netapp_storage_id);
+				}
+				break;
 
 
-        }
-    }
+		}
+	}
 }
 
 
@@ -405,8 +406,8 @@ function netapp_select_storage() {
 
 	$storage_count=0;
 	$arBody = array();
-    $t_deployment = new deployment();
-    $t_deployment->get_instance_by_type("netapp-deployment");
+	$t_deployment = new deployment();
+	$t_deployment->get_instance_by_type("netapp-deployment");
 	$storage_tmp = new storage();
 	$storage_array = $storage_tmp->display_overview_per_type($t_deployment->id, $table->offset, $table->limit, $table->sort, $table->order);
 	foreach ($storage_array as $index => $storage_db) {
@@ -416,28 +417,28 @@ function netapp_select_storage() {
 		$storage_resource->get_instance_by_id($storage->resource_id);
 		$deployment = new deployment();
 		$deployment->get_instance_by_id($storage->type);
-        $storage_count++;
-        $resource_icon_default="/openqrm/base/img/resource.png";
-        $storage_icon="/openqrm/base/plugins/netapp-storage/img/storage.png";
-        $state_icon="/openqrm/base/img/$storage_resource->state.png";
-        if (!file_exists($_SERVER["DOCUMENT_ROOT"]."/".$state_icon)) {
-            $state_icon="/openqrm/base/img/unknown.png";
-        }
-        if (file_exists($_SERVER["DOCUMENT_ROOT"]."/".$storage_icon)) {
-            $resource_icon_default=$storage_icon;
-        }
+		$storage_count++;
+		$resource_icon_default="/openqrm/base/img/resource.png";
+		$storage_icon="/openqrm/base/plugins/netapp-storage/img/storage.png";
+		$state_icon="/openqrm/base/img/$storage_resource->state.png";
+		if (!file_exists($_SERVER["DOCUMENT_ROOT"]."/".$state_icon)) {
+			$state_icon="/openqrm/base/img/unknown.png";
+		}
+		if (file_exists($_SERVER["DOCUMENT_ROOT"]."/".$storage_icon)) {
+			$resource_icon_default=$storage_icon;
+		}
 
-        $arBody[] = array(
-            'storage_state' => "<img src=$state_icon>",
-            'storage_icon' => "<img width=24 height=24 src=$resource_icon_default>",
-            'storage_id' => $storage->id,
-            'storage_name' => $storage->name,
-            'storage_resource_id' => $storage->resource_id,
-            'storage_resource_ip' => $storage_resource->ip,
-            'storage_type' => "$deployment->storagedescription",
-            'storage_comment' => $storage_resource->comment,
-        );
-    }
+		$arBody[] = array(
+			'storage_state' => "<img src=$state_icon>",
+			'storage_icon' => "<img width=24 height=24 src=$resource_icon_default>",
+			'storage_id' => $storage->id,
+			'storage_name' => $storage->name,
+			'storage_resource_id' => $storage->resource_id,
+			'storage_resource_ip' => $storage_resource->ip,
+			'storage_type' => "$deployment->storagedescription",
+			'storage_comment' => $storage->comment,
+		);
+	}
 
 	$table->id = 'Tabelle';
 	$table->css = 'htmlobject_table';
@@ -445,7 +446,7 @@ function netapp_select_storage() {
 	$table->cellspacing = 0;
 	$table->cellpadding = 3;
 	$table->form_action = $thisfile;
-    $table->identifier_type = "radio";
+	$table->identifier_type = "radio";
 	$table->head = $arHead;
 	$table->body = $arBody;
 	if ($OPENQRM_USER->role == "administrator") {
@@ -454,13 +455,27 @@ function netapp_select_storage() {
 	}
 	$table->max = $storage_tmp->get_count_per_type($t_deployment->id);
 
-    // set template
-    $t = new Template_PHPLIB();
+	// are there any storage server yet ?
+	if(count($arBody) > 0) {
+		$disp = $table->get_string();
+	} else {
+		$box = new htmlobject_box();
+		$box->id = 'htmlobject_box_add_storage';
+		$box->css = 'htmlobject_box';
+		$box->label = '<br><nobr><b>No storage configured yet!</b></nobr>';
+		$box_content = '<br><br><br><br>Please create a '.$t_deployment->storagedescription.' first!<br>';
+		$box_content .= '<a href="/openqrm/base/server/storage/storage-new.php?currenttab=tab1"><b>New storage</b></a><br>';
+		$box->content = $box_content;
+		$disp = $box->get_string();
+	}
+
+	// set template
+	$t = new Template_PHPLIB();
 	$t->debug = false;
 	$t->setFile('tplfile', './tpl/' . 'netapp-storage-select.tpl.php');
 	$t->setVar(array(
 		'formaction' => $thisfile,
-		'storage_server_table' => $table->get_string(),
+		'storage_server_table' => $disp,
 	));
 	$disp =  $t->parse('out', 'tplfile');
 	return $disp;
@@ -520,12 +535,12 @@ function netapp_display($netapp_storage_id) {
 	if (file_exists($_SERVER["DOCUMENT_ROOT"]."/".$storage_icon)) {
 		$resource_icon_default=$storage_icon;
 	}
-    // na config
-    $storage_configuration="<a href=\"netapp-storage-config.php?storage_id=$netapp_storage_id\"><img src=\"/openqrm/base/img/storage.png\" width=\"24\" height=\"24\" border=\"0\" alt=\"configuration\"/></a>";
-    // na admin
-    $storage_admin = "<a href=\"http://$storage_resource->ip/na_admin/\"><img src=\"/openqrm/base/img/user.gif\" width=\"24\" height=\"24\" border=\"0\" alt=\"administration\"/></a>";
+	// na config
+	$storage_configuration="<a href=\"netapp-storage-config.php?storage_id=$netapp_storage_id\"><img src=\"/openqrm/base/img/storage.png\" width=\"24\" height=\"24\" border=\"0\" alt=\"configuration\"/></a>";
+	// na admin
+	$storage_admin = "<a href=\"http://$storage_resource->ip/na_admin/\"><img src=\"/openqrm/base/img/user.gif\" width=\"24\" height=\"24\" border=\"0\" alt=\"administration\"/></a>";
 
-    $arBody[] = array(
+	$arBody[] = array(
 		'storage_state' => "<img src=$state_icon>",
 		'storage_icon' => "<img width=24 height=24 src=$resource_icon_default>",
 		'storage_id' => $storage->id,
@@ -554,83 +569,83 @@ function netapp_display($netapp_storage_id) {
 
 	$arHead1['lun_icon'] = array();
 	$arHead1['lun_icon']['title'] ='';
-    $arHead1['lun_icon']['sortable'] = false;
+	$arHead1['lun_icon']['sortable'] = false;
 
 	$arHead1['lun_name'] = array();
 	$arHead1['lun_name']['title'] ='Name';
 
-    $arHead1['lun_size'] = array();
+	$arHead1['lun_size'] = array();
 	$arHead1['lun_size']['title'] ='Size';
 
 	$arHead1['lun_status'] = array();
 	$arHead1['lun_status']['title'] ='Status';
 
-    $arHead1['lun_permissions'] = array();
+	$arHead1['lun_permissions'] = array();
 	$arHead1['lun_permissions']['title'] ='Permission';
 
-    $arHead1['lun_action'] = array();
+	$arHead1['lun_action'] = array();
 	$arHead1['lun_action']['title'] ='Action';
 
-    $arBody1 = array();
+	$arBody1 = array();
 	$lun_count=0;
 
 	$storage_export_list="storage/$storage_resource->ip.netapp_luns.stat";
 	if (file_exists($storage_export_list)) {
 		$storage_vg_content=file($storage_export_list);
 		foreach ($storage_vg_content as $index => $netapp) {
-            $netapp_output = trim($netapp);
-            $first_at_pos = strpos($netapp_output, "@");
-            $first_at_pos++;
-            $na_name_first_at_removed = substr($netapp_output, $first_at_pos, strlen($netapp_output)-$first_at_pos);
-            $second_at_pos = strpos($na_name_first_at_removed, "@");
-            $second_at_pos++;
-            $na_name_second_at_removed = substr($na_name_first_at_removed, $second_at_pos, strlen($na_name_first_at_removed)-$second_at_pos);
-            $third_at_pos = strpos($na_name_second_at_removed, "@");
-            $third_at_pos++;
-            $na_name_third_at_removed = substr($na_name_second_at_removed, $third_at_pos, strlen($na_name_second_at_removed)-$third_at_pos);
-            $fourth_at_pos = strpos($na_name_third_at_removed, "@");
-            $fourth_at_pos++;
-            $na_name_fourth_at_removed = substr($na_name_third_at_removed, $fourth_at_pos, strlen($na_name_third_at_removed)-$fourth_at_pos);
-            $fivth_at_pos = strpos($na_name_fourth_at_removed, "@");
-            $fivth_at_pos++;
-            $na_name_fivth_at_removed = substr($na_name_fourth_at_removed, $fivth_at_pos, strlen($na_name_fourth_at_removed)-$fivth_at_pos);
-            $sixth_at_pos = strpos($na_name_fivth_at_removed, "@");
-            $sixth_at_pos++;
-            $na_name_sixth_at_removed = substr($na_name_fivth_at_removed, $sixth_at_pos, strlen($na_name_fivth_at_removed)-$sixth_at_pos);
-            $seventh_at_pos = strpos($na_name_sixth_at_removed, "@");
-            $seventh_at_pos++;
+			$netapp_output = trim($netapp);
+			$first_at_pos = strpos($netapp_output, "@");
+			$first_at_pos++;
+			$na_name_first_at_removed = substr($netapp_output, $first_at_pos, strlen($netapp_output)-$first_at_pos);
+			$second_at_pos = strpos($na_name_first_at_removed, "@");
+			$second_at_pos++;
+			$na_name_second_at_removed = substr($na_name_first_at_removed, $second_at_pos, strlen($na_name_first_at_removed)-$second_at_pos);
+			$third_at_pos = strpos($na_name_second_at_removed, "@");
+			$third_at_pos++;
+			$na_name_third_at_removed = substr($na_name_second_at_removed, $third_at_pos, strlen($na_name_second_at_removed)-$third_at_pos);
+			$fourth_at_pos = strpos($na_name_third_at_removed, "@");
+			$fourth_at_pos++;
+			$na_name_fourth_at_removed = substr($na_name_third_at_removed, $fourth_at_pos, strlen($na_name_third_at_removed)-$fourth_at_pos);
+			$fivth_at_pos = strpos($na_name_fourth_at_removed, "@");
+			$fivth_at_pos++;
+			$na_name_fivth_at_removed = substr($na_name_fourth_at_removed, $fivth_at_pos, strlen($na_name_fourth_at_removed)-$fivth_at_pos);
+			$sixth_at_pos = strpos($na_name_fivth_at_removed, "@");
+			$sixth_at_pos++;
+			$na_name_sixth_at_removed = substr($na_name_fivth_at_removed, $sixth_at_pos, strlen($na_name_fivth_at_removed)-$sixth_at_pos);
+			$seventh_at_pos = strpos($na_name_sixth_at_removed, "@");
+			$seventh_at_pos++;
 
-            $na_name = dirname(trim(substr($netapp_output, 0, $first_at_pos-1)));
-            $na_size = trim(substr($na_name_first_at_removed, 0, $second_at_pos-1));
-            $na_snapshots = trim(substr($na_name_second_at_removed, 0, $third_at_pos-1));
-            $na_permissions = trim(substr($na_name_third_at_removed, 0, $fourth_at_pos-1));
-            $na_status = trim(substr($na_name_fourth_at_removed, 0, $fivth_at_pos-1));
-            $na_connections = trim(substr($na_name_fivth_at_removed, 0, $sixth_at_pos-1));
-            $na_tp = trim(substr($na_name_sixth_at_removed, 0, $seventh_at_pos-1));
-            // trim permissions
-            $na_permissions = str_replace('(', '', $na_permissions);
-            $na_permissions = str_replace(',', '', $na_permissions);
-            // build the snap-shot input
-            $na_lun_snap = "<form action=\"$thisfile\" method=\"GET\">";
-            $na_lun_snap .= "<input type='hidden' name='netapp_storage_id' value=$netapp_storage_id>";
-            $na_lun_snap .= "<input type='hidden' name='netapp_storage_image_name' value=$na_name>";
-            $na_lun_snap .= "<input type='text' name='netapp_storage_image_clone_name' value='' size='10' maxlength='20'>";
-            $na_lun_snap .= "<input type='submit' name='action' value='clone'>";
-            $na_lun_snap .= "</form>";
+			$na_name = dirname(trim(substr($netapp_output, 0, $first_at_pos-1)));
+			$na_size = trim(substr($na_name_first_at_removed, 0, $second_at_pos-1));
+			$na_snapshots = trim(substr($na_name_second_at_removed, 0, $third_at_pos-1));
+			$na_permissions = trim(substr($na_name_third_at_removed, 0, $fourth_at_pos-1));
+			$na_status = trim(substr($na_name_fourth_at_removed, 0, $fivth_at_pos-1));
+			$na_connections = trim(substr($na_name_fivth_at_removed, 0, $sixth_at_pos-1));
+			$na_tp = trim(substr($na_name_sixth_at_removed, 0, $seventh_at_pos-1));
+			// trim permissions
+			$na_permissions = str_replace('(', '', $na_permissions);
+			$na_permissions = str_replace(',', '', $na_permissions);
+			// build the snap-shot input
+			$na_lun_snap = "<form action=\"$thisfile\" method=\"GET\">";
+			$na_lun_snap .= "<input type='hidden' name='netapp_storage_id' value=$netapp_storage_id>";
+			$na_lun_snap .= "<input type='hidden' name='netapp_storage_image_name' value=$na_name>";
+			$na_lun_snap .= "<input type='text' name='netapp_storage_image_clone_name' value='' size='10' maxlength='20'>";
+			$na_lun_snap .= "<input type='submit' name='action' value='clone'>";
+			$na_lun_snap .= "</form>";
 
-            $arBody1[] = array(
-        		'lun_icon' => "<img width=24 height=24 src=$resource_icon_default>",
-                'lun_name' => $na_name,
-                'lun_size' => $na_size,
-                'lun_status' => $na_status,
-                'lun_permissions' => $na_permissions,
-                'lun_action' => $na_lun_snap,
-            );
-            $lun_count++;
+			$arBody1[] = array(
+				'lun_icon' => "<img width=24 height=24 src=$resource_icon_default>",
+				'lun_name' => $na_name,
+				'lun_size' => $na_size,
+				'lun_status' => $na_status,
+				'lun_permissions' => $na_permissions,
+				'lun_action' => $na_lun_snap,
+			);
+			$lun_count++;
 		}
 	}
 
-    $table1->add_headrow("<input type='hidden' name='netapp_storage_id' value=$netapp_storage_id>");
+	$table1->add_headrow("<input type='hidden' name='netapp_storage_id' value=$netapp_storage_id>");
 	$table1->id = 'Tabelle';
 	$table1->css = 'htmlobject_table';
 	$table1->border = 1;
@@ -638,7 +653,7 @@ function netapp_display($netapp_storage_id) {
 	$table1->cellpadding = 3;
 	$table1->form_action = $thisfile;
 	$table1->identifier_type = "checkbox";
-    $table1->autosort = true;
+	$table1->autosort = true;
 	$table1->head = $arHead1;
 	$table1->body = $arBody1;
 	if ($OPENQRM_USER->role == "administrator") {
@@ -647,19 +662,19 @@ function netapp_display($netapp_storage_id) {
 	}
 	$table1->max = $lun_count;
 
-    // check for the aggr stat file to get the list of available aggregates on the netapp
+	// check for the aggr stat file to get the list of available aggregates on the netapp
 	$storage_aggr_list="storage/$storage_resource->ip.netapp_aggr.stat";
 	if (file_exists($storage_aggr_list)) {
 		$storage_aggr_content=file($storage_aggr_list);
-        foreach ($storage_aggr_content as $index => $aggr) {
-            $aggr_arr[] = array("value" => "$aggr", "label" => "$aggr");
-        }
-        $na_aggr_select = htmlobject_select('netapp_aggregate', $aggr_arr, 'Aggregate');
-    } else {
-        $na_aggr_select = "<b>Error during getting list of aggregates !</b>";
-    }
+		foreach ($storage_aggr_content as $index => $aggr) {
+			$aggr_arr[] = array("value" => "$aggr", "label" => "$aggr");
+		}
+		$na_aggr_select = htmlobject_select('netapp_aggregate', $aggr_arr, 'Aggregate');
+	} else {
+		$na_aggr_select = "<b>Error during getting list of aggregates !</b>";
+	}
 
-     // set template
+	 // set template
 	$t = new Template_PHPLIB();
 	$t->debug = false;
 	$t->setFile('tplfile', './tpl/' . 'netapp-storage-luns.tpl.php');
@@ -670,13 +685,13 @@ function netapp_display($netapp_storage_id) {
 		'lun_table' => $table1->get_string(),
 		'netapp_lun_name' => htmlobject_input('netapp_storage_image_name', array("value" => '', "label" => 'Name'), 'text', 20),
 		'netapp_lun_size' => htmlobject_input('netapp_storage_image_size', array("value" => '1000', "label" => 'Lun Size (MB)'), 'text', 20),
-    	'hidden_netapp_storage_id' => "<input type=hidden name=identifier[] value=$storage->id>",
+		'hidden_netapp_storage_id' => "<input type=hidden name=identifier[] value=$storage->id>",
 		'netapp_aggr_select' => $na_aggr_select,
 		'submit' => htmlobject_input('action', array("value" => 'add', "label" => 'Add'), 'submit'),
 	));
 	$disp =  $t->parse('out', 'tplfile');
 	return $disp;
-    
+
 }
 
 
@@ -688,19 +703,19 @@ if(htmlobject_request('action') != '') {
 	switch (htmlobject_request('action')) {
 		case 'select':
 			if (isset($_REQUEST['identifier'])) {
-                foreach($_REQUEST['identifier'] as $id) {
-                    $output[] = array('label' => 'NetApp Storage Admin', 'value' => netapp_display($id));
-                }
-            } else {
-            	$output[] = array('label' => 'Select', 'value' => netapp_select_storage());
-            }
+				foreach($_REQUEST['identifier'] as $id) {
+					$output[] = array('label' => 'NetApp Storage Admin', 'value' => netapp_display($id));
+				}
+			} else {
+				$output[] = array('label' => 'Select', 'value' => netapp_select_storage());
+			}
 			break;
 		case 'refresh':
 			if (isset($_REQUEST['identifier'])) {
-                foreach($_REQUEST['identifier'] as $id) {
-                    $output[] = array('label' => 'NetApp Storage Admin', 'value' => netapp_display($id));
-                }
-            }
+				foreach($_REQUEST['identifier'] as $id) {
+					$output[] = array('label' => 'NetApp Storage Admin', 'value' => netapp_display($id));
+				}
+			}
 			break;
 	}
 } else if (strlen($netapp_storage_id)) {
@@ -708,6 +723,13 @@ if(htmlobject_request('action') != '') {
 } else  {
 	$output[] = array('label' => 'Select', 'value' => netapp_select_storage());
 }
+
+
+?>
+<script type="text/javascript">
+	$("#progressbar").remove();
+</script>
+<?php
 
 echo htmlobject_tabmenu($output);
 

@@ -2,19 +2,19 @@
 /*
   This file is part of openQRM.
 
-    openQRM is free software: you can redistribute it and/or modify
-    it under the terms of the GNU General Public License version 2
-    as published by the Free Software Foundation.
+	openQRM is free software: you can redistribute it and/or modify
+	it under the terms of the GNU General Public License version 2
+	as published by the Free Software Foundation.
 
-    openQRM is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    GNU General Public License for more details.
+	openQRM is distributed in the hope that it will be useful,
+	but WITHOUT ANY WARRANTY; without even the implied warranty of
+	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+	GNU General Public License for more details.
 
-    You should have received a copy of the GNU General Public License
-    along with openQRM.  If not, see <http://www.gnu.org/licenses/>.
+	You should have received a copy of the GNU General Public License
+	along with openQRM.  If not, see <http://www.gnu.org/licenses/>.
 
-    Copyright 2009, Matthias Rechenburg <matt@openqrm.com>
+	Copyright 2009, Matthias Rechenburg <matt@openqrm.com>
 */
 
 
@@ -27,6 +27,7 @@ require_once "$RootDir/class/storage.class.php";
 require_once "$RootDir/class/image.class.php";
 require_once "$RootDir/class/resource.class.php";
 require_once "$RootDir/class/deployment.class.php";
+require_once "$RootDir/class/authblocker.class.php";
 require_once "$RootDir/class/event.class.php";
 require_once "$RootDir/class/openqrm_server.class.php";
 require_once "$RootDir/include/htmlobject.inc.php";
@@ -36,6 +37,7 @@ global $DEPLOYMENT_INFO_TABLE;
 global $OPENQRM_SERVER_BASE_DIR;
 
 $lvm_storage_command = htmlobject_request('lvm_storage_command');
+$lvm_image_name = htmlobject_request('lvm_image_name');
 
 // place for the storage stat files
 $StorageDir = $_SERVER["DOCUMENT_ROOT"].'/openqrm/base/plugins/lvm-storage/storage';
@@ -51,46 +53,55 @@ if ($OPENQRM_USER->role != "administrator") {
 
 $event->log("$lvm_storage_command", $_SERVER['REQUEST_TIME'], 5, "lvm-storage-action", "Processing lvm-storage command $lvm_storage_command", "", "", 0, 0, 0);
 switch ($lvm_storage_command) {
-    case 'get_storage':
-        if (!file_exists($StorageDir)) {
-            mkdir($StorageDir);
-        }
-        $filename = $StorageDir."/".$_POST['filename'];
-        $filedata = base64_decode($_POST['filedata']);
-        echo "<h1>$filename</h1>";
-        $fout = fopen($filename,"wb");
-        fwrite($fout, $filedata);
-        fclose($fout);
-        break;
+	case 'get_storage':
+		if (!file_exists($StorageDir)) {
+			mkdir($StorageDir);
+		}
+		$filename = $StorageDir."/".$_POST['filename'];
+		$filedata = base64_decode($_POST['filedata']);
+		echo "<h1>$filename</h1>";
+		$fout = fopen($filename,"wb");
+		fwrite($fout, $filedata);
+		fclose($fout);
+		break;
 
-    case 'get_ident':
-        if (!file_exists($StorageDir)) {
-            mkdir($StorageDir);
-        }
-        $filename = $StorageDir."/".$_POST['filename'];
-        $filedata = base64_decode($_POST['filedata']);
-        echo "<h1>$filename</h1>";
-        $fout = fopen($filename,"wb");
-        fwrite($fout, $filedata);
-        fclose($fout);
-        break;
+	case 'get_ident':
+		if (!file_exists($StorageDir)) {
+			mkdir($StorageDir);
+		}
+		$filename = $StorageDir."/".$_POST['filename'];
+		$filedata = base64_decode($_POST['filedata']);
+		echo "<h1>$filename</h1>";
+		$fout = fopen($filename,"wb");
+		fwrite($fout, $filedata);
+		fclose($fout);
+		break;
 
-    case 'clone_finished':
-        if (!file_exists($StorageDir)) {
-            mkdir($StorageDir);
-        }
-        $filename = $StorageDir."/".$_POST['filename'];
-        $filedata = base64_decode($_POST['filedata']);
-        echo "<h1>$filename</h1>";
-        $fout = fopen($filename,"wb");
-        fwrite($fout, $filedata);
-        fclose($fout);
-        break;
+	case 'clone_finished':
+		if (!file_exists($StorageDir)) {
+			mkdir($StorageDir);
+		}
+		$filename = $StorageDir."/".$_POST['filename'];
+		$filedata = base64_decode($_POST['filedata']);
+		echo "<h1>$filename</h1>";
+		$fout = fopen($filename,"wb");
+		fwrite($fout, $filedata);
+		fclose($fout);
+		break;
 
+	case 'auth_finished':
+		// remove storage-auth-blocker if existing
+		$authblocker = new authblocker();
+		$authblocker->get_instance_by_image_name($lvm_image_name);
+		if (strlen($authblocker->id)) {
+			$event->log("$lvm_storage_command", $_SERVER['REQUEST_TIME'], 5, "lvm-storage-action", "Removing authblocker for image $lvm_image_name", "", "", 0, 0, 0);
+			$authblocker->remove($authblocker->id);
+		}
+		break;
 
-    default:
-        $event->log("$lvm_storage_command", $_SERVER['REQUEST_TIME'], 3, "lvm-storage-action", "No such lvm-storage command ($lvm_storage_command)", "", "", 0, 0, 0);
-        break;
+	default:
+		$event->log("$lvm_storage_command", $_SERVER['REQUEST_TIME'], 3, "lvm-storage-action", "No such lvm-storage command ($lvm_storage_command)", "", "", 0, 0, 0);
+		break;
 
 
 }

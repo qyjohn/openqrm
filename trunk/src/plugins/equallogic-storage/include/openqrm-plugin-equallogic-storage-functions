@@ -42,7 +42,7 @@ function equallogic_storage_storage_log() {
 function equallogic_storage_lock() {
 	local COMMAND=$1
 	local RET=1
-	
+
 	if [ ! -d `dirname $EQUALLOGIC_STORAGE_MGMT_LOCK_FILE` ]; then
 		mkdir -p `dirname $EQUALLOGIC_STORAGE_MGMT_LOCK_FILE`
 	fi
@@ -62,7 +62,7 @@ function equallogic_storage_lock() {
 		*)
 			equallogic_storage_storage_log equallogic_storage_storage_lock "No such command. Try 'aquire' or 'release'"
 			return 1
-			;;	
+			;;
 	esac
 }
 

@@ -62,6 +62,8 @@ install:
 	. $(OPENQRM_SERVER_CONF) && cp cloud-portal/web/*.php $(DESTINATION_DIR)$$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/cloud/cloud-portal/web/
 	. $(OPENQRM_SERVER_CONF) && mkdir -p $(DESTINATION_DIR)$$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/cloud/cloud-portal/web/css
 	. $(OPENQRM_SERVER_CONF) && cp cloud-portal/web/css/*.css $(DESTINATION_DIR)$$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/cloud/cloud-portal/web/css/
+	. $(OPENQRM_SERVER_CONF) && mkdir -p $(DESTINATION_DIR)$$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/cloud/cloud-portal/web/snd
+	. $(OPENQRM_SERVER_CONF) && cp cloud-portal/web/snd/*.wav $(DESTINATION_DIR)$$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/cloud/cloud-portal/web/snd/
 	. $(OPENQRM_SERVER_CONF) && mkdir -p $(DESTINATION_DIR)$$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/cloud/cloud-portal/web/img
 	. $(OPENQRM_SERVER_CONF) && cp cloud-portal/web/img/*.gif $(DESTINATION_DIR)$$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/cloud/cloud-portal/web/img/
 	. $(OPENQRM_SERVER_CONF) && cp cloud-portal/web/img/*.png $(DESTINATION_DIR)$$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/cloud/cloud-portal/web/img/
@@ -75,6 +77,9 @@ install:
 	. $(OPENQRM_SERVER_CONF) && mkdir -p $(DESTINATION_DIR)$$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/cloud/cloud-portal/web/user/vcd
 	. $(OPENQRM_SERVER_CONF) && cp cloud-portal/web/user/vcd/*.php $(DESTINATION_DIR)$$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/cloud/cloud-portal/web/user/vcd/
 	. $(OPENQRM_SERVER_CONF) && cp cloud-portal/web/user/vcd/*.css $(DESTINATION_DIR)$$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/cloud/cloud-portal/web/user/vcd/
+	. $(OPENQRM_SERVER_CONF) && mkdir -p $(DESTINATION_DIR)$$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/cloud/cloud-portal/web/user/vid
+	. $(OPENQRM_SERVER_CONF) && cp cloud-portal/web/user/vid/*.php $(DESTINATION_DIR)$$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/cloud/cloud-portal/web/user/vid/
+	. $(OPENQRM_SERVER_CONF) && cp cloud-portal/web/user/vid/*.css $(DESTINATION_DIR)$$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/cloud/cloud-portal/web/user/vid/
 	. $(OPENQRM_SERVER_CONF) && cp web/soap/soap-user.php $(DESTINATION_DIR)$$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/cloud/cloud-portal/web/user/soap/
 	. $(OPENQRM_SERVER_CONF) && mkdir -p $(DESTINATION_DIR)$$OPENQRM_SERVER_BASE_DIR/openqrm/web/base/img/menu/cloud
 	. $(OPENQRM_SERVER_CONF) && cp web/img/cloudrequests.png $(DESTINATION_DIR)$$OPENQRM_SERVER_BASE_DIR/openqrm/web/base/img/menu/cloud/

@@ -28,7 +28,7 @@ openqrm_server_get_config
 export resource_openqrmserver=$OPENQRM_SERVER_IP_ADDRESS
 # define wget to use with https
 if [ "$OPENQRM_WEB_PROTOCOL" == "https" ]; then
-    WGET_NO_CERT_CHECK="--no-check-certificate"
+	WGET_NO_CERT_CHECK="--no-check-certificate"
 fi
 
 
@@ -49,7 +49,7 @@ function openqrm_plugin_cloud_uninstall() {
 	if [ "$USERNAME" == "" ] && [ "$PASSWORD" == "" ]; then
 		echo -n "cloud: Please give a username to uninstall the plugin : "
 		read USERNAME
-		echo	
+		echo
 		echo -n "cloud: Please give the password for user $USERNAME : "
 		read PASSWORD
 		echo
@@ -65,11 +65,15 @@ function openqrm_plugin_cloud_uninstall() {
 	rm -f $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/boot-service/boot-service-cloud.tgz
 	rm -f $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/boot-service/cloudadmin.wdsl
 	rm -f $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/boot-service/clouduser.wdsl
+	rm -f $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/boot-service/cloudadmin.compat.wdsl
+	rm -f $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/boot-service/clouduser.compat.wdsl
 	# remove netconf dir
 	rm -rf $OPENQRM_SERVER_BASE_DIR/openqrm/web/action/cloud-conf
 	# remove auth files
 	rm -f $OPENQRM_WEBSERVER_DOCUMENT_ROOT/cloud-portal/user/.htaccess
 	rm -f $OPENQRM_WEBSERVER_DOCUMENT_ROOT/cloud-portal/user/.htpasswd
+	# remove custom-icons
+	rm -rf $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/cloud/cloud-portal/web/user/custom-icons
 	# remove the portal
 	rm -f $OPENQRM_WEBSERVER_DOCUMENT_ROOT/cloud-portal
 	rm -f $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/base/plugins/cloud
@@ -86,7 +90,7 @@ function openqrm_plugin_cloud_uninstall() {
 		fi
 	fi
 	$OPENQRM_WEBSERVER_INIT reload
-	
+
 	
 }
 
@@ -96,7 +100,7 @@ function openqrm_plugin_cloud_init() {
 	if [ "$USERNAME" == "" ] && [ "$PASSWORD" == "" ]; then
 		echo -n "cloud: Please give a username to init the plugin : "
 		read USERNAME
-		echo	
+		echo
 		echo -n "cloud: Please give the password for user $USERNAME : "
 		read PASSWORD
 		echo
@@ -116,6 +120,12 @@ function openqrm_plugin_cloud_init() {
 		sed -e "s/@@OPENQRM_SERVER_IP_ADDRESS@@/$OPENQRM_SERVER_IP_ADDRESS/g" > $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/boot-service/cloudadmin.wdsl
 	cat $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/cloud/cloud-portal/web/user/soap/clouduser.wdsl	| \
 		sed -e "s/@@OPENQRM_SERVER_IP_ADDRESS@@/$OPENQRM_SERVER_IP_ADDRESS/g" > $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/boot-service/clouduser.wdsl
+	# compat webservices
+	cat $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/cloud/web/soap/cloudadmin.compat.wdsl	| \
+		sed -e "s/@@OPENQRM_SERVER_IP_ADDRESS@@/$OPENQRM_SERVER_IP_ADDRESS/g" > $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/boot-service/cloudadmin.compat.wdsl
+	cat $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/cloud/cloud-portal/web/user/soap/clouduser.compat.wdsl	| \
+		sed -e "s/@@OPENQRM_SERVER_IP_ADDRESS@@/$OPENQRM_SERVER_IP_ADDRESS/g" > $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/boot-service/clouduser.compat.wdsl
+
 
 	# link the web portal to the documentroot
 	# create the virtualhost + auth for the cloud web portal
@@ -145,6 +155,10 @@ function openqrm_plugin_cloud_init() {
 	# create the directory for the cloud network-config of the appliances
 	mkdir -p $OPENQRM_SERVER_BASE_DIR/openqrm/web/action/cloud-conf/
 	chmod 777 $OPENQRM_SERVER_BASE_DIR/openqrm/web/action/cloud-conf/
+
+	# create the directory for the custom user icons
+	mkdir -p $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/cloud/cloud-portal/web/user/custom-icons
+	chmod 777 $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/cloud/cloud-portal/web/user/custom-icons
 	
 }
 

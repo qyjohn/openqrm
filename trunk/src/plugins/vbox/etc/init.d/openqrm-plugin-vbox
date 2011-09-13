@@ -31,15 +31,15 @@ export OPENQRM_VM_DIR
 function openqrm_plugin_vbox_server_start() {
 	echo "Starting the openQRM vbox-plugin"
 	touch $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/base/plugins/vbox/.running
-    # start the vm status autostart
-    if [ -d "$OPENQRM_VM_DIR" ]; then
-        for VM_CONFIG in `find $OPENQRM_VM_DIR/* -name autostart`; do
-            VM_NAME=`dirname $VM_CONFIG`
-            VM_NAME=`basename $VM_NAME`
-            echo "- auto-starting VM $VM_NAME"
-            $OPENQRM_VM_DIR/$VM_NAME/$VM_NAME.vbox
-        done
-    fi
+	# start the vm status autostart
+	if [ -d "$OPENQRM_VM_DIR" ]; then
+		for VM_CONFIG in `find $OPENQRM_VM_DIR/* -name autostart`; do
+			VM_NAME=`dirname $VM_CONFIG`
+			VM_NAME=`basename $VM_NAME`
+			echo "- auto-starting VM $VM_NAME"
+			$OPENQRM_VM_DIR/$VM_NAME/$VM_NAME.vbox
+		done
+	fi
 }
 
 
@@ -54,7 +54,7 @@ function openqrm_plugin_vbox_server_uninstall() {
 	if [ "$USERNAME" == "" ] && [ "$PASSWORD" == "" ]; then
 		echo -n "vbox: Please give a username to uninstall the plugin : "
 		read USERNAME
-		echo	
+		echo
 		echo -n "vbox: Please give the password for user $USERNAME : "
 		read PASSWORD
 		echo
@@ -73,23 +73,23 @@ function openqrm_plugin_vbox_server_init() {
 	if [ "$USERNAME" == "" ] && [ "$PASSWORD" == "" ]; then
 		echo -n "vbox: Please give a username to init the plugin : "
 		read USERNAME
-		echo	
+		echo
 		echo -n "vbox: Please give the password for user $USERNAME : "
 		read PASSWORD
 		echo
 	fi
 	echo "Initializing the openQRM vbox-plugin"
-	# adding virtualization type	
+	# adding virtualization type
 	openqrm_server_add_virtualization_type $USERNAME $PASSWORD vbox "VirtualBox Host"
 	openqrm_server_add_virtualization_type $USERNAME $PASSWORD vbox-vm "VirtualBox VM"
 	# linking the web dir
 	ln -sf $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/vbox/web $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/base/plugins/vbox
 	# link the boot-service
 	ln -sf $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/vbox/web/boot-service-vbox.tgz $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/boot-service/boot-service-vbox.tgz
-    chmod +x $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/vbox/bin/*
-    # create vbox-stat dir
-    mkdir -p $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/vbox/web/vbox-stat
-    chmod -R 777 $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/vbox/web/vbox-stat
+	chmod +x $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/vbox/bin/*
+	# create vbox-stat dir
+	mkdir -p $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/vbox/web/vbox-stat
+	chmod -R 777 $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/vbox/web/vbox-stat
 
 }
 

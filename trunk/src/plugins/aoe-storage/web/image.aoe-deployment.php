@@ -34,29 +34,25 @@ global $event;
 
 
 function wait_for_identfile($sfile) {
-    $refresh_delay=1;
-    $refresh_loop_max=20;
-    $refresh_loop=0;
-    while (!file_exists($sfile)) {
-        sleep($refresh_delay);
-        $refresh_loop++;
-        flush();
-        if ($refresh_loop > $refresh_loop_max)  {
-            return false;
-        }
-    }
-    return true;
+	$refresh_delay=1;
+	$refresh_loop_max=20;
+	$refresh_loop=0;
+	while (!file_exists($sfile)) {
+		sleep($refresh_delay);
+		$refresh_loop++;
+		flush();
+		if ($refresh_loop > $refresh_loop_max)  {
+			return false;
+		}
+	}
+	return true;
 }
 
 
 function get_image_rootdevice_identifier($aoe_storage_id) {
 	global $OPENQRM_SERVER_BASE_DIR;
-	global $OPENQRM_USER;
+	global $OPENQRM_ADMIN;
 	global $event;
-	if (!strlen($OPENQRM_USER->name)) {
-		$OPENQRM_USER = new user("openqrm");
-		$OPENQRM_USER->set_user();
-	}
 	// place for the storage stat files
 	$StorageDir = $_SERVER["DOCUMENT_ROOT"].'/openqrm/base/plugins/aoe-storage/storage';
 	$rootdevice_identifier_array = array();
@@ -66,28 +62,40 @@ function get_image_rootdevice_identifier($aoe_storage_id) {
 	$storage_resource->get_instance_by_id($storage->resource_id);
 	$storage_resource_id = $storage_resource->id;
 	$ident_file = "$StorageDir/$storage_resource_id.aoe.ident";
-    if (file_exists($ident_file)) {
-        unlink($ident_file);
-    }
-    // send command
-	$resource_command="$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/aoe-storage/bin/openqrm-aoe-storage post_identifier -u $OPENQRM_USER->name -p $OPENQRM_USER->password";
-    $storage_resource->send_command($storage_resource->ip, $resource_command);
-    if (!wait_for_identfile($ident_file)) {
-        $event->log("get_image_rootdevice_identifier", $_SERVER['REQUEST_TIME'], 2, "image.aoe-deployment", "Timeout while requesting image identifier from storage id $storage->id", "", "", 0, 0, 0);
-        return;
-    }
-    $fcontent = file($ident_file);
-    foreach($fcontent as $lun_info) {
-        $tpos = strpos($lun_info, ",");
-        $timage_name = trim(substr($lun_info, 0, $tpos));
-        $troot_device = trim(substr($lun_info, $tpos+1));
-        $rootdevice_identifier_array[] = array("value" => "$troot_device", "label" => "$timage_name");
-    }
+	if (file_exists($ident_file)) {
+		unlink($ident_file);
+	}
+	// send command
+	$resource_command="$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/aoe-storage/bin/openqrm-aoe-storage post_identifier -u $OPENQRM_ADMIN->name -p $OPENQRM_ADMIN->password";
+	$storage_resource->send_command($storage_resource->ip, $resource_command);
+	if (!wait_for_identfile($ident_file)) {
+		$event->log("get_image_rootdevice_identifier", $_SERVER['REQUEST_TIME'], 2, "image.aoe-deployment", "Timeout while requesting image identifier from storage id $storage->id", "", "", 0, 0, 0);
+		return;
+	}
+	$fcontent = file($ident_file);
+	foreach($fcontent as $lun_info) {
+		$tpos = strpos($lun_info, ",");
+		$timage_name = trim(substr($lun_info, 0, $tpos));
+		$troot_device = trim(substr($lun_info, $tpos+1));
+		$rootdevice_identifier_array[] = array("value" => "$troot_device", "label" => "$timage_name");
+	}
 	return $rootdevice_identifier_array;
 }
 
 function get_image_default_rootfs() {
 	return "ext3";
+}
+
+function get_rootfs_transfer_methods() {
+	return true;
+}
+
+function get_rootfs_set_password_method() {
+	return true;
+}
+
+function get_is_network_deployment() {
+	return true;
 }
 
 ?>

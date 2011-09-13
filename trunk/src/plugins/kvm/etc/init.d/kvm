@@ -31,6 +31,7 @@ if [ -f $OPENQRM_RESOURCE_PARAMETER_FILE ]; then
 elif [ -f $OPENQRM_SERVER_BASE_DIR/openqrm/etc/openqrm-server.conf ]; then
 	. $OPENQRM_SERVER_BASE_DIR/openqrm/etc/openqrm-server.conf
 	. $OPENQRM_SERVER_BASE_DIR/openqrm/include/openqrm-server-functions
+	resource_id=0
 	openqrm_server_get_config
 	OPENQRM_SERVER_IP=$OPENQRM_SERVER_IP_ADDRESS
 fi
@@ -45,74 +46,88 @@ fi
 
 function kvm_start() {
 	echo "Starting the openQRM kvm-plugin"
-   	export FORCE_INSTALL=true
-   	openqrm_install_os_dependency screen
-
+	# first check if this is a kvm host
+	if ! which kvm 1>/dev/null; then
+		if ! which qemu-kvm 1>/dev/null; then
+			# maybe it is centos and not in the path
+			if [ ! -x /usr/libexec/qemu-kvm ]; then
+				exit 0
+			fi
+		fi
+	fi
+	# check that bridging is enabled, if not this may is not a kvm host
+	if ! which brctl 1>/dev/null; then
+		exit 0
+	fi
+	# otherwise we want to prepare the host a bit
+	export FORCE_INSTALL=true
+	openqrm_install_os_dependency screen
 	# preparing the nic-bios in case the openQRM server itself is the kvm-host
 	if [ ! -d /usr/share/kvm/ ]; then
 		mkdir -p /usr/share/kvm
 	fi
-    if [ -f $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/kvm/include/pxe/kvm-nic-bios-1.1.tgz ]; then
-        if [ -f /usr/share/kvm/pxe-e1000.bin ] && [ ! -f /usr/share/kvm/pxe-e1000.bin.openqrm-backup ]; then
-            cp -f /usr/share/kvm/pxe-e1000.bin /usr/share/kvm/pxe-e1000.bin.openqrm-backup
-        fi
-        if [ -f /usr/share/kvm/pxe-rtl8139.bin ] && [ ! -f /usr/share/kvm/pxe-rtl8139.bin.openqrm-backup ]; then
-            cp -f /usr/share/kvm/pxe-rtl8139.bin /usr/share/kvm/pxe-rtl8139.bin.openqrm-backup
-        fi
-        if [ -f /usr/share/kvm/pxe-virtio.bin ] && [ ! -f /usr/share/kvm/pxe-virtio.bin.openqrm-backup ]; then
-            cp -f /usr/share/kvm/pxe-virtio.bin /usr/share/kvm/pxe-virtio.bin.openqrm-backup
-        fi
-        tar -C /usr/share/kvm/ -xzf $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/kvm/include/pxe/kvm-nic-bios-1.1.tgz
-        chown root:root /usr/share/kvm/pxe-e1000.bin /usr/share/kvm/pxe-rtl8139.bin /usr/share/kvm/pxe-virtio.bin
-    fi
-
+	if [ -f $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/kvm/include/pxe/kvm-nic-bios-1.1.tgz ]; then
+		if [ -f /usr/share/kvm/pxe-e1000.bin ] && [ ! -f /usr/share/kvm/pxe-e1000.bin.openqrm-backup ]; then
+			cp -f /usr/share/kvm/pxe-e1000.bin /usr/share/kvm/pxe-e1000.bin.openqrm-backup
+		fi
+		if [ -f /usr/share/kvm/pxe-rtl8139.bin ] && [ ! -f /usr/share/kvm/pxe-rtl8139.bin.openqrm-backup ]; then
+			cp -f /usr/share/kvm/pxe-rtl8139.bin /usr/share/kvm/pxe-rtl8139.bin.openqrm-backup
+		fi
+		if [ -f /usr/share/kvm/pxe-virtio.bin ] && [ ! -f /usr/share/kvm/pxe-virtio.bin.openqrm-backup ]; then
+			cp -f /usr/share/kvm/pxe-virtio.bin /usr/share/kvm/pxe-virtio.bin.openqrm-backup
+		fi
+		tar -C /usr/share/kvm/ -xzf $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/kvm/include/pxe/kvm-nic-bios-1.1.tgz
+		chown root:root /usr/share/kvm/pxe-e1000.bin /usr/share/kvm/pxe-rtl8139.bin /usr/share/kvm/pxe-virtio.bin
+	fi
 	# be sure to have the tun device
-	if [ ! -f /dev/tun ]; then
+	if [ ! -e /dev/tun ]; then
 		mknod /dev/tun c 10 200
 	fi
 	depmod -a
 	modprobe tun
+	# setting the kvm-ifup +kvm-ifdown script to the internal and external bridge
+	# internal
+	cat $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/kvm/etc/templates/openqrm-kvm-ifup | sed -e "s/@@OPENQRM_PLUGIN_KVM_BRIDGE@@/$OPENQRM_PLUGIN_KVM_BRIDGE_NET1/g" > $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/kvm/bin/openqrm-kvm-ifup-net1
+	cat $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/kvm/etc/templates/openqrm-kvm-ifdown | sed -e "s/@@OPENQRM_PLUGIN_KVM_BRIDGE@@/$OPENQRM_PLUGIN_KVM_BRIDGE_NET1/g" > $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/kvm/bin/openqrm-kvm-ifdown-net1
+	# external
+	cat $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/kvm/etc/templates/openqrm-kvm-ifup | sed -e "s/@@OPENQRM_PLUGIN_KVM_BRIDGE@@/$OPENQRM_PLUGIN_KVM_BRIDGE_NET2/g" > $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/kvm/bin/openqrm-kvm-ifup-net2
+	cat $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/kvm/etc/templates/openqrm-kvm-ifdown | sed -e "s/@@OPENQRM_PLUGIN_KVM_BRIDGE@@/$OPENQRM_PLUGIN_KVM_BRIDGE_NET2/g" > $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/kvm/bin/openqrm-kvm-ifdown-net2
+	cat $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/kvm/etc/templates/openqrm-kvm-ifup | sed -e "s/@@OPENQRM_PLUGIN_KVM_BRIDGE@@/$OPENQRM_PLUGIN_KVM_BRIDGE_NET3/g" > $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/kvm/bin/openqrm-kvm-ifup-net3
+	cat $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/kvm/etc/templates/openqrm-kvm-ifdown | sed -e "s/@@OPENQRM_PLUGIN_KVM_BRIDGE@@/$OPENQRM_PLUGIN_KVM_BRIDGE_NET3/g" > $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/kvm/bin/openqrm-kvm-ifdown-net3
+	cat $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/kvm/etc/templates/openqrm-kvm-ifup | sed -e "s/@@OPENQRM_PLUGIN_KVM_BRIDGE@@/$OPENQRM_PLUGIN_KVM_BRIDGE_NET4/g" > $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/kvm/bin/openqrm-kvm-ifup-net4
+	cat $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/kvm/etc/templates/openqrm-kvm-ifdown | sed -e "s/@@OPENQRM_PLUGIN_KVM_BRIDGE@@/$OPENQRM_PLUGIN_KVM_BRIDGE_NET4/g" > $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/kvm/bin/openqrm-kvm-ifdown-net4
+	cat $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/kvm/etc/templates/openqrm-kvm-ifup | sed -e "s/@@OPENQRM_PLUGIN_KVM_BRIDGE@@/$OPENQRM_PLUGIN_KVM_BRIDGE_NET5/g" > $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/kvm/bin/openqrm-kvm-ifup-net5
+	cat $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/kvm/etc/templates/openqrm-kvm-ifdown | sed -e "s/@@OPENQRM_PLUGIN_KVM_BRIDGE@@/$OPENQRM_PLUGIN_KVM_BRIDGE_NET5/g" > $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/kvm/bin/openqrm-kvm-ifdown-net5
+	# ifup/down scripts for openvswitch
+	# internal
+	cat $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/kvm/etc/templates/openqrm-ovs-kvm-ifup | sed -e "s/@@OPENQRM_PLUGIN_KVM_BRIDGE@@/$OPENQRM_PLUGIN_KVM_BRIDGE_NET1/g" | sed -e "s#@@OPENQRM_SERVER_BASE_DIR@@#$OPENQRM_SERVER_BASE_DIR#g" | sed -e "s#@@OPENQRM_APP_NIC@@#0#g" > $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/kvm/bin/openqrm-ovs-kvm-ifup-net1
+	cat $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/kvm/etc/templates/openqrm-ovs-kvm-ifdown | sed -e "s/@@OPENQRM_PLUGIN_KVM_BRIDGE@@/$OPENQRM_PLUGIN_KVM_BRIDGE_NET1/g" | sed -e "s#@@OPENQRM_SERVER_BASE_DIR@@#$OPENQRM_SERVER_BASE_DIR#g" | sed -e "s#@@OPENQRM_APP_NIC@@#0#g" > $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/kvm/bin/openqrm-ovs-kvm-ifdown-net1
+	# external
+	cat $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/kvm/etc/templates/openqrm-ovs-kvm-ifup | sed -e "s/@@OPENQRM_PLUGIN_KVM_BRIDGE@@/$OPENQRM_PLUGIN_KVM_BRIDGE_NET2/g" | sed -e "s#@@OPENQRM_SERVER_BASE_DIR@@#$OPENQRM_SERVER_BASE_DIR#g" | sed -e "s#@@OPENQRM_APP_NIC@@#1#g" > $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/kvm/bin/openqrm-ovs-kvm-ifup-net2
+	cat $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/kvm/etc/templates/openqrm-ovs-kvm-ifdown | sed -e "s/@@OPENQRM_PLUGIN_KVM_BRIDGE@@/$OPENQRM_PLUGIN_KVM_BRIDGE_NET2/g" | sed -e "s#@@OPENQRM_SERVER_BASE_DIR@@#$OPENQRM_SERVER_BASE_DIR#g" | sed -e "s#@@OPENQRM_APP_NIC@@#1#g" > $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/kvm/bin/openqrm-ovs-kvm-ifdown-net2
+	cat $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/kvm/etc/templates/openqrm-ovs-kvm-ifup | sed -e "s/@@OPENQRM_PLUGIN_KVM_BRIDGE@@/$OPENQRM_PLUGIN_KVM_BRIDGE_NET3/g" | sed -e "s#@@OPENQRM_SERVER_BASE_DIR@@#$OPENQRM_SERVER_BASE_DIR#g" | sed -e "s#@@OPENQRM_APP_NIC@@#2#g" > $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/kvm/bin/openqrm-ovs-kvm-ifup-net3
+	cat $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/kvm/etc/templates/openqrm-ovs-kvm-ifdown | sed -e "s/@@OPENQRM_PLUGIN_KVM_BRIDGE@@/$OPENQRM_PLUGIN_KVM_BRIDGE_NET3/g" | sed -e "s#@@OPENQRM_SERVER_BASE_DIR@@#$OPENQRM_SERVER_BASE_DIR#g" | sed -e "s#@@OPENQRM_APP_NIC@@#2#g" > $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/kvm/bin/openqrm-ovs-kvm-ifdown-net3
+	cat $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/kvm/etc/templates/openqrm-ovs-kvm-ifup | sed -e "s/@@OPENQRM_PLUGIN_KVM_BRIDGE@@/$OPENQRM_PLUGIN_KVM_BRIDGE_NET4/g" | sed -e "s#@@OPENQRM_SERVER_BASE_DIR@@#$OPENQRM_SERVER_BASE_DIR#g" | sed -e "s#@@OPENQRM_APP_NIC@@#3#g" > $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/kvm/bin/openqrm-ovs-kvm-ifup-net4
+	cat $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/kvm/etc/templates/openqrm-ovs-kvm-ifdown | sed -e "s/@@OPENQRM_PLUGIN_KVM_BRIDGE@@/$OPENQRM_PLUGIN_KVM_BRIDGE_NET4/g" | sed -e "s#@@OPENQRM_SERVER_BASE_DIR@@#$OPENQRM_SERVER_BASE_DIR#g" | sed -e "s#@@OPENQRM_APP_NIC@@#3#g" > $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/kvm/bin/openqrm-ovs-kvm-ifdown-net4
+	cat $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/kvm/etc/templates/openqrm-ovs-kvm-ifup | sed -e "s/@@OPENQRM_PLUGIN_KVM_BRIDGE@@/$OPENQRM_PLUGIN_KVM_BRIDGE_NET5/g" | sed -e "s#@@OPENQRM_SERVER_BASE_DIR@@#$OPENQRM_SERVER_BASE_DIR#g" | sed -e "s#@@OPENQRM_APP_NIC@@#4#g" > $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/kvm/bin/openqrm-ovs-kvm-ifup-net5
+	cat $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/kvm/etc/templates/openqrm-ovs-kvm-ifdown | sed -e "s/@@OPENQRM_PLUGIN_KVM_BRIDGE@@/$OPENQRM_PLUGIN_KVM_BRIDGE_NET5/g" | sed -e "s#@@OPENQRM_SERVER_BASE_DIR@@#$OPENQRM_SERVER_BASE_DIR#g" | sed -e "s#@@OPENQRM_APP_NIC@@#4#g" > $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/kvm/bin/openqrm-ovs-kvm-ifdown-net5
 
-	# check that bridging is enabled
-	if ! which brctl 1>/dev/null; then
-		kvm_log kvm_start "ERROR: brctl is not installed! Please install bridge-utils."
-		exit 1
+	chmod +x $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/kvm/bin/*
+
+	# make sure the kvm modules are loaded
+	modprobe kvm
+	if grep flags.*vmx /proc/cpuinfo 1>/dev/null; then modprobe kvm-intel; fi
+	if grep flags.*svm /proc/cpuinfo 1>/dev/null; then modprobe kvm-amd; fi
+
+	# start the vm status autostart
+	if [ -d "$OPENQRM_VM_DIR" ]; then
+		for VM_CONFIG in `find $OPENQRM_VM_DIR/* -name autostart.$resource_id 2>/dev/null`; do
+			VM_NAME=`dirname $VM_CONFIG`
+			VM_NAME=`basename $VM_NAME`
+			echo "- auto-starting VM $VM_NAME"
+			$OPENQRM_VM_DIR/$VM_NAME/$VM_NAME.kvm
+		done
 	fi
-	if ! which kvm 1>/dev/null; then
-        if ! which qemu-kvm 1>/dev/null; then
-            kvm_log kvm_start "ERROR: kvm is not installed! Please install kvm."
-            exit 1
-        fi
-    fi
-    # setting the kvm-ifup +kvm-ifdown script to the internal and external bridge
-    # internal
-    cat $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/kvm/etc/templates/openqrm-kvm-ifup | sed -e "s/@@OPENQRM_PLUGIN_KVM_BRIDGE@@/$OPENQRM_PLUGIN_KVM_BRIDGE_NET1/g" > $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/kvm/bin/openqrm-kvm-ifup-net1
-    cat $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/kvm/etc/templates/openqrm-kvm-ifdown | sed -e "s/@@OPENQRM_PLUGIN_KVM_BRIDGE@@/$OPENQRM_PLUGIN_KVM_BRIDGE_NET1/g" > $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/kvm/bin/openqrm-kvm-ifdown-net1
-    # external
-    cat $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/kvm/etc/templates/openqrm-kvm-ifup | sed -e "s/@@OPENQRM_PLUGIN_KVM_BRIDGE@@/$OPENQRM_PLUGIN_KVM_BRIDGE_NET2/g" > $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/kvm/bin/openqrm-kvm-ifup-net2
-    cat $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/kvm/etc/templates/openqrm-kvm-ifdown | sed -e "s/@@OPENQRM_PLUGIN_KVM_BRIDGE@@/$OPENQRM_PLUGIN_KVM_BRIDGE_NET2/g" > $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/kvm/bin/openqrm-kvm-ifdown-net2
-    cat $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/kvm/etc/templates/openqrm-kvm-ifup | sed -e "s/@@OPENQRM_PLUGIN_KVM_BRIDGE@@/$OPENQRM_PLUGIN_KVM_BRIDGE_NET3/g" > $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/kvm/bin/openqrm-kvm-ifup-net3
-    cat $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/kvm/etc/templates/openqrm-kvm-ifdown | sed -e "s/@@OPENQRM_PLUGIN_KVM_BRIDGE@@/$OPENQRM_PLUGIN_KVM_BRIDGE_NET3/g" > $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/kvm/bin/openqrm-kvm-ifdown-net3
-    cat $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/kvm/etc/templates/openqrm-kvm-ifup | sed -e "s/@@OPENQRM_PLUGIN_KVM_BRIDGE@@/$OPENQRM_PLUGIN_KVM_BRIDGE_NET4/g" > $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/kvm/bin/openqrm-kvm-ifup-net4
-    cat $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/kvm/etc/templates/openqrm-kvm-ifdown | sed -e "s/@@OPENQRM_PLUGIN_KVM_BRIDGE@@/$OPENQRM_PLUGIN_KVM_BRIDGE_NET4/g" > $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/kvm/bin/openqrm-kvm-ifdown-net4
-    cat $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/kvm/etc/templates/openqrm-kvm-ifup | sed -e "s/@@OPENQRM_PLUGIN_KVM_BRIDGE@@/$OPENQRM_PLUGIN_KVM_BRIDGE_NET5/g" > $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/kvm/bin/openqrm-kvm-ifup-net5
-    cat $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/kvm/etc/templates/openqrm-kvm-ifdown | sed -e "s/@@OPENQRM_PLUGIN_KVM_BRIDGE@@/$OPENQRM_PLUGIN_KVM_BRIDGE_NET5/g" > $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/kvm/bin/openqrm-kvm-ifdown-net5
-    chmod +x $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/kvm/bin/*
-
-    # make sure the kvm modules are loaded
-    modprobe kvm
-    if grep flags.*vmx /proc/cpuinfo 1>/dev/null; then modprobe kvm-intel; fi
-    if grep flags.*svm /proc/cpuinfo 1>/dev/null; then modprobe kvm-amd; fi
-
-    # start the vm status autostart
-    if [ -d "$OPENQRM_VM_DIR" ]; then
-        for VM_CONFIG in `find $OPENQRM_VM_DIR/* -name autostart`; do
-            VM_NAME=`dirname $VM_CONFIG`
-            VM_NAME=`basename $VM_NAME`
-            echo "- auto-starting VM $VM_NAME"
-            $OPENQRM_VM_DIR/$VM_NAME/$VM_NAME.kvm
-        done
-    fi
 
 }
 

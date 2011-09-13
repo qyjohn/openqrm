@@ -14,7 +14,7 @@
     You should have received a copy of the GNU General Public License
     along with openQRM.  If not, see <http://www.gnu.org/licenses/>.
 
-    Copyright 2009, Matthias Rechenburg <matt@openqrm.com>
+    Copyright 2010, Matthias Rechenburg <matt@openqrm.com>
 */
 -->
 <style>
@@ -25,9 +25,9 @@
 
 <h1><img border=0 src="/openqrm/base/plugins/sshterm/img/plugin.png"> Sshterm plugin</h1>
 <br>
-The sshterm-plugin integrates 'ajaxterm' into openQRM and provides a secure login to the openQRM-server and the managed resources through the Web-interface.
+本插件集成了一个基于AJAX的终端模拟器，提供了基于浏览器的SSH登录界面。
 <br>
 <br>
-No manual configuration is needed for the sshterm-plugin.
+本插件无须任何手工配置。
 <br>
 <br>

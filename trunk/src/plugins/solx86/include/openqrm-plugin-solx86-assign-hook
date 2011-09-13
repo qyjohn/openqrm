@@ -36,8 +36,8 @@ function solx86_assign_hook() {
 
 		# get more infos about the resource
 		openqrm_get_resource_parameter $OPENQRM_RESOURCE_MAC
-		if [ "$resource_capabilities" == "solx86" ]; then
-			openqrm_server_set_boot local $resource_id $resource_mac $resource_id		
+		if echo $resource_capabilities | grep solx86 1>/dev/null; then
+			openqrm_server_set_boot local $resource_id $resource_mac $resource_id
 		fi
 	fi
 

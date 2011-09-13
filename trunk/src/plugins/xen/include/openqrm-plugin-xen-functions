@@ -46,7 +46,7 @@ function xen_log() {
 function xen_lock() {
 	local COMMAND=$1
 	local RET=1
-	
+
 	if [ ! -d `dirname $XEN_LOCK_FILE` ]; then
 		mkdir -p `dirname $XEN_LOCK_FILE`
 	fi
@@ -66,7 +66,7 @@ function xen_lock() {
 		*)
 			xen_log xen_lock "No such command. Try 'aquire' or 'release'"
 			return 1
-			;;	
+			;;
 	esac
 }
 

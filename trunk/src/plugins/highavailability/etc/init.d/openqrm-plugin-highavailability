@@ -27,7 +27,7 @@ OPENQRM_SERVER_BASE_DIR=$(pushd $(dirname $0)/../../../../.. > /dev/null; echo $
 function openqrm_plugin_highavailability_start() {
 	echo "Starting the openQRM highavailability-plugin"
 	openqrm_plugin_highavailability_stop 1>/dev/null 2>&1
-	touch $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/base/plugins/highavailability/.running	
+	touch $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/base/plugins/highavailability/.running
 }
 
 
@@ -42,6 +42,9 @@ function openqrm_plugin_highavailability_init() {
 	echo "Initializing the openQRM highavailability-plugin"
 	# linking the web dir
 	ln -sf $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/highavailability/web $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/base/plugins/highavailability
+	# create lockdir
+	mkdir -p $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/highavailability/lock/
+	chmod 777 $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/highavailability/lock/
 	return 0
 }
 
@@ -50,6 +53,7 @@ function openqrm_plugin_highavailability_uninstall() {
 	echo "Uninstalling the openQRM highavailability-plugin"
 	openqrm_plugin_highavailability_stop
 	# unlinking the web dir
+	rm -rf $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/highavailability/lock
 	rm -f $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/base/plugins/highavailability
 }
 

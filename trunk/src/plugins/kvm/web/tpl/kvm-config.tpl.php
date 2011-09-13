@@ -23,21 +23,21 @@
 }
 </style>
 
-<h1><img border=0 src="/openqrm/base/plugins/kvm/img/manager.png"> KVM VM Configuration</h1>
+<h1><img border=0 src="/openqrm/base/plugins/kvm/img/manager.png"> KVM 虚拟机配置</h1>
 {backlink}
 <br><br>
-<h4>VM CPUs</h4>
+<h4>VM 处理器</h4>
 {vm_cpus_disp}
 <hr>
-<h4>VM Memory</h4>
+<h4>VM 内存</h4>
 {vm_ram_disp}
 <hr>
-<h4>VM Network Cards</h4>
+<h4>VM 网卡</h4>
 {vm_net_disp}
 <hr>
-<h4>VM Disks</h4>
+<h4>VM 磁盘</h4>
 {vm_disk_disp}
 <hr>
-<h4>VM VNC Display</h4>
+<h4>VM VNC显示</h4>
 {vm_vnc_disp}
 

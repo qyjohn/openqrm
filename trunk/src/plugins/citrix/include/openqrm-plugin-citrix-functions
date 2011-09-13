@@ -41,7 +41,7 @@ function citrix_log() {
 function citrix_lock() {
 	local COMMAND=$1
 	local RET=1
-	
+
 	if [ ! -d `dirname $CITRIX_SERVER_LOCK_FILE` ]; then
 		mkdir -p `dirname $CITRIX_SERVER_LOCK_FILE`
 	fi
@@ -61,7 +61,7 @@ function citrix_lock() {
 		*)
 			citrix_log citrix_lock "No such command. Try 'aquire' or 'release'"
 			return 1
-			;;	
+			;;
 	esac
 }
 

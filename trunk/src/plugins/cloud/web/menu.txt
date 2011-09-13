@@ -20,25 +20,29 @@
 #	Alt
 #	IMG
 #	Target
-..|About|plugins/cloud/cloud-about.php|How to use|cloud/plugin.png
-..|User|plugins/cloud/cloud-user.php|The User on the Cloud|cloud/clouduser.png
-..|Requests|plugins/cloud/cloud-manager.php|The Requests from the Users|cloud/cloudrequests.png
-..|Mail|plugins/cloud/cloud-mailer.php|Send a mail to the Cloud Users|cloud/cloudmail.png
-..|Configuration
-...|Main Config|plugins/cloud/cloud-config.php|The Cloud Configuration|cloud/cloudconfig.png
-...|Products|plugins/cloud/cloud-selector.php
+..|插件介绍|plugins/cloud/cloud-about.php|How to use|cloud/plugin.png
+..|用户管理|plugins/cloud/cloud-user.php|The User on the Cloud|cloud/clouduser.png
+..|用户组|plugins/cloud/cloud-usergroup.php|User Groups on the Cloud|cloud/clouduser.png
+..|资源请求|plugins/cloud/cloud-manager.php|The Requests from the Users|cloud/cloudrequests.png
+..|发送邮件|plugins/cloud/cloud-mailer.php|Send a mail to the Cloud Users|cloud/cloudmail.png
+..|服务配置
+...|主要设置|plugins/cloud/cloud-config.php|The Cloud Configuration|cloud/cloudconfig.png
+...|服务产品|plugins/cloud/cloud-selector.php
 ....|CPU|plugins/cloud/cloud-selector.php?product_type=cpu|CPU Products|cloud/cloudproduct_cpu.png
-....|Disk|plugins/cloud/cloud-selector.php?product_type=disk|Disk Products|cloud/cloudproduct_disk.png
-....|HA|plugins/cloud/cloud-selector.php?product_type=ha|HighAvailability Products|cloud/cloudproduct_ha.png
-....|Kernel|plugins/cloud/cloud-selector.php?product_type=kernel|Kernel Products|cloud/cloudproduct_kernel.png
-....|Memory|plugins/cloud/cloud-selector.php?product_type=memory|Memory Products|cloud/cloudproduct_memory.png
-....|Network|plugins/cloud/cloud-selector.php?product_type=network|Network Products|cloud/cloudproduct_network.png
-....|Puppet|plugins/cloud/cloud-selector.php?product_type=puppet|Puppet Products|cloud/cloudproduct_puppet.png
-....|Quantity|plugins/cloud/cloud-selector.php?product_type=quantity|Quantity Products|cloud/cloudproduct_quantity.png
-....|Virtual|plugins/cloud/cloud-selector.php?product_type=resource|Virtualization Products|cloud/cloudproduct_resource.png
-...|Private Images|plugins/cloud/cloud-image-selector.php|Private Cloud Images|cloud/cloudprivateimage.png
-...|IpGroups|plugins/cloud/cloud-ipgroup-manager.php|Setup IP-Adressing for the Cloud|cloud/cloudipgroups.png
-...|Cloud NAT|plugins/cloud/cloud-nat-manager.php|Configure NAT for the Cloud|cloud/cloudnat.png
+....|磁盘|plugins/cloud/cloud-selector.php?product_type=disk|Disk Products|cloud/cloudproduct_disk.png
+....|高可用性|plugins/cloud/cloud-selector.php?product_type=ha|HighAvailability Products|cloud/cloudproduct_ha.png
+....|内核|plugins/cloud/cloud-selector.php?product_type=kernel|Kernel Products|cloud/cloudproduct_kernel.png
+....|内存|plugins/cloud/cloud-selector.php?product_type=memory|Memory Products|cloud/cloudproduct_memory.png
+....|网络|plugins/cloud/cloud-selector.php?product_type=network|Network Products|cloud/cloudproduct_network.png
+....|Puppet配置工具|plugins/cloud/cloud-selector.php?product_type=puppet|Puppet Products|cloud/cloudproduct_puppet.png
+....|兑换关系|plugins/cloud/cloud-selector.php?product_type=quantity|Quantity Products|cloud/cloudproduct_quantity.png
+....|虚拟化产品|plugins/cloud/cloud-selector.php?product_type=resource|Virtualization Products|cloud/cloudproduct_resource.png
+...|私有映像|plugins/cloud/cloud-image-selector.php|Private Cloud Images|cloud/cloudprivateimage.png
+...|资源池|plugins/cloud/cloud-resource-pools.php|Resource Pooling Manager|cloud/cloudprivateimage.png
+...|宿主设置|plugins/cloud/cloud-hostlimit.php|Host-Limit Manager|cloud/cloudprivateimage.png
+...|节能设置|plugins/cloud/cloud-power-saver.php|Power Saver Manager|cloud/cloudprivateimage.png
+...|IP管理|plugins/cloud/cloud-ip-manager.php|Setup IP-Adressing for the Cloud|cloud/cloudipgroups.png
+...|云NAT|plugins/cloud/cloud-nat-manager.php|Configure NAT for the Cloud|cloud/cloudnat.png
 ..|WebService
 ...|Main|plugins/cloud/soap/index.php|Documenation for the Cloud SOAP WebService|cloud/cloudsoap.png
 ...|Admin WebService|plugins/cloud/soap/soap-admin.php|Documenation for the Cloud Admin SOAP WebService|cloud/cloudsoap.png

@@ -19,7 +19,7 @@
 -->
 <style>
 .htmlobject_tab_box {
-	width:800px;
+	width:900px;
 }
 </style>
 

@@ -33,12 +33,16 @@ elif [ -f $OPENQRM_SERVER_BASE_DIR/openqrm/etc/openqrm-server.conf ]; then
 	OPENQRM_SERVER_IP=$OPENQRM_SERVER_IP_ADDRESS
 	resource_id=0
 	resource_openqrmserver=$OPENQRM_SERVER_IP_ADDRESS
-    openqrm_web_protocol=$OPENQRM_WEB_PROTOCOL
+	openqrm_web_protocol=$OPENQRM_WEB_PROTOCOL
 fi
 export LANG=C
+# how long to wait for the volume authentication, each loop is 5 secs
+MAX_VOLUME_AUTHENTICATION_LOOP=30
+export MAX_VOLUME_AUTHENTICATION_LOOP
+
 # define wget to use with https
 if [ "$openqrm_web_protocol" == "https" ]; then
-    WGET_NO_CERT_CHECK="--no-check-certificate"
+	WGET_NO_CERT_CHECK="--no-check-certificate"
 fi
 # let only root run this script
 WHOAMI=`whoami`
@@ -55,15 +59,15 @@ fi
 
 # re-run in background via screen
 if [ "$RUN_IN_BACKGROUND" != "true" ]; then
-    if [ -x /usr/bin/screen.real ]; then
-        RUNSCREEN="/usr/bin/screen.real"
-    else
-        RUNSCREEN=`which screen`
-    fi
-    export RUN_IN_BACKGROUND=true
-    SCREEN_NAME=`date +%T%x | sed -e "s/://g" | sed -e "s#/##g"`
-    $RUNSCREEN -dmS $SCREEN_NAME $0 $@
-    exit
+	if [ -x /usr/bin/screen.real ]; then
+		RUNSCREEN="/usr/bin/screen.real"
+	else
+		RUNSCREEN=`which screen`
+	fi
+	export RUN_IN_BACKGROUND=true
+	SCREEN_NAME=`date +%T%x | sed -e "s/://g" | sed -e "s#/##g"`
+	$RUNSCREEN -dmS $SCREEN_NAME $0 $@
+	exit
 fi
 
 
@@ -96,6 +100,10 @@ while [ $# -ne 0 ]; do
 			;;
 		-r)
 			NFS_IMAGE_ROOTDEVICE=$2
+			shift
+			;;
+		-t)
+			NFS_IMAGE_TYPE=$2
 			shift
 			;;
 		-u)
@@ -141,6 +149,10 @@ fi
 case "$NFS_COMMAND" in 
 
 	add)
+		if [ -d $NFS_STORAGE_SERVER_IMAGE_DIRECTORY/$NFS_IMAGE_NAME ]; then
+			openqrm_post_event 0 "add" 3 "nfs-storage" "$NFS_STORAGE_SERVER_IMAGE_DIRECTORY/$NFS_IMAGE_NAME already exists."
+			exit 1
+		fi
 		echo -n "Creating NFS export for image $NFS_IMAGE_NAME"
 		# add to exports
 		nfs_storage_lock aquire
@@ -164,24 +176,27 @@ case "$NFS_COMMAND" in
 
 	snap)
 		if [ "$NFS_IMAGE_SNAPSHOT_NAME" == "" ]; then
-			echo "ERROR: Please give a name for the snapshot using the -s cmdline parmeter"
-			echo
+			openqrm_post_event 0 "snap" 3 "nfs-storage" "No snapshot name given. Please use the -s cmdline parameter."
 			nfs_storage_usage
 		fi
-		
+
 		# check that source fs-images exist
 		if [ ! -d $NFS_STORAGE_SERVER_IMAGE_DIRECTORY/$NFS_IMAGE_NAME ]; then
-			echo "ERROR: Could not find source image $NFS_STORAGE_SERVER_IMAGE_DIRECTORY/$NFS_IMAGE_NAME on the storage-server"
+			openqrm_post_event 0 "snap" 3 "nfs-storage" "Source volume $NFS_STORAGE_SERVER_IMAGE_DIRECTORY/$NFS_IMAGE_NAME does not exists."
 			exit 1
 		fi
 		echo -n "Creating snapshot from image $NFS_IMAGE_NAME -> $NFS_IMAGE_SNAPSHOT_NAME"
 		mkdir -p $NFS_STORAGE_SERVER_IMAGE_DIRECTORY/$NFS_IMAGE_SNAPSHOT_NAME
+		# clreate lock for snap
+		touch $NFS_STORAGE_SERVER_IMAGE_DIRECTORY/$NFS_IMAGE_SNAPSHOT_NAME/syncing
 		nfs_storage_lock aquire
 		export ORG_IMAGE_NAME=$NFS_IMAGE_NAME
 		export NFS_IMAGE_NAME=$NFS_IMAGE_SNAPSHOT_NAME
 		manage_nfs add $OPENQRM_SERVER_IP
 		nfs_storage_lock release
 		rsync -a $NFS_STORAGE_SERVER_IMAGE_DIRECTORY/$ORG_IMAGE_NAME/* $NFS_STORAGE_SERVER_IMAGE_DIRECTORY/$NFS_IMAGE_SNAPSHOT_NAME/
+		# remove lock
+		rm -f $NFS_STORAGE_SERVER_IMAGE_DIRECTORY/$NFS_IMAGE_SNAPSHOT_NAME/syncing
 		if [ "$NFS_OPENQRM_USERNAME" != "" ] && [ "$NFS_OPENQRM_PASSWORD" != "" ]; then
 			$0 post_exports -u $NFS_OPENQRM_USERNAME -p $NFS_OPENQRM_PASSWORD
 		fi
@@ -189,13 +204,30 @@ case "$NFS_COMMAND" in
 
 	auth)
 		echo -n "Authenticating NFS export $NFS_IMAGE_ROOTDEVICE to $NFS_IMAGE_AUTH_IP"
+		if [ "$NFS_OPENQRM_USERNAME" != "" ] && [ "$NFS_OPENQRM_PASSWORD" != "" ] && [ "$NFS_IMAGE_NAME" != "" ]; then
+			MAX_AUTH_LOOP=0
+			while (true); do
+				# while snapping we have a lockfile to wait for
+				if [ ! -e "$NFS_STORAGE_SERVER_IMAGE_DIRECTORY/$NFS_IMAGE_NAME/syncing" ]; then
+					break
+				fi
+				sleep 5
+				if [ "$MAX_AUTH_LOOP" == "$MAX_VOLUME_AUTHENTICATION_LOOP" ]; then
+					openqrm_post_event 0 "auth" 3 "nfs-storage" "Volume $NFS_IMAGE_ROOTDEVICE does not exists, Cannot auth to $NFS_IMAGE_AUTH_IP."
+					exit 1
+				fi
+				MAX_AUTH_LOOP=$(( MAX_AUTH_LOOP + 1 ))
+			done
+		fi
 		# auth in exports
 		nfs_storage_lock aquire
 		manage_nfs auth $NFS_IMAGE_AUTH_IP
 		nfs_storage_lock release
-		# in case we have a username + password post the updated list to the openQRM-server
-		if [ "$NFS_OPENQRM_USERNAME" != "" ] && [ "$NFS_OPENQRM_PASSWORD" != "" ]; then
-			$0 post_exports -u $NFS_OPENQRM_USERNAME -p $NFS_OPENQRM_PASSWORD
+		# if we have an image name send back to openQRM that storage auth finished to remvoe the storage-auth-blocker
+		if [ "$NFS_OPENQRM_USERNAME" != "" ] && [ "$NFS_OPENQRM_PASSWORD" != "" ] && [ "$NFS_IMAGE_NAME" != "" ]; then
+			if ! wget -q $WGET_NO_CERT_CHECK -O /dev/null --http-user=$NFS_OPENQRM_USERNAME --http-password=$NFS_OPENQRM_PASSWORD "$openqrm_web_protocol://$OPENQRM_SERVER_IP/openqrm/base/plugins/nfs-storage/nfs-storage-action.php?nfs_storage_command=auth_finished&nfs_image_name=$NFS_IMAGE_NAME"; then
+				openqrm_post_event 0 "auth" 3 "nfs-storage" "Could not remove the storage-auth-blocker from openQRM at $OPENQRM_SERVER_IP."
+			fi
 		fi
 		;;
 
@@ -205,11 +237,10 @@ case "$NFS_COMMAND" in
 	post_exports)
 		echo "Posting current nfs-exports to the openQRM-server"
 		STORAGE_STATUS_TMP=$resource_id.nfs.stat
-        # take care to only post "our" exports, e.g. not the ones from an lvm-nfs-storage
-        cat /var/lib/nfs/etab | grep ^$NFS_STORAGE_SERVER_IMAGE_DIRECTORY | awk {' print $1"@"$2 '} | sed -e "s/<.*>//g" | sed -e "s/(.*)//g" > $STORAGE_STATUS_TMP
+		# take care to only post "our" exports, e.g. not the ones from an lvm-nfs-storage
+		cat /var/lib/nfs/etab | grep ^$NFS_STORAGE_SERVER_IMAGE_DIRECTORY | awk {' print $1"@"$2 '} | sed -e "s/<.*>//g" | sed -e "s/(.*)//g" > $STORAGE_STATUS_TMP
 		if ! wget -q $WGET_NO_CERT_CHECK -O /dev/null --http-user=$NFS_OPENQRM_USERNAME --http-password=$NFS_OPENQRM_PASSWORD  --post-file=`$OPENQRM_POSTENCODE $STORAGE_STATUS_TMP` $openqrm_web_protocol://$OPENQRM_SERVER_IP/openqrm/base/plugins/nfs-storage/nfs-storage-action.php?nfs_storage_command=get_storage; then
-			echo "ERROR: Could not post the nfs-export status to the openQRM-server at $resource_openqrmserver!"
-			echo "ERROR: Could not post the nfs-export status to the openQRM-server at $resource_openqrmserver!" | logger
+			openqrm_post_event 0 "post_exports" 3 "nfs-storage" "Could not post the nfs-export status to openQRM at $OPENQRM_SERVER_IP."
 		fi
 		rm -f $STORAGE_STATUS_TMP
 		rm -f $STORAGE_STATUS_TMP.post
@@ -222,8 +253,7 @@ case "$NFS_COMMAND" in
 			echo "$IMAGE_NAME,$IMAGE_NAME" >> $STORAGE_STATUS_TMP
 		done
 		if ! wget -q $WGET_NO_CERT_CHECK -O /dev/null --http-user=$NFS_OPENQRM_USERNAME --http-password=$NFS_OPENQRM_PASSWORD  --post-file=`$OPENQRM_POSTENCODE $STORAGE_STATUS_TMP` $openqrm_web_protocol://$OPENQRM_SERVER_IP/openqrm/base/plugins/nfs-storage/nfs-storage-action.php?nfs_storage_command=get_ident; then
-			echo "ERROR: Could not post the nfs-export status to the openQRM-server at $resource_openqrmserver!"
-			echo "ERROR: Could not post the nfs-export status to the openQRM-server at $resource_openqrmserver!" | logger
+			openqrm_post_event 0 "post_identifier" 3 "nfs-storage" "Could not post the nfs-export identifier to openQRM at $OPENQRM_SERVER_IP."
 		fi
 		rm -f $STORAGE_STATUS_TMP
 		rm -f $STORAGE_STATUS_TMP.post

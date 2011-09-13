@@ -30,7 +30,7 @@ export resource_openqrmserver=$OPENQRM_SERVER_IP_ADDRESS
 export LANG=C
 # define wget to use with https
 if [ "$OPENQRM_WEB_PROTOCOL" == "https" ]; then
-    WGET_NO_CERT_CHECK="--no-check-certificate"
+	WGET_NO_CERT_CHECK="--no-check-certificate"
 fi
 
 function openqrm_plugin_netapp_storage_start() {
@@ -50,7 +50,7 @@ function openqrm_plugin_netapp_storage_uninstall() {
 	if [ "$USERNAME" == "" ] && [ "$PASSWORD" == "" ]; then
 		echo -n "netapp-storage: Please give a username to uninstall the plugin : "
 		read USERNAME
-		echo	
+		echo
 		echo -n "netapp-storage: Please give the password for user $USERNAME : "
 		read PASSWORD
 		echo
@@ -63,7 +63,7 @@ function openqrm_plugin_netapp_storage_uninstall() {
 		netapp_storage_log uninstall "ERROR: Could not drop the netapp-plugin tables in the database!"
 	fi
 	rm -f $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/base/plugins/netapp-storage
-	rm -f $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/boot-service/root-mount.netapp-deployment 
+	rm -f $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/boot-service/root-mount.netapp-deployment
 	rm -f $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/boot-service/image.netapp-deployment
 
 	# remove only if nfs/iscsi/aoe is not enabled
@@ -81,7 +81,7 @@ function openqrm_plugin_netapp_storage_init() {
 	if [ "$USERNAME" == "" ] && [ "$PASSWORD" == "" ]; then
 		echo -n "netapp-storage: Please give a username to init the plugin : "
 		read USERNAME
-		echo	
+		echo
 		echo -n "netapp-storage: Please give the password for user $USERNAME : "
 		read PASSWORD
 		echo
@@ -108,13 +108,13 @@ function openqrm_plugin_netapp_storage_init() {
 	# creating the tables
 	if ! wget -q $WGET_NO_CERT_CHECK -O /dev/null --http-user=$USERNAME --http-password=$PASSWORD "$OPENQRM_WEB_PROTOCOL://localhost/openqrm/base/plugins/netapp-storage/netapp-storage-action.php?netapp_storage_command=init"; then
 		netapp_storage_log uninstall "ERROR: Could not initialyze the NetApp-Storage plugin tables in the database!"
-        exit 1
+		exit 1
 	fi
-    # create storage dir for stat files
-    mkdir -p $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/netapp-storage/web/storage
-    chmod 777 $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/netapp-storage/web/storage
+	# create storage dir for stat files
+	mkdir -p $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/netapp-storage/web/storage
+	chmod 777 $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/netapp-storage/web/storage
 
-	
+
 }
 
 USER=$2

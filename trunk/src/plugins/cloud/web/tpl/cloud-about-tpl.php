@@ -25,15 +25,13 @@
 
 <h1><img border=0 src="/openqrm/base/plugins/cloud/img/plugin.png"> Cloud plugin</h1>
 <br>
-<b>The Cloud-plugin</b>
+<b>云服务插件</b>
 <br>
-The openQRM cloud-plugin provides a fully automated request and provisioning deployment-cycle.
- External data-center users can submit their Cloud requests for systems via a second web-portal on the openQRM-server.
- After either manually or automatic approval of the Cloud requests openQRM handles the provisioning and deployment
- fully automatically.
+OpenQRM云服务插件提供了一个完全自动化的计算资源申请、分配与部署工具。注册用户可以通过一个浏览器界面提交资源请求。根据系统的设定，这些请求可以被手动批准或者是自动批准。
+当请求被批准之后，OpenQRM将自动处理资源分配和部署等任务。
 <br>
 <br>
-<b>How to use :</b>
+<b>使用方法</b>
 <br>
 To setup automatic deployment with the cloud-plugin first the openQRM environment needs
  to be populated with available resources, kernels and server-images.
@@ -41,22 +39,22 @@ To setup automatic deployment with the cloud-plugin first the openQRM environmen
 
 <ul>
 <li>
-Start some resources (phyiscal and/or virtual)
+启动一些物理计算资源或者虚拟计算资源
 </li><li>
-Create one (or more) storage-server
+创建一个或者多个存储服务器
 </li><li>
-Create one (or more) server-image on the storage-servers
+在存储服务器上创建一个或者多个服务器映像
 </li>
 </ul>
 <br>
 
-<b>Cloud-Users</b>
+<b>云用户</b>
 <br>
-Cloud-Users can be created in 2 different ways :
+可以通过两种方式创建云用户：
 <br>
-1. User can go to http://[openqrm-server-ip]/cloud-portal and register themselves
+1. 用户访问 http://[openqrm-server-ip]/cloud-portal 进行自助注册。
 <br>
-2. Administrators of openQRM can create Users within the Cloud-plugin UI
+2. OpenQRM管理员通过云插件的用户界面直接创建用户。
 <br>
 <br>
 

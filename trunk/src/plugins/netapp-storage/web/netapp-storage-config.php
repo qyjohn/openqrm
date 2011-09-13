@@ -6,19 +6,19 @@
 /*
   This file is part of openQRM.
 
-    openQRM is free software: you can redistribute it and/or modify
-    it under the terms of the GNU General Public License version 2
-    as published by the Free Software Foundation.
+	openQRM is free software: you can redistribute it and/or modify
+	it under the terms of the GNU General Public License version 2
+	as published by the Free Software Foundation.
 
-    openQRM is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    GNU General Public License for more details.
+	openQRM is distributed in the hope that it will be useful,
+	but WITHOUT ANY WARRANTY; without even the implied warranty of
+	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+	GNU General Public License for more details.
 
-    You should have received a copy of the GNU General Public License
-    along with openQRM.  If not, see <http://www.gnu.org/licenses/>.
+	You should have received a copy of the GNU General Public License
+	along with openQRM.  If not, see <http://www.gnu.org/licenses/>.
 
-    Copyright 2009, Matthias Rechenburg <matt@openqrm.com>
+	Copyright 2009, Matthias Rechenburg <matt@openqrm.com>
 */
 
 
@@ -36,7 +36,7 @@ require_once "$RootDir/include/htmlobject.inc.php";
 require_once "$RootDir/plugins/netapp-storage/class/netapp-storage-server.class.php";
 $refresh_delay=1;
 
-$netapp_storage_id = $_REQUEST["storage_id"];
+$netapp_storage_id = htmlobject_request('storage_id');
 global $netapp_storage_id;
 $netapp_storage_fields = array();
 foreach ($_REQUEST as $key => $value) {
@@ -54,34 +54,35 @@ function redirect($strMsg, $currenttab = 'tab0', $na_id) {
 }
 
 // running the actions
+$strMsg = '';
 if(htmlobject_request('action') != '') {
 	switch (htmlobject_request('action')) {
 		case 'update':
 			if (isset($_REQUEST['identifier'])) {
-                foreach($_REQUEST['identifier'] as $id) {
-                    $na_storage = new netapp_storage();
-                    $na_storage->get_instance_by_storage_id($id);
+				foreach($_REQUEST['identifier'] as $id) {
+					$na_storage = new netapp_storage();
+					$na_storage->get_instance_by_storage_id($id);
 
-                    if (!strlen($na_storage->storage_id)) {
-        				$strMsg = "NetApp Storage server $id not configured yet. Adding configuration<br>";
-                        $na_storage_fields['na_id'] = openqrm_db_get_free_id('na_id', $na_storage->_db_table);
-                        $na_storage_fields['na_storage_id'] = $id;
-                        $na_storage_fields['na_storage_name'] = $netapp_storage_fields['storage_name'];
-                        $na_storage_fields['na_storage_user'] = $netapp_storage_fields['storage_user'];
-                        $na_storage_fields['na_storage_password'] = $netapp_storage_fields['storage_password'];
-                        $na_storage_fields['na_storage_comment'] = $netapp_storage_fields['storage_comment'];
-                        $na_storage->add($na_storage_fields);
-                    } else {
-                        $strMsg = "Updating NetApp Storage configuration of server $id<br>";
-                        $na_storage_fields['na_storage_name'] = $netapp_storage_fields['storage_name'];
-                        $na_storage_fields['na_storage_user'] = $netapp_storage_fields['storage_user'];
-                        $na_storage_fields['na_storage_password'] = $netapp_storage_fields['storage_password'];
-                        $na_storage_fields['na_storage_comment'] = $netapp_storage_fields['storage_comment'];
-                        $na_storage->update($na_storage->id, $na_storage_fields);
-                    }
-    				redirect($strMsg, 'tab0', $id);
-                }
-            }
+					if (!strlen($na_storage->storage_id)) {
+						$strMsg = "NetApp Storage server $id not configured yet. Adding configuration<br>";
+						$na_storage_fields['na_id'] = openqrm_db_get_free_id('na_id', $na_storage->_db_table);
+						$na_storage_fields['na_storage_id'] = $id;
+						$na_storage_fields['na_storage_name'] = $netapp_storage_fields['storage_name'];
+						$na_storage_fields['na_storage_user'] = $netapp_storage_fields['storage_user'];
+						$na_storage_fields['na_storage_password'] = $netapp_storage_fields['storage_password'];
+						$na_storage_fields['na_storage_comment'] = $netapp_storage_fields['storage_comment'];
+						$na_storage->add($na_storage_fields);
+					} else {
+						$strMsg = "Updating NetApp Storage configuration of server $id<br>";
+						$na_storage_fields['na_storage_name'] = $netapp_storage_fields['storage_name'];
+						$na_storage_fields['na_storage_user'] = $netapp_storage_fields['storage_user'];
+						$na_storage_fields['na_storage_password'] = $netapp_storage_fields['storage_password'];
+						$na_storage_fields['na_storage_comment'] = $netapp_storage_fields['storage_comment'];
+						$na_storage->update($na_storage->id, $na_storage_fields);
+					}
+					redirect($strMsg, 'tab0', $id);
+				}
+			}
 			break;
 
 		default:
@@ -139,16 +140,20 @@ function netapp_storage_configuration($netapp_storage_id) {
 	if (file_exists($_SERVER["DOCUMENT_ROOT"]."/".$storage_icon)) {
 		$resource_icon_default=$storage_icon;
 	}
-    // get defaults if existing
-    $na_storage = new netapp_storage();
-    $na_storage->get_instance_by_storage_id($netapp_storage_id);
-    if (strlen($na_storage->storage_id)) {
-        $na_storage_user = $na_storage->storage_user;
-        $na_storage_password = $na_storage->storage_password;
-        $na_storage_comment = $na_storage->storage_comment;
-    }
-    // eq storage config
-    $arBody[] = array(
+	// get defaults if existing
+	$na_storage = new netapp_storage();
+	$na_storage->get_instance_by_storage_id($netapp_storage_id);
+	if (strlen($na_storage->storage_id)) {
+		$na_storage_user = $na_storage->storage_user;
+		$na_storage_password = $na_storage->storage_password;
+		$na_storage_comment = $na_storage->storage_comment;
+	} else {
+		$na_storage_user = '';
+		$na_storage_password = '';
+		$na_storage_comment = '';
+	}
+	// eq storage config
+	$arBody[] = array(
 		'storage_state' => "<img src=$state_icon>",
 		'storage_icon' => "<img width=24 height=24 src=$resource_icon_default>",
 		'storage_id' => $storage->id,
@@ -175,7 +180,7 @@ function netapp_storage_configuration($netapp_storage_id) {
 	$backlink = "<a href=\"netapp-storage-manager.php?identifier[]=$netapp_storage_id&action=refresh\">back</a>";
 
    // set template
-    $t = new Template_PHPLIB();
+	$t = new Template_PHPLIB();
 	$t->debug = false;
 	$t->setFile('tplfile', './tpl/' . 'netapp-storage-config.tpl.php');
 	$t->setVar(array(

@@ -22,9 +22,6 @@
 */
 
 
-$iptables = $_REQUEST['ig_id'];
-
-
 // error_reporting(E_ALL);
 $thisfile = basename($_SERVER['PHP_SELF']);
 $RootDir = $_SERVER["DOCUMENT_ROOT"].'/openqrm/base/';
@@ -69,21 +66,22 @@ function redirect($strMsg, $currenttab = 'tab0', $url = '') {
 
 
 // check if we got some actions to do
+$strMsg = '';
 if(htmlobject_request('action') != '') {
 	switch (htmlobject_request('action')) {
 		case 'update':
-           if (isset($_REQUEST['identifier'])) {
-                foreach($_REQUEST['identifier'] as $id) {
-                    $upnat = new cloudnat();
-                    $new_internal = htmlobject_request('cn_internal_network');
-                    $new_external = htmlobject_request('cn_external_network');
-                    $up_entry['cn_internal_net'] = $new_internal;
-                    $up_entry['cn_external_net'] = $new_external;
-                    $upnat->update($id, $up_entry);
-                    $strMsg = "Updated Cloud NAT table internal : $new_internal external $new_external<br>";
-                    redirect($strMsg, tab0);
-                }
-           }
+		   if (isset($_REQUEST['identifier'])) {
+				foreach($_REQUEST['identifier'] as $id) {
+					$upnat = new cloudnat();
+					$new_internal = htmlobject_request('cn_internal_network');
+					$new_external = htmlobject_request('cn_external_network');
+					$up_entry['cn_internal_net'] = $new_internal;
+					$up_entry['cn_external_net'] = $new_external;
+					$upnat->update($id, $up_entry);
+					$strMsg = "Updated Cloud NAT table internal : $new_internal external $new_external<br>";
+					redirect($strMsg, 'tab0');
+				}
+		   }
 			break;
 
 	}
@@ -102,14 +100,14 @@ function cloud_nat_manager() {
 	$table = new htmlobject_table_identifiers_checked('ip_id');
 	$arHead = array();
 
-    // cloud-nat enabled ?
-    $cl_conf = new cloudconfig();
-    $cloud_nat_enabled = $cl_conf->get_value(18);	// cloud_nat
-    if (strcmp($cloud_nat_enabled, "true")) {
-        $strMsg = "<strong>Cloud-NAT feature is not enabled in this Cloud !</strong>";
-        return $strMsg;
-        exit(0);
-    }
+	// cloud-nat enabled ?
+	$cl_conf = new cloudconfig();
+	$cloud_nat_enabled = $cl_conf->get_value(18);	// cloud_nat
+	if (strcmp($cloud_nat_enabled, "true")) {
+		$strMsg = "<strong>Cloud-NAT feature is not enabled in this Cloud !</strong>";
+		return $strMsg;
+		exit(0);
+	}
 
 	$arHead['cn_id'] = array();
 	$arHead['cn_id']['title'] ='ID';
@@ -124,19 +122,19 @@ function cloud_nat_manager() {
 
 	// db select
 	$nat = new cloudnat();
-    // check if we have the initial entry, if not create it
-    if ($nat->is_id_free(1)) {
-        $init_entry['cn_id'] = 1;
-        $init_entry['cn_internal_net'] = "0.0.0.0";
-        $init_entry['cn_external_net'] = "0.0.0.0";
-        $nat->add($init_entry);
-    }
-    // display
-    $ip_array = array();
+	// check if we have the initial entry, if not create it
+	if ($nat->is_id_free(1)) {
+		$init_entry['cn_id'] = 1;
+		$init_entry['cn_internal_net'] = "0.0.0.0";
+		$init_entry['cn_external_net'] = "0.0.0.0";
+		$nat->add($init_entry);
+	}
+	// display
+	$ip_array = array();
 	$ip_array = $nat->display_overview(0, 1, 'cn_id', 'ASC');
 	foreach ($ip_array as $index => $ipg) {
-        $internal=$ipg["cn_internal_net"];
-        $external=$ipg["cn_external_net"];
+		$internal=$ipg["cn_internal_net"];
+		$external=$ipg["cn_external_net"];
 		$arBody[] = array(
 			'cn_id' => $ipg["cn_id"],
 			'cn_internal_net' => htmlobject_input('cn_internal_network', array("value" => $internal, "label" => 'Internal Net'), 'text', 20),

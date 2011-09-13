@@ -39,10 +39,18 @@ fi
 
 function cloud_manager_usage() {
 	echo "Usage : $0 enable-ssl"
-    echo "      : $0 setup-graph <cloud-appliancename> <cloud-username> <cloud-userpassword> "
-    echo "      : $0 remove-graph <cloud-appliancename> <cloud-username>"
+	echo "      : $0 setup-graph <cloud-appliancename> <cloud-username> <cloud-userpassword> "
+	echo "      : $0 setup-graph-ldap <cloud-appliancename> <cloud-username> <cloud-ldap-host> <cloud-ldap-host> <cloud-ldap-port> <cloud-ldap-base-dn> <cloud-ldap-password> "
+	echo "      : $0 remove-graph <cloud-appliancename> <cloud-username>"
 	exit 1
 }
+
+		CLOUD_APPLIANCE=$2
+		CLOUD_USER=$3
+		CLOUD_LDAP_HOST=$4
+		CLOUD_LDAP_PORT=$5
+		CLOUD_LDAP_BASE_DN=$6
+		CLOUD_LDAP_PASSWORD=$7
 
 
 
@@ -52,31 +60,55 @@ case "$CLOUD_MANAGER_COMMAND" in
 
 
 	setup-graph)
-        CLOUD_APPLIANCE=$2
-        CLOUD_USER=$3
-        CLOUD_PASS=$4
-        cloud_manager_log openqrm-cloud-manager "Setting up access to collectd graphs for user $CLOUD_USER with password $CLOUD_PASS to appliance $CLOUD_APPLIANCE"
-        CLOUD_USER_HTPASSWD="$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/cloud/cloud-portal/web/user/users/$CLOUD_USER/.htpasswd"
-        if [ -f "$CLOUD_USER_HTPASSWD" ]; then
-            htpasswd -b $CLOUD_USER_HTPASSWD $CLOUD_USER $CLOUD_PASS
-        else
-            mkdir -p $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/cloud/cloud-portal/web/user/users/$CLOUD_USER
-            cat $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/cloud/etc/httpd/openqrm-user-htaccess.conf |   \
-                sed -e "s#@@CLOUD_USER@@#$CLOUD_USER#g" |   \
-                sed -e "s#@@OPENQRM_WEBSERVER_DOCUMENT_ROOT@@#$OPENQRM_WEBSERVER_DOCUMENT_ROOT#g" > $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/cloud/cloud-portal/web/user/users/$CLOUD_USER/.htaccess
-           htpasswd -c -b $CLOUD_USER_HTPASSWD $CLOUD_USER $CLOUD_PASS
-        fi
-        cd $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/cloud/cloud-portal/web/user/users/$CLOUD_USER
-        ln -sf $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/collectd/web/graphs/$CLOUD_APPLIANCE .
-        cd $THISDIR
+		CLOUD_APPLIANCE=$2
+		CLOUD_USER=$3
+		CLOUD_PASS=$4
+
+		# create user via htpasswd + basic auth
+		mkdir -p $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/cloud/cloud-portal/web/user/users/$CLOUD_USER
+		cloud_manager_log openqrm-cloud-manager "Setting up access to collectd graphs for user $CLOUD_USER with password $CLOUD_PASS to appliance $CLOUD_APPLIANCE."
+		CLOUD_USER_HTPASSWD="$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/cloud/cloud-portal/web/user/users/$CLOUD_USER/.htpasswd"
+		if [ -f "$CLOUD_USER_HTPASSWD" ]; then
+			htpasswd -b $CLOUD_USER_HTPASSWD $CLOUD_USER $CLOUD_PASS
+		else
+			cat $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/cloud/etc/httpd/openqrm-user-htaccess.conf |   \
+				sed -e "s#@@CLOUD_USER@@#$CLOUD_USER#g" |   \
+				sed -e "s#@@OPENQRM_WEBSERVER_DOCUMENT_ROOT@@#$OPENQRM_WEBSERVER_DOCUMENT_ROOT#g" > $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/cloud/cloud-portal/web/user/users/$CLOUD_USER/.htaccess
+		   htpasswd -c -b $CLOUD_USER_HTPASSWD $CLOUD_USER $CLOUD_PASS
+		fi
+		cd $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/cloud/cloud-portal/web/user/users/$CLOUD_USER
+		ln -sf $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/collectd/web/graphs/$CLOUD_APPLIANCE .
+		cd $THISDIR
 		;;
 
+	setup-graph-ldap)
+		CLOUD_APPLIANCE=$2
+		CLOUD_USER=$3
+		CLOUD_LDAP_HOST=$4
+		CLOUD_LDAP_PORT=$5
+		CLOUD_LDAP_BASE_DN=$6
+		CLOUD_LDAP_PASSWORD=$7
+
+		mkdir -p $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/cloud/cloud-portal/web/user/users/$CLOUD_USER
+		cloud_manager_log openqrm-cloud-manager "Setting up access to collectd graphs for ldap user $CLOUD_USER to appliance $CLOUD_APPLIANCE."
+		cat $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/cloud/etc/httpd/openqrm-ldap-user-htaccess.conf |   \
+			sed -e "s#@@CLOUD_USER@@#$CLOUD_USER#g" |   \
+			sed -e "s#@@CLOUD_LDAP_HOST@@#$CLOUD_LDAP_HOST#g" |   \
+			sed -e "s#@@CLOUD_LDAP_PORT@@#$CLOUD_LDAP_PORT#g" |   \
+			sed -e "s#@@CLOUD_LDAP_BASE_DN@@#$CLOUD_LDAP_BASE_DN#g" |   \
+			sed -e "s#@@CLOUD_LDAP_PASSWORD@@#$CLOUD_LDAP_PASSWORD#g" > $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/cloud/cloud-portal/web/user/users/$CLOUD_USER/.htaccess
+		cd $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/cloud/cloud-portal/web/user/users/$CLOUD_USER
+		ln -sf $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/collectd/web/graphs/$CLOUD_APPLIANCE .
+		cd $THISDIR
+		;;
+
+
 	remove-graph)
-        CLOUD_APPLIANCE=$2
-        CLOUD_USER=$3
-        CLOUD_PASS=$4
-        cloud_manager_log openqrm-cloud-manager "Removing access to collectd graphs for user $CLOUD_USER to appliance $CLOUD_APPLIANCE"
-        rm -f $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/cloud/cloud-portal/web/user/users/$CLOUD_USER/$CLOUD_APPLIANCE
+		CLOUD_APPLIANCE=$2
+		CLOUD_USER=$3
+		CLOUD_PASS=$4
+		cloud_manager_log openqrm-cloud-manager "Removing access to collectd graphs for user $CLOUD_USER to appliance $CLOUD_APPLIANCE"
+		rm -f $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/cloud/cloud-portal/web/user/users/$CLOUD_USER/$CLOUD_APPLIANCE
 		;;
 
 
@@ -84,7 +116,7 @@ case "$CLOUD_MANAGER_COMMAND" in
 
 
 	enable-ssl)
-        # TODO
+		# TODO
 		PRIVATE_KEY=$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/cloud/etc/ssl/private/private.key
 		CERTIFICATE_FILE=$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/cloud/etc/ssl/cerst/openqrm.crt
 		VALID_DAYS=3650
@@ -107,20 +139,20 @@ case "$CLOUD_MANAGER_COMMAND" in
 		#    specified in the configuration file.
 
 		openssl req -new \
-		        -days $VALID_DAYS \
-		        -key $PRIVATE_KEY \
-		        -x509 \
-		        -out $CERTIFICATE_FILE
+				-days $VALID_DAYS \
+				-key $PRIVATE_KEY \
+				-x509 \
+				-out $CERTIFICATE_FILE
 
 		echo private-keyfile is $PRIVATE_KEY
-		echo server-certificate-file is $CERTIFICATE_FILE	
-		
+		echo server-certificate-file is $CERTIFICATE_FILE
+
 		# ;) please do the cat/sed-magic for the ssl https.conf here
 		# the template you will find in the cloud-plugins etc/httpd/ dir
 		# btw: when you source openqrm-server.conf (the main conf file)
 		# you will get the doc-root dir for the different supported linux-distris
 
-		
+
 		;;
 
 

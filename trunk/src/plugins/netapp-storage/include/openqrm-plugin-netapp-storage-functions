@@ -40,7 +40,7 @@ function netapp_storage_log() {
 function netapp_storage_lock() {
 	local COMMAND=$1
 	local RET=1
-	
+
 	if [ ! -d `dirname $NETAPP_STORAGE_LOCK_FILE` ]; then
 		mkdir -p `dirname $NETAPP_STORAGE_LOCK_FILE`
 	fi
@@ -60,7 +60,7 @@ function netapp_storage_lock() {
 		*)
 			netapp_storage_log netapp_storage_lock "No such command. Try 'aquire' or 'release'"
 			return 1
-			;;	
+			;;
 	esac
 }
 

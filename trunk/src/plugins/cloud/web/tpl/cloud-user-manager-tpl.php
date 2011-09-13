@@ -25,7 +25,7 @@
 
 <h1><img border=0 src="/openqrm/base/plugins/cloud/img/clouduser.png"> Cloud Users on portal <small><a href={external_portal_name} target="_BLANK">{external_portal_name}</a></small></h1>
 <br>
-<b><a href="{thisfile}?action=create">Create new Cloud User</a></b>
+<b>{create_user_link}</b>
 
 {cloud_user_table}
 

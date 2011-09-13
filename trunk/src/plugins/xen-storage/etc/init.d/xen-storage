@@ -36,7 +36,18 @@ elif [ -f $OPENQRM_SERVER_BASE_DIR/openqrm/etc/openqrm-server.conf ]; then
 fi
 OPENQRM_VM_DIR="/var/lib/xen-storage/openqrm/"
 export OPENQRM_VM_DIR
-
+# define wget to use with https
+if [ "$openqrm_web_protocol" == "https" ]; then
+	WGET="wget -q --no-check-certificate"
+else
+	WGET="wget -q"
+fi
+# which screen binary to use
+if [ -x /usr/bin/screen.real ]; then
+	RUNSCREEN="/usr/bin/screen.real"
+else
+	RUNSCREEN=`which screen`
+fi
 # do not start on the intitrd
 if [ -f /etc/initrd-devices.conf ]; then
 	exit 0
@@ -45,18 +56,60 @@ fi
 
 function xen_start() {
 	echo "Starting the openQRM xen-plugin"
-   	export FORCE_INSTALL=true
-   	openqrm_install_os_dependency screen
-    chmod +x $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/xen-storage/bin/*
-    # start the vm status autostart
-    if [ -d "$OPENQRM_VM_DIR" ]; then
-        for VM_CONFIG in `find $OPENQRM_VM_DIR/* -name autostart`; do
-            VM_NAME=`dirname $VM_CONFIG`
-            VM_NAME=`basename $VM_NAME`
-            echo "- auto-starting VM $VM_NAME"
-            $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/xen-storage/xen-storage/bin/openqrm-xen-storage-vm start -n $VM_NAME
-        done
-    fi
+	if which xm &>/dev/null; then
+		export FORCE_INSTALL=true
+		openqrm_install_os_dependency screen
+		chmod +x $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/xen-storage/bin/*
+		# start the vm status autostart
+		if [ -d "$OPENQRM_VM_DIR" ]; then
+			for VM_CONFIG in `find $OPENQRM_VM_DIR/* -name autostart.$resource_id 2>/dev/null`; do
+				VM_NAME=`dirname $VM_CONFIG`
+				VM_NAME=`basename $VM_NAME`
+				XEN_STORAGE_VM_MAC=`cat $OPENQRM_VM_DIR/$VM_NAME/mac1 2>/dev/null`
+				if [ "$XEN_STORAGE_VM_MAC" == "" ]; then
+					echo "- Could not find the MAC address of VM $VM_NAME, not autostarting..."
+					continue
+				fi
+				# already running ?
+				if ps ax | grep -i $XEN_STORAGE_VM_MAC | grep openqrm-xen-storage-monitord | grep -v grep 1>/dev/null; then
+					echo "- VM $VM_NAME already running, not autostarting..."
+					continue
+				fi
+
+				# ask openQRM what to do
+				if ! $WGET -O $OPENQRM_VM_DIR/$VM_NAME/resource-parameter.conf "$openqrm_web_protocol://$OPENQRM_SERVER_IP/openqrm/action/resource-monitor.php?resource_command=get_parameter&resource_mac=$XEN_STORAGE_VM_MAC"; then
+					echo "- Could not get parameters for VM $VM_NAME, not auto-starting it ..."
+					continue
+				fi
+				unset appliance_state
+				unset image_rootdevice
+				. $OPENQRM_VM_DIR/$VM_NAME/resource-parameter.conf
+				# is really active ?
+				if [ "$appliance_state" == "active" ] && [ "$image_rootdevice" != "ram" ]; then
+					echo "- Activating Rootdevice $image_rootdevice for VM $VM_NAME"
+					lvchange -ay $image_rootdevice
+					sleep 2
+					# make sure the lvm device is active
+					if [ -e "$image_rootdevice" ]; then
+						echo "- auto-starting active VM $VM_NAME"
+						# make sure the rigth device is in the VM config
+						echo "phy:$image_rootdevice,hda,w" > $OPENQRM_VM_DIR/$VM_NAME/disk1
+						$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/xen-storage/bin/openqrm-xen-storage-vm start -n $VM_NAME
+					else
+						echo "- Rootdevice $image_rootdevice for VM $VM_NAME not existing, not autostarting it ..."
+						continue
+					fi
+				else
+					# make sure the VM is not still attached to the disk
+					> $OPENQRM_VM_DIR/$VM_NAME/disk1
+					# start only the xen-storage monitor
+					echo "- auto-starting idle VM $VM_NAME"
+				fi
+				kill `ps ax | grep openqrm-xen-storage-monitord | grep -v grep | grep -i $XEN_STORAGE_VM_MAC | awk {' print $1 '}` 2>/dev/null
+				$RUNSCREEN -dmS $XEN_STORAGE_VM_MAC $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/xen-storage/sbin/openqrm-xen-storage-monitord $XEN_STORAGE_VM_MAC
+			done
+		fi
+	fi
 
 }
 

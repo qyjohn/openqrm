@@ -33,14 +33,18 @@ elif [ -f $OPENQRM_SERVER_BASE_DIR/openqrm/etc/openqrm-server.conf ]; then
 	OPENQRM_SERVER_IP=$OPENQRM_SERVER_IP_ADDRESS
 	resource_id=0
 	resource_openqrmserver=$OPENQRM_SERVER_IP_ADDRESS
-    openqrm_web_protocol=$OPENQRM_WEB_PROTOCOL
+	openqrm_web_protocol=$OPENQRM_WEB_PROTOCOL
 fi
 export LANG=C
 LINEBR='
 '
+# how long to wait for the volume authentication, each loop is 5 secs
+MAX_VOLUME_AUTHENTICATION_LOOP=30
+export MAX_VOLUME_AUTHENTICATION_LOOP
+
 # define wget to use with https
 if [ "$openqrm_web_protocol" == "https" ]; then
-    WGET_NO_CERT_CHECK="--no-check-certificate"
+	WGET_NO_CERT_CHECK="--no-check-certificate"
 fi
 
 # using the resource_id as the shelf-id
@@ -164,16 +168,20 @@ fi
 case "$LVM_COMMAND" in 
 
 	add)
-	
 		if [ "$LVM_IMAGE_SIZE" == "" ]; then
 			LVM_IMAGE_SIZE=$DEFAULT_IMAGE_SIZE
 			echo "Using default size of $DEFAULT_IMAGE_SIZE MB!"
 		fi
 		export LVM_IMAGE_SIZE
-		echo -n "Creating logical volume $LVM_IMAGE_NAME size $LVM_IMAGE_SIZE MB using volume group $LVM_STORAGE_SERVER_VOLUME_GROUP"
-        xen_storage_lock aquire
+		# check if already exists
+		if [ -e /dev/$LVM_STORAGE_SERVER_VOLUME_GROUP/$LVM_IMAGE_NAME ]; then
+			openqrm_post_event 0 "add" 3 "openqrm-lvm-manager" "Volume $LVM_IMAGE_NAME already exists."
+			exit 1
+		fi
+		echo "Creating logical volume $LVM_IMAGE_NAME size $LVM_IMAGE_SIZE MB using volume group $LVM_STORAGE_SERVER_VOLUME_GROUP"
+		xen_storage_lock aquire
 		lvcreate -L$LVM_IMAGE_SIZE -n$LVM_IMAGE_NAME $LVM_STORAGE_SERVER_VOLUME_GROUP
-        xen_storage_lock release
+		xen_storage_lock release
 
 		# in case we have a username + password post the updated list to the openQRM-server
 		if [ "$LVM_OPENQRM_USERNAME" != "" ] && [ "$LVM_OPENQRM_PASSWORD" != "" ]; then
@@ -183,12 +191,16 @@ case "$LVM_COMMAND" in
 		;;
 
 	remove)
-
+		# check that no snapshots existing with this volume as the origin
+		if lvs | awk '{ print $5 }' | grep -w $LVM_IMAGE_NAME 1>/dev/null; then
+			openqrm_post_event 0 "remove" 3 "openqrm-xen-storage" "Snapshot exist from volume /dev/$LVM_STORAGE_SERVER_VOLUME_GROUP/$LVM_IMAGE_NAME. Not removing!"
+			exit 1
+		fi
 		echo -n "Removing logical volume $LVM_IMAGE_NAME on volume group $LVM_STORAGE_SERVER_VOLUME_GROUP"
-        xen_storage_lock aquire
+		xen_storage_lock aquire
 		lvchange -a n /dev/$LVM_STORAGE_SERVER_VOLUME_GROUP/$LVM_IMAGE_NAME
 		lvremove -f /dev/$LVM_STORAGE_SERVER_VOLUME_GROUP/$LVM_IMAGE_NAME
-        xen_storage_lock release
+		xen_storage_lock release
 		# in case we have a username + password post the updated list to the openQRM-server
 		if [ "$LVM_OPENQRM_USERNAME" != "" ] && [ "$LVM_OPENQRM_PASSWORD" != "" ]; then
 			$0 post_lv -u $LVM_OPENQRM_USERNAME -p $LVM_OPENQRM_PASSWORD -v $LVM_STORAGE_SERVER_VOLUME_GROUP
@@ -207,16 +219,17 @@ case "$LVM_COMMAND" in
 			echo "Using default size of $DEFAULT_IMAGE_SIZE MB!"
 		fi
 		export LVM_IMAGE_SIZE
-		
+
 		# check that source fs-images exist
 		if ! `lvdisplay /dev/$LVM_STORAGE_SERVER_VOLUME_GROUP/$LVM_IMAGE_NAME 1>/dev/null`; then
 			echo "ERROR: Could not find /dev/$LVM_STORAGE_SERVER_VOLUME_GROUP/$LVM_IMAGE_NAME on the storage-server"
 			exit 1
 		fi
 		echo -n "Creating snapshot size $LVM_IMAGE_SIZE from logical volume $LVM_IMAGE_NAME -> $LVM_IMAGE_SNAPSHOT_NAME"
-        xen_storage_lock aquire
+		xen_storage_lock aquire
+		lvchange -ay /dev/$LVM_STORAGE_SERVER_VOLUME_GROUP/$LVM_IMAGE_NAME
 		lvcreate --size $LVM_IMAGE_SIZE""m --snapshot --name $LVM_IMAGE_SNAPSHOT_NAME /dev/$LVM_STORAGE_SERVER_VOLUME_GROUP/$LVM_IMAGE_NAME
-        xen_storage_lock release
+		xen_storage_lock release
 		# in case we have a username + password post the updated list to the openQRM-server
 		if [ "$LVM_OPENQRM_USERNAME" != "" ] && [ "$LVM_OPENQRM_PASSWORD" != "" ]; then
 			$0 post_lv -u $LVM_OPENQRM_USERNAME -p $LVM_OPENQRM_PASSWORD -v $LVM_STORAGE_SERVER_VOLUME_GROUP
@@ -225,6 +238,26 @@ case "$LVM_COMMAND" in
 
 	auth)
 		echo "Authenticating $LVM_IMAGE_TYPE image $LVM_IMAGE_ROOTDEVICE to $LVM_IMAGE_AUTH"
+		# this is just for starting auth, make sure the device is there, otherwise wait
+		if [ "$LVM_OPENQRM_USERNAME" != "" ] && [ "$LVM_OPENQRM_PASSWORD" != "" ] && [ "$LVM_IMAGE_NAME" != "" ]; then
+			MAX_AUTH_LOOP=0
+			while (true); do
+				lvchange -ay $LVM_IMAGE_ROOTDEVICE
+				if [ -e "$LVM_IMAGE_ROOTDEVICE" ]; then
+					break
+				fi
+				sleep 5
+				if [ "$MAX_AUTH_LOOP" == "$MAX_VOLUME_AUTHENTICATION_LOOP" ]; then
+					xen_storage_log auth "ERROR: Volume $LVM_IMAGE_TYPE image $LVM_IMAGE_ROOTDEVICE does not exists, Cannot auth to $LVM_IMAGE_AUTH"
+					exit 1
+				fi
+				MAX_AUTH_LOOP=$(( MAX_AUTH_LOOP + 1 ))
+			done
+			# if we have an image name send back to openQRM that storage auth finished to remvoe the storage-auth-blocker
+			if ! wget -q $WGET_NO_CERT_CHECK -O /dev/null --http-user=$LVM_OPENQRM_USERNAME --http-password=$LVM_OPENQRM_PASSWORD "$openqrm_web_protocol://$OPENQRM_SERVER_IP/openqrm/base/plugins/xen-storage/xen-storage-action.php?xen_storage_command=auth_finished&xen_storage_image_name=$LVM_IMAGE_NAME"; then
+				xen_storage_log auth "ERROR: Could not remove the storage-auth-blocker from the openQRM-server at $OPENQRM_SERVER_IP!"
+			fi
+		fi
 		;;
 
 	list)
@@ -234,7 +267,7 @@ case "$LVM_COMMAND" in
 		echo "Posting current volume group status to the openQRM-server"
 		STORAGE_STATUS_TMP=$resource_id.vg.stat
 		vgs | grep -v VFree | sed -e "s/ \{1,\}//" > $STORAGE_STATUS_TMP
-        sed -i -e "s/ \{1,\}/@/g" $STORAGE_STATUS_TMP
+		sed -i -e "s/ \{1,\}/@/g" $STORAGE_STATUS_TMP
 		if ! wget -q $WGET_NO_CERT_CHECK -O /dev/null --http-user=$LVM_OPENQRM_USERNAME --http-password=$LVM_OPENQRM_PASSWORD  --post-file=`$OPENQRM_POSTENCODE $STORAGE_STATUS_TMP` $openqrm_web_protocol://$OPENQRM_SERVER_IP/openqrm/base/plugins/xen-storage/xen-storage-action.php?xen_storage_command=get_storage; then
 			echo "ERROR: Could not post the volume group status to the openQRM-server at $resource_openqrmserver!"
 			echo "ERROR: Could not post the volume group status to the openQRM-server at $resource_openqrmserver!" | logger
@@ -246,10 +279,10 @@ case "$LVM_COMMAND" in
 		echo "Posting current $LVM_IMAGE_TYPE logic volume status to the openQRM-server"
 		STORAGE_STATUS_TMP=$resource_id.$LVM_STORAGE_SERVER_VOLUME_GROUP.lv.stat
 		> $STORAGE_STATUS_TMP
-        for LVOL in `lvs $LVM_STORAGE_SERVER_VOLUME_GROUP | grep -v LSize | sed -e "s/ \{1,\}//" | awk {' print $1 '}`; do
-            lvs $LVM_STORAGE_SERVER_VOLUME_GROUP/$LVOL | grep -v LSize | sed -e "s/ \{1,\}//" >> $STORAGE_STATUS_TMP
+		for LVOL in `lvs $LVM_STORAGE_SERVER_VOLUME_GROUP | grep -v LSize | sed -e "s/ \{1,\}//" | awk {' print $1 '}`; do
+			lvs $LVM_STORAGE_SERVER_VOLUME_GROUP/$LVOL | grep -v LSize | sed -e "s/ \{1,\}//" >> $STORAGE_STATUS_TMP
 		done
-        sed -i -e "s/ \{1,\}/@/g" $STORAGE_STATUS_TMP
+		sed -i -e "s/ \{1,\}/@/g" $STORAGE_STATUS_TMP
 		if ! wget -q $WGET_NO_CERT_CHECK -O /dev/null --http-user=$LVM_OPENQRM_USERNAME --http-password=$LVM_OPENQRM_PASSWORD  --post-file=`$OPENQRM_POSTENCODE $STORAGE_STATUS_TMP` $openqrm_web_protocol://$OPENQRM_SERVER_IP/openqrm/base/plugins/xen-storage/xen-storage-action.php?xen_storage_command=get_storage; then
 			echo "ERROR: Could not post the logic volume status to the openQRM-server at $resource_openqrmserver!"
 			echo "ERROR: Could not post the logic volume status to the openQRM-server at $resource_openqrmserver!" | logger
@@ -264,11 +297,11 @@ case "$LVM_COMMAND" in
 
 		for LVOL in `lvdisplay | grep "LV Name" | awk {' print $3 '}`; do
 			LVOL_SHORT=`basename $LVOL`
-            IMAGE_NAME=$LVOL_SHORT
-            VOLUME_GROUP=`echo $LVOL | cut -d'/' -f3`
-            echo "$IMAGE_NAME:/dev/$VOLUME_GROUP/$IMAGE_NAME"
-            echo "$IMAGE_NAME:/dev/$VOLUME_GROUP/$IMAGE_NAME" >> $STORAGE_STATUS_TMP
-		
+			IMAGE_NAME=$LVOL_SHORT
+			VOLUME_GROUP=`echo $LVOL | cut -d'/' -f3`
+			echo "$IMAGE_NAME:/dev/$VOLUME_GROUP/$IMAGE_NAME"
+			echo "$IMAGE_NAME:/dev/$VOLUME_GROUP/$IMAGE_NAME" >> $STORAGE_STATUS_TMP
+
 		done
 
 		if ! wget -q $WGET_NO_CERT_CHECK -O /dev/null --http-user=$LVM_OPENQRM_USERNAME --http-password=$LVM_OPENQRM_PASSWORD  --post-file=`$OPENQRM_POSTENCODE $STORAGE_STATUS_TMP` $openqrm_web_protocol://$OPENQRM_SERVER_IP/openqrm/base/plugins/xen-storage/xen-storage-action.php?xen_storage_command=get_ident; then
@@ -287,9 +320,10 @@ case "$LVM_COMMAND" in
 		fi
 		export LVM_IMAGE_SIZE
 		echo "Resizing logical volume $LVM_IMAGE_NAME + size $LVM_IMAGE_SIZE MB using volume group $LVM_STORAGE_SERVER_VOLUME_GROUP"
-        xen_storage_lock aquire
-        lvresize -L +$LVM_IMAGE_SIZE /dev/$LVM_STORAGE_SERVER_VOLUME_GROUP/$LVM_IMAGE_NAME 2>&1 | logger
-        xen_storage_lock release
+		xen_storage_lock aquire
+		lvchange -ay /dev/$LVM_STORAGE_SERVER_VOLUME_GROUP/$LVM_IMAGE_NAME
+		lvresize -L +$LVM_IMAGE_SIZE /dev/$LVM_STORAGE_SERVER_VOLUME_GROUP/$LVM_IMAGE_NAME 2>&1 | logger
+		xen_storage_lock release
 		# in case we have a username + password post the updated list to the openQRM-server
 		if [ "$LVM_OPENQRM_USERNAME" != "" ] && [ "$LVM_OPENQRM_PASSWORD" != "" ]; then
 			$0 post_lv -u $LVM_OPENQRM_USERNAME -p $LVM_OPENQRM_PASSWORD -v $LVM_STORAGE_SERVER_VOLUME_GROUP
@@ -299,9 +333,9 @@ case "$LVM_COMMAND" in
 
 
 	clone)
-        # cloning is similar to snapshots but since lvm cannot (yet) create snapshots
-        # from snapshots we have to dd the origin (which may be a snapshot) to a
-        # new lvol.
+		# cloning is similar to snapshots but since lvm cannot (yet) create snapshots
+		# from snapshots we have to dd the origin (which may be a snapshot) to a
+		# new lvol.
 		if [ "$LVM_IMAGE_SNAPSHOT_NAME" == "" ]; then
 			echo "ERROR: Please give a name for the clone using the -s cmdline parmeter"
 			echo
@@ -314,41 +348,42 @@ case "$LVM_COMMAND" in
 		export LVM_IMAGE_SIZE
 		echo "Cloning logical volume $LVM_IMAGE_NAME to $LVM_IMAGE_SNAPSHOT_NAME size $LVM_IMAGE_SIZE MB volume group $LVM_STORAGE_SERVER_VOLUME_GROUP"
 
-        # re-run in background via screen
-        if [ "$RUN_IN_BACKGROUND" != "true" ]; then
-            if [ -x /usr/bin/screen.real ]; then
-                RUNSCREEN="/usr/bin/screen.real"
-            else
-                RUNSCREEN=`which screen`
-            fi
-            export RUN_IN_BACKGROUND=true
-            SCREEN_NAME=`date +%T%x | sed -e "s/://g" | sed -e "s#/##g"`
-            $RUNSCREEN -dmS $SCREEN_NAME $FULL_COMMANDLINE
-            exit
-        fi
+		# re-run in background via screen
+		if [ "$RUN_IN_BACKGROUND" != "true" ]; then
+			if [ -x /usr/bin/screen.real ]; then
+				RUNSCREEN="/usr/bin/screen.real"
+			else
+				RUNSCREEN=`which screen`
+			fi
+			export RUN_IN_BACKGROUND=true
+			SCREEN_NAME=`date +%T%x | sed -e "s/://g" | sed -e "s#/##g"`
+			$RUNSCREEN -dmS $SCREEN_NAME $FULL_COMMANDLINE
+			exit
+		fi
 
-        xen_storage_lock aquire
+		xen_storage_lock aquire
 		if ! lvcreate -L$LVM_IMAGE_SIZE -n$LVM_IMAGE_SNAPSHOT_NAME $LVM_STORAGE_SERVER_VOLUME_GROUP; then
-            echo "ERROR: Cloud not create target logical volume $LVM_IMAGE_SNAPSHOT_NAME !"
-            echo "ERROR: Cloud not create target logical volume $LVM_IMAGE_SNAPSHOT_NAME !" | logger
-            exit 1
-        fi
-        # copy content
-        echo "Running : dd if=/dev/$LVM_STORAGE_SERVER_VOLUME_GROUP/$LVM_IMAGE_NAME of=/dev/$LVM_STORAGE_SERVER_VOLUME_GROUP/$LVM_IMAGE_SNAPSHOT_NAME bs=1M" | logger
-        xen_storage_lock release
-        dd if=/dev/$LVM_STORAGE_SERVER_VOLUME_GROUP/$LVM_IMAGE_NAME of=/dev/$LVM_STORAGE_SERVER_VOLUME_GROUP/$LVM_IMAGE_SNAPSHOT_NAME bs=1M
+			echo "ERROR: Cloud not create target logical volume $LVM_IMAGE_SNAPSHOT_NAME !"
+			echo "ERROR: Cloud not create target logical volume $LVM_IMAGE_SNAPSHOT_NAME !" | logger
+			exit 1
+		fi
+		# copy content
+		echo "Running : dd if=/dev/$LVM_STORAGE_SERVER_VOLUME_GROUP/$LVM_IMAGE_NAME of=/dev/$LVM_STORAGE_SERVER_VOLUME_GROUP/$LVM_IMAGE_SNAPSHOT_NAME bs=1M" | logger
+		xen_storage_lock release
+		lvchange -ay /dev/$LVM_STORAGE_SERVER_VOLUME_GROUP/$LVM_IMAGE_NAME
+		dd if=/dev/$LVM_STORAGE_SERVER_VOLUME_GROUP/$LVM_IMAGE_NAME of=/dev/$LVM_STORAGE_SERVER_VOLUME_GROUP/$LVM_IMAGE_SNAPSHOT_NAME bs=1M
 
-        # here we notify openQRM that cloning has finished
+		# here we notify openQRM that cloning has finished
 		# in case we have a username + password post the updated list to the openQRM-server
-        # and notify openQRM that cloning has finished
+		# and notify openQRM that cloning has finished
 		if [ "$LVM_OPENQRM_USERNAME" != "" ] && [ "$LVM_OPENQRM_PASSWORD" != "" ]; then
-            CLONE_FINISHED="$LVM_IMAGE_SNAPSHOT_NAME.clone"
-            touch $CLONE_FINISHED
-            if ! wget -q $WGET_NO_CERT_CHECK -O /dev/null --http-user=$LVM_OPENQRM_USERNAME --http-password=$LVM_OPENQRM_PASSWORD  --post-file=`$OPENQRM_POSTENCODE $CLONE_FINISHED` $openqrm_web_protocol://$OPENQRM_SERVER_IP/openqrm/base/plugins/xen-storage/xen-storage-action.php?xen_storage_command=clone_finished; then
-                echo "ERROR: Could not post clone-finished status to the openQRM-server at $resource_openqrmserver!"
-                echo "ERROR: Could not post clone-finished status to the openQRM-server at $resource_openqrmserver!" | logger
-            fi
-            # post lv
+			CLONE_FINISHED="$LVM_IMAGE_SNAPSHOT_NAME.clone"
+			touch $CLONE_FINISHED
+			if ! wget -q $WGET_NO_CERT_CHECK -O /dev/null --http-user=$LVM_OPENQRM_USERNAME --http-password=$LVM_OPENQRM_PASSWORD  --post-file=`$OPENQRM_POSTENCODE $CLONE_FINISHED` $openqrm_web_protocol://$OPENQRM_SERVER_IP/openqrm/base/plugins/xen-storage/xen-storage-action.php?xen_storage_command=clone_finished; then
+				echo "ERROR: Could not post clone-finished status to the openQRM-server at $resource_openqrmserver!"
+				echo "ERROR: Could not post clone-finished status to the openQRM-server at $resource_openqrmserver!" | logger
+			fi
+			# post lv
 			$0 post_lv -u $LVM_OPENQRM_USERNAME -p $LVM_OPENQRM_PASSWORD -v $LVM_STORAGE_SERVER_VOLUME_GROUP
 		fi
 

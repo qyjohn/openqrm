@@ -47,8 +47,11 @@
 <br />
 {kvm_server_mac}
 => connected to <select name="kvm_vm_bridge">
-    <option value="{kvm_server_bridge_int}">{kvm_server_bridge_int} (internal bridge)</option>
-    <option value="{kvm_server_bridge_ext}">{kvm_server_bridge_ext} (external bridge)</option>
+    <option value="1">{kvm_server_bridge_net1} (bridge1)</option>
+    <option value="2">{kvm_server_bridge_net2} (bridge2)</option>
+    <option value="3">{kvm_server_bridge_net3} (bridge3)</option>
+    <option value="4">{kvm_server_bridge_net4} (bridge4)</option>
+    <option value="5">{kvm_server_bridge_net5} (bridge5)</option>
     </select>
 <br />
 

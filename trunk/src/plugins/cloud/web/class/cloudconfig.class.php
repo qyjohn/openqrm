@@ -161,7 +161,7 @@ function set_value($cloudconfig_id, $cloudconfig_value) {
 	global $CLOUD_CONFIG_TABLE;
 	global $event;
 	$db=openqrm_get_db_connection();
-	$cloudconfig_set = &$db->Execute("update $CLOUD_CONFIG_TABLE set cc_value=\"$cloudconfig_value\" where cc_id=$cloudconfig_id");
+	$cloudconfig_set = &$db->Execute("update $CLOUD_CONFIG_TABLE set cc_value='$cloudconfig_value' where cc_id=$cloudconfig_id");
 	if (!$cloudconfig_set) {
 		$event->log("get_name", $_SERVER['REQUEST_TIME'], 2, "cloudconfig.class.php", $db->ErrorMsg(), "", "", 0, 0, 0);
 	}
@@ -231,7 +231,7 @@ function display_overview($offset, $limit, $sort, $order) {
 			$recordSet->MoveNext();
 		}
 		$recordSet->Close();
-	}		
+	}
 	return $cloudconfig_array;
 }
 

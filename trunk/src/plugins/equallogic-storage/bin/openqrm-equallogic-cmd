@@ -21,9 +21,9 @@
 #
 
 if {[llength $argv]<3} {
-        send_user "usage: $argv0 <equallogic-ip> <equallogic-user> <equallogic-password> <command 1> [command 2] [command 3] [command 4]\n"
-        send_user "do not forget to quote your commands!\n"
-        exit
+		send_user "usage: $argv0 <equallogic-ip> <equallogic-user> <equallogic-password> <command 1> [command 2] [command 3] [command 4]\n"
+		send_user "do not forget to quote your commands!\n"
+		exit
 }
 
 set EQUALLOGIC_IP [lindex $argv 0]
@@ -36,13 +36,13 @@ set EQUALLOGIC_CMD_4 [lindex $argv 6]
 
 
 set force_conservative 0  ;# set to 1 to force conservative mode even if
-                          ;# script wasn't run conservatively originally
+						  ;# script wasn't run conservatively originally
 if {$force_conservative} {
-        set send_slow {1 .1}
-        proc send {ignore arg} {
-                sleep .1
-                exp_send -s -- $arg
-        }
+		set send_slow {1 .1}
+		proc send {ignore arg} {
+				sleep .1
+				exp_send -s -- $arg
+		}
 }
 
 set timeout 30
@@ -100,7 +100,7 @@ expect {
 	}
 	timeout {
 		exit
-	} 
+	}
 	eof {
 		exit
 	}

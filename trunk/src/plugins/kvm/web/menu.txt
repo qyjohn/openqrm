@@ -21,5 +21,5 @@
 #	IMG
 #	Target
 ..|KVM
-...|About|plugins/kvm/kvm-about.php|How to use|kvm/plugin.png
-...|VM Manager|plugins/kvm/kvm-manager.php|KVM VM Manager|kvm/manager.png
+...|插件介绍|plugins/kvm/kvm-about.php|How to use|kvm/plugin.png
+...|VM管理器|plugins/kvm/kvm-manager.php|KVM VM Manager|kvm/manager.png

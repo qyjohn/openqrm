@@ -10,7 +10,7 @@
 
 
 !define OQPROGRAMNAME "openQRM-Client"
-!define OQPROGRAMVERSION "4.6.1"
+!define OQPROGRAMVERSION "4.8.0"
 !define OQPROGRAMLICENSE "license.txt"
 !define OQSERVERIPCONF "openqrm-server-ip.conf"
 !define OQRESOURCECONF "resource-id.conf"
@@ -20,8 +20,8 @@
 !define OQTIMEOUT "5"
 
 
-; Copssh version 3.0.3
-!define OQCOPSSH "Copssh_3.0.3_Installer.exe"
+; Copssh version 3.1.4
+!define OQCOPSSH "Copssh_3.1.4_Installer.exe"
 ; wget statically linked from http://users.ugent.be/~bpuype/wget/
 !define OQWGET "wget.exe"
 
@@ -35,7 +35,7 @@
   OutFile "${OQPROGRAMNAME}-${OQPROGRAMVERSION}-setup.exe"
 
   ;Default installation folder
-  InstallDir "$PROGRAMFILES\${OQPROGRAMNAME}"
+  InstallDir "C:\${OQPROGRAMNAME}"
 
   ;Get installation folder from registry if available
   InstallDirRegKey HKCU "Software\${OQPROGRAMNAME}" ""
@@ -243,7 +243,7 @@ Function GetOpenQrmPublicKey
 	MessageBox MB_OK "Getting public key of openQRM Server at : $3"
 
 	; run wget
-	!define WGETCMD "$INSTDIR\wget.exe -t ${OQRETRIES} -w ${OQTIMEOUT} -O $PROGRAMFILES\ICW\home\root\.ssh\authorized_keys_add http://$3/openqrm/boot-service/openqrm-server-public-rsa-key"
+	!define WGETCMD "$INSTDIR\wget.exe -t ${OQRETRIES} -w ${OQTIMEOUT} -O $INSTDIR\ICW\home\root\.ssh\authorized_keys_add http://$3/openqrm/boot-service/openqrm-server-public-rsa-key"
 
 	FileOpen $9 "$INSTDIR\public-key.bat" w
 	FileWrite $9 "${WGETCMD}"
@@ -254,10 +254,10 @@ Function GetOpenQrmPublicKey
 	Pop $0 ; contains the cmd output
 	strCmp $retcode "0" 0 badexit
 		; add the key to authorized_keys of user root
-		FileOpen $2 "$PROGRAMFILES\ICW\home\root\.ssh\authorized_keys_add" r
+		FileOpen $2 "$INSTDIR\ICW\home\root\.ssh\authorized_keys_add" r
 		FileRead $2 $3
 		FileClose $2
-		FileOpen $2 "$PROGRAMFILES\ICW\home\root\.ssh\authorized_keys" a
+		FileOpen $2 "$INSTDIR\ICW\home\root\.ssh\authorized_keys" a
 		FileWrite $2 "$\n$3$\n"
 		FileClose $2
 		return
@@ -340,11 +340,11 @@ Section "openQRM Exec subsystem" SecCopssh
    SetOutPath "$INSTDIR"
    File ${OQCOPSSH}
 
-   MessageBox MB_OK "Copssh installation. Please setup with the defaults"
+   MessageBox MB_OK "Copssh installation. Please install in $INSTDIR\ICW"
    ExecWait '"$INSTDIR\${OQCOPSSH}"' $0
 
    MessageBox MB_OK "Copssh setup. Please activate user root"
-   Execwait '"$PROGRAMFILES\ICW\Bin\UserActivationWizard.exe"'
+   Execwait '"$INSTDIR\ICW\Bin\UserActivationWizard.exe"'
 
 
 SectionEnd
@@ -373,9 +373,9 @@ Section "Uninstall"
 
   ; copssh uninstall first
   MessageBox MB_OK "Copssh Uninstallation"
-  Execwait '"$PROGRAMFILES\ICW\uninstall_Copssh.exe" _?=$INSTDIR'
-  Execwait '"$PROGRAMFILES\ICW\uninstall_ICW_OpenSSHServer.exe"'
-  Execwait '"$PROGRAMFILES\ICW\uninstall_ICW_Base.exe"'
+  Execwait '"$INSTDIR\ICW\uninstall_Copssh.exe" _?=$INSTDIR'
+  Execwait '"$INSTDIR\ICW\uninstall_ICW_OpenSSHServer.exe"'
+  Execwait '"$INSTDIR\ICW\uninstall_ICW_Base.exe"'
 
 
   ;file uninstall

@@ -5,19 +5,19 @@
 /*
   This file is part of openQRM.
 
-    openQRM is free software: you can redistribute it and/or modify
-    it under the terms of the GNU General Public License version 2
-    as published by the Free Software Foundation.
+	openQRM is free software: you can redistribute it and/or modify
+	it under the terms of the GNU General Public License version 2
+	as published by the Free Software Foundation.
 
-    openQRM is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    GNU General Public License for more details.
+	openQRM is distributed in the hope that it will be useful,
+	but WITHOUT ANY WARRANTY; without even the implied warranty of
+	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+	GNU General Public License for more details.
 
-    You should have received a copy of the GNU General Public License
-    along with openQRM.  If not, see <http://www.gnu.org/licenses/>.
+	You should have received a copy of the GNU General Public License
+	along with openQRM.  If not, see <http://www.gnu.org/licenses/>.
 
-    Copyright 2009, Matthias Rechenburg <matt@openqrm.com>
+	Copyright 2009, Matthias Rechenburg <matt@openqrm.com>
 */
 
 
@@ -56,17 +56,17 @@ if(htmlobject_request('action') != '') {
 				$key = $puppet_conf->key;
 				$value = $_REQUEST[$key];
 				$puppet_conf->set_value($id, $value);
-				
+
 				// in case autosigining changed
 				if ($id == 1) {
 					if (!strcmp($value, "true")) {
 						$puppet_cli_command="$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/puppet/bin/openqrm-puppet-manager auto_sign_true";
 					} else {
 						$puppet_cli_command="$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/puppet/bin/openqrm-puppet-manager auto_sign_false";
-					}	
+					}
 					$openqrm_server->send_command($puppet_cli_command);
-				}				
-				
+				}
+
 			}
 			break;
 	}
@@ -79,7 +79,7 @@ function puppet_config_manager() {
 	global $OPENQRM_USER;
 	global $OPENQRM_SERVER_IP_ADDRESS;
 	global $thisfile;
-    
+
 	$table = new htmlobject_table_identifiers_checked('cc_id');
 	$arHead = array();
 
@@ -95,7 +95,7 @@ function puppet_config_manager() {
 	$arBody = array();
 
 	// db select
-    $puppet_config_count=0;
+	$puppet_config_count=0;
 	$cc_config = new puppetconfig();
 	$cc_array = $cc_config->display_overview(0, 100, $table->sort, $table->order);
 	$ident_array = array();
@@ -114,7 +114,7 @@ function puppet_config_manager() {
 			'cc_key' => $cc["cc_key"],
 			'cc_value' => $input_value,
 		);
-        $puppet_config_count++;
+		$puppet_config_count++;
 	}
 
 	$table->id = 'Tabelle';
@@ -132,12 +132,12 @@ function puppet_config_manager() {
 		$table->identifier = 'cc_id';
 	}
 	$table->max = $puppet_config_count;
-    // set template
+	// set template
 	$t = new Template_PHPLIB();
 	$t->debug = false;
 	$t->setFile('tplfile', './tpl/' . 'puppet-config.tpl.php');
 	$t->setVar(array(
-        'puppet_config_table' => $table->get_string(),
+		'puppet_config_table' => $table->get_string(),
 	));
 	$disp =  $t->parse('out', 'tplfile');
 	return $disp;

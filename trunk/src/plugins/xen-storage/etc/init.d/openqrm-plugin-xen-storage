@@ -24,8 +24,24 @@ OPENQRM_SERVER_BASE_DIR=$(pushd $(dirname $0)/../../../../.. > /dev/null; echo $
 . $OPENQRM_SERVER_BASE_DIR/openqrm/include/openqrm-server-functions
 . $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/xen-storage/include/openqrm-plugin-xen-storage-functions
 . $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/xen-storage/etc/openqrm-plugin-xen-storage.conf
+openqrm_server_get_config
+OPENQRM_SERVER_IP=$OPENQRM_SERVER_IP_ADDRESS
+# define wget to use with https
+if [ "$OPENQRM_WEB_PROTOCOL" == "https" ]; then
+	WGET="wget -q --no-check-certificate"
+else
+	WGET="wget -q"
+fi
+# which screen binary to use
+if [ -x /usr/bin/screen.real ]; then
+	RUNSCREEN="/usr/bin/screen.real"
+else
+	RUNSCREEN=`which screen`
+fi
+
 OPENQRM_VM_DIR="/var/lib/xen-storage/openqrm/"
 export OPENQRM_VM_DIR
+export resource_id=0
 
 
 LINE_IFS='
@@ -35,15 +51,55 @@ function openqrm_plugin_xen_storage_start() {
 	openqrm_plugin_xen_storage_stop 1>/dev/null 2>&1
 	echo "Starting the openQRM xen-storage-plugin"
 	touch $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/base/plugins/xen-storage/.running
-    # start the vm status autostart
-    if [ -d "$OPENQRM_VM_DIR" ]; then
-        for VM_CONFIG in `find $OPENQRM_VM_DIR/* -name autostart`; do
-            VM_NAME=`dirname $VM_CONFIG`
-            VM_NAME=`basename $VM_NAME`
-            echo "- auto-starting VM $VM_NAME"
-            $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/xen-storage/xen-storage/bin/openqrm-xen-storage-vm start -n $VM_NAME
-        done
-    fi
+	# start the vm status autostart
+	if [ -d "$OPENQRM_VM_DIR" ]; then
+		for VM_CONFIG in `find $OPENQRM_VM_DIR/* -name autostart.$resource_id 2>/dev/null`; do
+			VM_NAME=`dirname $VM_CONFIG`
+			VM_NAME=`basename $VM_NAME`
+			XEN_STORAGE_VM_MAC=`cat $OPENQRM_VM_DIR/$VM_NAME/mac1 2>/dev/null`
+			if [ "$XEN_STORAGE_VM_MAC" == "" ]; then
+				echo "- Could not find the MAC address of VM $VM_NAME, not autostarting..."
+				continue
+			fi
+			# already running ?
+			if ps ax | grep -i $XEN_STORAGE_VM_MAC | grep openqrm-xen-storage-monitord | grep -v grep 1>/dev/null; then
+				echo "- VM $VM_NAME already running, not autostarting..."
+				continue
+			fi
+
+			# ask openQRM what to do
+			if ! $WGET -O $OPENQRM_VM_DIR/$VM_NAME/resource-parameter.conf "$OPENQRM_WEB_PROTOCOL://$OPENQRM_SERVER_IP/openqrm/action/resource-monitor.php?resource_command=get_parameter&resource_mac=$XEN_STORAGE_VM_MAC"; then
+				echo "- Could not get parameters for VM $VM_NAME, not auto-starting it ..."
+				continue
+			fi
+			unset appliance_state
+			unset image_rootdevice
+			. $OPENQRM_VM_DIR/$VM_NAME/resource-parameter.conf
+			# is really active ?
+			if [ "$appliance_state" == "active" ] && [ "$image_rootdevice" != "ram" ]; then
+				echo "- Activating Rootdevice $image_rootdevice for VM $VM_NAME"
+				lvchange -ay $image_rootdevice
+				sleep 2
+				# make sure the lvm device is active
+				if [ -e "$image_rootdevice" ]; then
+					echo "- auto-starting active VM $VM_NAME"
+					# make sure the rigth device is in the VM config
+					echo "phy:$image_rootdevice,hda,w" > $OPENQRM_VM_DIR/$VM_NAME/disk1
+					$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/xen-storage/bin/openqrm-xen-storage-vm start -n $VM_NAME
+				else
+					echo "- Rootdevice $image_rootdevice for VM $VM_NAME not existing, not autostarting it ..."
+					continue
+				fi
+			else
+				# make sure the VM is not still attached to the disk
+				> $OPENQRM_VM_DIR/$VM_NAME/disk1
+				# start only the xen-storage monitor
+				echo "- auto-starting idle VM $VM_NAME"
+			fi
+			kill `ps ax | grep openqrm-xen-storage-monitord | grep -v grep | grep -i $XEN_STORAGE_VM_MAC | awk {' print $1 '}` 2>/dev/null
+			$RUNSCREEN -dmS $XEN_STORAGE_VM_MAC $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/xen-storage/sbin/openqrm-xen-storage-monitord $XEN_STORAGE_VM_MAC
+		done
+	fi
 
 }
 
@@ -59,7 +115,7 @@ function openqrm_plugin_xen_storage_uninstall() {
 	if [ "$USERNAME" == "" ] && [ "$PASSWORD" == "" ]; then
 		echo -n "xen-storage: Please give a username to uninstall the plugin : "
 		read USERNAME
-		echo	
+		echo
 		echo -n "xen-storage: Please give the password for user $USERNAME : "
 		read PASSWORD
 		echo
@@ -81,7 +137,7 @@ function openqrm_plugin_xen_storage_init() {
 	if [ "$USERNAME" == "" ] && [ "$PASSWORD" == "" ]; then
 		echo -n "xen-storage: Please give a username to init the plugin : "
 		read USERNAME
-		echo	
+		echo
 		echo -n "xen-storage: Please give the password for user $USERNAME : "
 		read PASSWORD
 		echo
@@ -97,15 +153,15 @@ function openqrm_plugin_xen_storage_init() {
 	ln -sf $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/xen-storage/web/boot-service-xen-storage.tgz $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/boot-service/boot-service-xen-storage.tgz
 	# linking the image deployment parameters menu
 	ln -sf $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/xen-storage/web/image.xen-lvm-deployment.php $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/boot-service/image.xen-lvm-deployment.php
-    # create storage dir for stat files
-    mkdir -p $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/xen-storage/web/storage
-    chmod 777 $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/xen-storage/web/storage
-    chmod +x $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/xen-storage/bin/*
-    # create xen-stat dir
-    mkdir -p $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/xen-storage/web/xen-stat
-    chmod -R 777 $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/xen-storage/web/xen-stat
+	# create storage dir for stat files
+	mkdir -p $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/xen-storage/web/storage
+	chmod 777 $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/xen-storage/web/storage
+	chmod +x $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/xen-storage/bin/*
+	# create xen-stat dir
+	mkdir -p $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/xen-storage/web/xen-stat
+	chmod -R 777 $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/xen-storage/web/xen-stat
 
-	
+
 }
 
 USER=$2

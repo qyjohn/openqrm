@@ -78,9 +78,9 @@ IMAGE_ROOT_DEVICE=`echo $image_rootdevice | cut -d':' -f3`
 
 # define wget to use with https
 if [ "$openqrm_web_protocol" == "https" ]; then
-    export WGET="wget --no-check-certificate -q"
+	export WGET="wget --no-check-certificate -q"
 else
-    export WGET="wget -q"
+	export WGET="wget -q"
 fi
 
 #######################################################################
@@ -101,9 +101,9 @@ function mount_rootfs() {
 	$WGET -O /sbin/aoe-mkshelf $openqrm_web_protocol://$resource_openqrmserver/openqrm/boot-service/aoe-mkshelf
 	chmod +x /sbin/aoe*
 
-    # insert udev rule
-    mkdir -p /etc/udev
-    cat >> /etc/udev/rules.d/60-aoe.rules << EOF
+	# insert udev rule
+	mkdir -p /etc/udev
+	cat >> /etc/udev/rules.d/60-aoe.rules << EOF
 # aoe char devices
 SUBSYSTEM=="aoe", KERNEL=="discover", NAME="etherd/%k", GROUP="disk",
 MODE="0220"
@@ -132,35 +132,35 @@ EOF
 	sleep 4
 	# let udev settle
 	sleep 4
-    while (true); do
-        if [ -e "$IMAGE_ROOT_DEVICE" ]; then
-            echo "Udev created $IMAGE_ROOT_DEVICE"
-            break
-        else
-            echo -n "."
-        fi
-        sleep 1
-    done
+	while (true); do
+		if [ -e "$IMAGE_ROOT_DEVICE" ]; then
+			echo "Udev created $IMAGE_ROOT_DEVICE"
+			break
+		else
+			echo -n "."
+		fi
+		sleep 1
+	done
 
 	# finallly mount
 	if ! mount -t $image_rootfstype $IMAGE_ROOT_DEVICE /mnt; then
-        # in case we install from nfs we create a fs since this should be a new lun
-    	if  [ "$IMAGE_INSTALL_FROM_NFS" != "" ]; then
-            echo "NOTICE: Found install-from-nfs enabled but failed mounting the rootdevice"
-            echo "NOTICE: Assuming a new (unformatted) Lun -> creating $image_rootfstype filesystem on $IMAGE_ROOT_DEVICE"
-            mke2fs -F -j $IMAGE_ROOT_DEVICE
-            if ! mount -t $image_rootfstype $IMAGE_ROOT_DEVICE /mnt; then
-                echo "ERROR: Could not mount $IMAGE_ROOT_DEVICE via iscsi"
-                # give a shell for the admin
-                /bin/bash
-            else
-        		echo "lvm-aoe-storage: Mounted $IMAGE_ROOT_DEVICE rw"
-            fi
-        else
-            echo "ERROR: Could not mount $IMAGE_ROOT_DEVICE via aoe"
-            # give a shell for the admin
-            /bin/bash
-        fi
+		# in case we install from nfs we create a fs since this should be a new lun
+		if  [ "$IMAGE_INSTALL_FROM_NFS" != "" ]; then
+			echo "NOTICE: Found install-from-nfs enabled but failed mounting the rootdevice"
+			echo "NOTICE: Assuming a new (unformatted) Lun -> creating $image_rootfstype filesystem on $IMAGE_ROOT_DEVICE"
+			mke2fs -F -j $IMAGE_ROOT_DEVICE
+			if ! mount -t $image_rootfstype $IMAGE_ROOT_DEVICE /mnt; then
+				echo "ERROR: Could not mount $IMAGE_ROOT_DEVICE via iscsi"
+				# give a shell for the admin
+				/bin/bash
+			else
+				echo "lvm-aoe-storage: Mounted $IMAGE_ROOT_DEVICE rw"
+			fi
+		else
+			echo "ERROR: Could not mount $IMAGE_ROOT_DEVICE via aoe"
+			# give a shell for the admin
+			/bin/bash
+		fi
 	else
 		echo "lvm-aoe-storage: Mounted $IMAGE_ROOT_DEVICE rw"
 	fi
@@ -190,7 +190,18 @@ EOF
 
 
 function remount_rootfs() {
-
+	# fix for ubuntu lucid + maverick
+	if [ -f /mnt/etc/apt/sources.list ]; then
+		if grep lucid /mnt/etc/apt/sources.list >/remountlog; then
+			echo "lvm-aoe-storage: Skipping Re-mount $IMAGE_ROOT_DEVICE ro"
+			return
+		fi
+		if grep maverick /mnt/etc/apt/sources.list >/remountlog; then
+			echo "lvm-aoe-storage: Skipping Re-mount $IMAGE_ROOT_DEVICE ro"
+			return
+		fi
+		rm -f /remountlog
+	fi
 	REMOUNT_LOOP=0
 	# remont /mnt ro
 	while ! mount -t $image_rootfstype -o ro,remount $IMAGE_ROOT_DEVICE /mnt; do
@@ -198,12 +209,12 @@ function remount_rootfs() {
 		sleep 1
 		REMOUNT_LOOP=$[ REMOUNT_LOOP + 1 ]
 		if [ "$REMOUNT_LOOP" == "10" ]; then
-			echo "ERROR: aoe-storage could not remount /mnt "
+			echo "ERROR: lvm-aoe-storage could not remount /mnt "
 			/bin/bash
 		fi
 	done
 	echo "lvm-aoe-storage: Re-mounted $IMAGE_ROOT_DEVICE ro"
-	
+
 }
 
 

@@ -2,19 +2,19 @@
 /*
   This file is part of openQRM.
 
-    openQRM is free software: you can redistribute it and/or modify
-    it under the terms of the GNU General Public License version 2
-    as published by the Free Software Foundation.
+	openQRM is free software: you can redistribute it and/or modify
+	it under the terms of the GNU General Public License version 2
+	as published by the Free Software Foundation.
 
-    openQRM is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    GNU General Public License for more details.
+	openQRM is distributed in the hope that it will be useful,
+	but WITHOUT ANY WARRANTY; without even the implied warranty of
+	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+	GNU General Public License for more details.
 
-    You should have received a copy of the GNU General Public License
-    along with openQRM.  If not, see <http://www.gnu.org/licenses/>.
+	You should have received a copy of the GNU General Public License
+	along with openQRM.  If not, see <http://www.gnu.org/licenses/>.
 
-    Copyright 2009, Matthias Rechenburg <matt@openqrm.com>
+	Copyright 2009, Matthias Rechenburg <matt@openqrm.com>
 */
 
 
@@ -45,25 +45,28 @@ function openqrm_equallogic_storage_appliance($cmd, $appliance_fields) {
 	$resource = new resource();
 	$resource->get_instance_by_id($appliance_fields["appliance_resources"]);
 	$appliance_ip=$resource->ip;
-    $appliance = new appliance();
-    $appliance->get_instance_by_id($appliance_id);
+	$appliance = new appliance();
+	$appliance->get_instance_by_id($appliance_id);
 
 	$event->log("openqrm_equallogic_storage_appliance", $_SERVER['REQUEST_TIME'], 5, "openqrm-equallogic-storage-appliance-hook.php", "Handling $cmd event $appliance_id/$appliance_name/$appliance_ip", "", "", 0, 0, $appliance_id);
 
-    // check image type -> equallogic
-
-    $image = new image();
-    $image->get_instance_by_id($appliance->imageid);
-    $storage = new storage();
-    $storage->get_instance_by_id($image->storageid);
-    if(!preg_match('/equallogic$/i',$image->type)) {
-    	$event->log("openqrm_equallogic_storage_appliance", $_SERVER['REQUEST_TIME'], 5, "openqrm-equallogic-storage-appliance-hook.php", "$appliance_id is not from type equallogic-storage-, skipping .. $appliance_name/$appliance_ip", "", "", 0, 0, $appliance_id);
-        return;
-    }
+	// check that appliance is not using openqrm resource
+	if ($resource->id == 0) {
+		return;
+	}
+	// check image type -> equallogic
+	$image = new image();
+	$image->get_instance_by_id($appliance->imageid);
+	$storage = new storage();
+	$storage->get_instance_by_id($image->storageid);
+	if(!preg_match('/equallogic$/i',$image->type)) {
+		$event->log("openqrm_equallogic_storage_appliance", $_SERVER['REQUEST_TIME'], 5, "openqrm-equallogic-storage-appliance-hook.php", "$appliance_id is not from type equallogic-storage-, skipping .. $appliance_name/$appliance_ip", "", "", 0, 0, $appliance_id);
+		return;
+	}
 
 	switch($cmd) {
 		case "add":
-	                // set CREATE_FS=TRUE deployment parameter when it's not set (e.g. with newly created images)
+			// set CREATE_FS=TRUE deployment parameter when it's not set (e.g. with newly created images)
 			$create_fs_param = $image->get_deployment_parameter("CREATE_FS");
 			if($create_fs_param == "") {
 				$image->set_deployment_parameters("CREATE_FS", "TRUE");

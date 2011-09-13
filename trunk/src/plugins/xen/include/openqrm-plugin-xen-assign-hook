@@ -34,7 +34,7 @@ function xen_assign_hook() {
 	if echo $OPENQRM_KERNEL_NAME | grep xen 1>/dev/null; then
 		echo "xen-plugin: Running assign hook with $OPENQRM_RESOURCE_ID $OPENQRM_KERNEL_NAME $OPENQRM_RESOURCE_PXELINUXCFG_FILE"
 		echo "xen-plugin: Running assign hook with $OPENQRM_RESOURCE_ID $OPENQRM_KERNEL_NAME $OPENQRM_RESOURCE_PXELINUXCFG_FILE" | logger
-		echo "!!! template $XEN_PXE_CONFIG_TEMPLATE" | logger
+		echo "Template $XEN_PXE_CONFIG_TEMPLATE" | logger
 
 
 		# get more infos about the resource

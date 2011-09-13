@@ -91,7 +91,7 @@ function mount_rootfs() {
 	else
 		echo "nfs-storage: Mounted $image_storage_server_ip:$IMAGE_ROOT_DIR rw"
 	fi
-	
+
 	if  [ "$IMAGE_INSTALL_FROM_NFS" != "" ]; then
 		install_rootfs_from_nfs
 	else
@@ -133,7 +133,7 @@ function remount_rootfs() {
 	done
 	echo "nfs-storage: Re-mounted $image_storage_server_ip:$IMAGE_ROOT_DIR ro"
 	openqrm_portmap_stop
-	
+
 }
 
 

@@ -42,7 +42,7 @@ function openqrm_plugin_solx86_uninstall() {
 	if [ "$USERNAME" == "" ] && [ "$PASSWORD" == "" ]; then
 		echo -n "solx86: Please give a username to uninstall the plugin : "
 		read USERNAME
-		echo	
+		echo
 		echo -n "solx86: Please give the password for user $USERNAME : "
 		read PASSWORD
 		echo
@@ -50,8 +50,8 @@ function openqrm_plugin_solx86_uninstall() {
 	echo "Uninstalling the openQRM solx86-plugin"
 	openqrm_plugin_solx86_stop
 	openqrm_server_remove_deployment_type $USERNAME $PASSWORD solx86
-    rm -f $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/boot-service/openqrm-solx86
-    rm -f $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/boot-service/openqrm-client.solx86.tgz
+	rm -f $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/boot-service/openqrm-solx86
+	rm -f $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/boot-service/openqrm-client.solx86.tgz
 	rm -f $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/base/plugins/solx86
 
 }
@@ -62,7 +62,7 @@ function openqrm_plugin_solx86_init() {
 	if [ "$USERNAME" == "" ] && [ "$PASSWORD" == "" ]; then
 		echo -n "solx86: Please give a username to init the plugin : "
 		read USERNAME
-		echo	
+		echo
 		echo -n "solx86: Please give the password for user $USERNAME : "
 		read PASSWORD
 		echo
@@ -71,7 +71,7 @@ function openqrm_plugin_solx86_init() {
 	openqrm_server_add_deployment_type $USERNAME $PASSWORD solx86 solx86 "Solaris server" solx86 "Solaris server"
 	# linking the web dir
 	ln -sf $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/solx86/web $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/base/plugins/solx86
-    # linking integration util
+	# linking integration util
 	ln -sf $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/solx86/bin/openqrm-solx86 $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/boot-service/openqrm-solx86
 	# link the boot-service
 	ln -sf $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/solx86/web/openqrm-client.solx86.tgz $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/boot-service/openqrm-client.solx86.tgz

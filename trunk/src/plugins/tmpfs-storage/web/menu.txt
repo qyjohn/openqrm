@@ -21,4 +21,4 @@
 #	IMG
 #	Target
 ..|Tmpfs-Storage
-...|About|plugins/tmpfs-storage/tmpfs-storage-about.php|How to use|tmpfs-storage/plugin.png
+...|插件介绍|plugins/tmpfs-storage/tmpfs-storage-about.php|How to use|tmpfs-storage/plugin.png

@@ -36,7 +36,7 @@ LINEBR='
 
 # define wget to use with https
 if [ "$openqrm_web_protocol" == "https" ]; then
-    WGET_NO_CERT_CHECK="--no-check-certificate"
+	WGET_NO_CERT_CHECK="--no-check-certificate"
 fi
 
 function equallogic_storage_usage() {
@@ -54,141 +54,144 @@ function equallogic_storage_usage() {
 
 
 function equallogic_parse_lun_output() {
-    # there is one issue with Equallogic 'show volume' output, and that is line wrapping.
-    # an example:
+	# there is one issue with Equallogic 'show volume' output, and that is line wrapping.
+	# an example:
 
-    # somelun         100MB      0         online         read-write 0           N 
-    # a-lun-with-a-ve 100MB      0         online         read-write 0           N 
-    #   ry-long-lun-n                                                              
-    #   ame                                                                       
-    # otherlun        100MB      0         online         read-write 0           N 
+	# somelun         100MB      0         online         read-write 0           N
+	# a-lun-with-a-ve 100MB      0         online         read-write 0           N
+	#   ry-long-lun-n
+	#   ame
+	# otherlun        100MB      0         online         read-write 0           N
 
-    # we need to fix this and turn it back to one line, and we do this with bash.. yay
+	# we need to fix this and turn it back to one line, and we do this with bash.. yay
 
-    OUTPUT_FILE=$1
-    OUTPUT_START=0
-    OUTPUT_END=0
-    OLD_IFS=$IFS
-IFS='
+	local OUTPUT_FILE=$1
+	local OUTPUT_START=0
+	local OUTPUT_END=0
+	local OLD_IFS=$IFS
+	local IFS='
 '
-    # get a new line
-    for LINE in `cat $TMPLISTFILE`; do
+	local LINE=''
 
-        if [ "$OUTPUT_START" == "0" ]; then
-            if echo $LINE | grep "Name" 1>/dev/null; then
-                OUTPUT_START=1
-                continue
-            fi
-        elif [ "$OUTPUT_START" == "1" ]; then
-            if echo $LINE | grep "logout" 1>/dev/null; then
-                OUTPUT_END=1
+	# get a new line
+	for LINE in `cat $OUTPUT_FILE`; do
+
+		if [ "$OUTPUT_START" == "0" ]; then
+			if echo $LINE | grep "Name" 1>/dev/null; then
+				OUTPUT_START=1
+				continue
+			fi
+		elif [ "$OUTPUT_START" == "1" ]; then
+			if echo $LINE | grep "logout" 1>/dev/null; then
+				OUTPUT_END=1
 		# don't forget to spit out that last lun thats in our cached variables
-                echo "$LUNNAME $LUNSIZE $LUNSNAP $LUNSTAT $LUNRW $LUNCON $LUNTP"
-                continue
-            fi
-        fi
-        if [ "$OUTPUT_START" == "1" ] && [ "$OUTPUT_END" == "0" ]; then
-            if echo $LINE | grep Name 1>/dev/null; then
-                continue
-            fi
-            if echo $LINE | grep "\-\-\-\-\-" 1>/dev/null; then
-                continue
-            fi
-	    if echo "$LINE" | grep "^  " 1>/dev/null; then
-                 # this line is the remainder of the previous LUN definition
-                 ADDTOLUN=`echo $LINE | awk '{ print $1 }'`
-                 LUNNAME=${LUNNAME}${ADDTOLUN}
-	    else
-                  # spit out the old variables when there weren't any appendable lines in the output
+				echo "$LUNNAME $LUNSIZE $LUNSNAP $LUNSTAT $LUNRW $LUNCON $LUNTP"
+				continue
+			fi
+		fi
+		if [ "$OUTPUT_START" == "1" ] && [ "$OUTPUT_END" == "0" ]; then
+			if echo $LINE | grep Name 1>/dev/null; then
+				continue
+			fi
+			if echo $LINE | grep "\-\-\-\-\-" 1>/dev/null; then
+				continue
+			fi
+		if echo "$LINE" | grep "^  " 1>/dev/null; then
+				 # this line is the remainder of the previous LUN definition
+				 local ADDTOLUN=`echo $LINE | awk '{ print $1 }'`
+				 local LUNNAME=${LUNNAME}${ADDTOLUN}
+		else
+				  # spit out the old variables when there weren't any appendable lines in the output
 		   if [ "x$LUNNAME" != "x" ]; then
-	                   echo "$LUNNAME $LUNSIZE $LUNSNAP $LUNSTAT $LUNRW $LUNCON $LUNTP"
-                   fi
-                   # this is a lun definition line, set the variables
-                   # $1 = lun_name, $2 = size, $3 = snapshots, $4= state (off/online), $5 = write (ro/rw), $6 is conns, $7 = TP
-                   LUNNAME=`echo $LINE | awk '{ print $1 }'`
-                   LUNSIZE=`echo $LINE | awk '{ print $2 }'`
-                   LUNSNAP=`echo $LINE | awk '{ print $3 }'`
-                   LUNSTAT=`echo $LINE | awk '{ print $4 }'`
-                   LUNRW=`echo $LINE | awk '{ print $5 }'`
-                   LUNCON=`echo $LINE | awk '{ print $6 }'`
-                   LUNTP=`echo $LINE | awk '{ print $7 }'`
-	    fi
-        fi
-    done
-    IFS=$OLD_IFS
+					   echo "$LUNNAME $LUNSIZE $LUNSNAP $LUNSTAT $LUNRW $LUNCON $LUNTP"
+				   fi
+				   # this is a lun definition line, set the variables
+				   # $1 = lun_name, $2 = size, $3 = snapshots, $4= state (off/online), $5 = write (ro/rw), $6 is conns, $7 = TP
+				   local LUNNAME=`echo $LINE | awk '{ print $1 }'`
+				   local LUNSIZE=`echo $LINE | awk '{ print $2 }'`
+				   local LUNSNAP=`echo $LINE | awk '{ print $3 }'`
+				   local LUNSTAT=`echo $LINE | awk '{ print $4 }'`
+				   local LUNRW=`echo $LINE | awk '{ print $5 }'`
+				   local LUNCON=`echo $LINE | awk '{ print $6 }'`
+				   local LUNTP=`echo $LINE | awk '{ print $7 }'`
+		fi
+		fi
+	done
+	IFS=$OLD_IFS
 
 
 }
 
 function equallogic_parse_access_output() {
-    # the same issue with lun access.
+	# the same issue with lun access.
 
-    # an example:
-    # ID  Initiator                     Ipaddress       AuthMethod UserName   Apply-To
-    # --- ----------------------------- --------------- ---------- ---------- --------
-    # 1                                 *.*.*.*         chap       18.cloud_8 both    
-    #                                                               _1_              
+	# an example:
+	# ID  Initiator                     Ipaddress       AuthMethod UserName   Apply-To
+	# --- ----------------------------- --------------- ---------- ---------- --------
+	# 1                                 *.*.*.*         chap       18.cloud_8 both
+	#                                                               _1_
 
-    # note: initiator access filed is empty, but not used by openqrm.
-    # if it is used elsewhere, this might lead to unexpected results.
+	# note: initiator access filed is empty, but not used by openqrm.
+	# if it is used elsewhere, this might lead to unexpected results.
 
-    OUTPUT_FILE=$1
-    OUTPUT_START=0
-    OUTPUT_END=0
-    OLD_IFS=$IFS
-    ITERATION=0
-IFS='
+	local OUTPUT_FILE=$1
+	local OUTPUT_START=0
+	local OUTPUT_END=0
+	local OLD_IFS=$IFS
+	local ITERATION=0
+	local IFS='
 '
-    # get a new line
-    for LINE in `cat $TMPLISTFILE`; do
-        let ITERATION=$ITERATION+1
+	local LINE=''
+	# get a new line
+	for LINE in `cat $OUTPUT_FILE`; do
+		let ITERATION=$ITERATION+1
 
-        if [ "$OUTPUT_START" == "0" ]; then
-            if echo $LINE | grep "Name" 1>/dev/null; then
-                OUTPUT_START=1
-                continue
-            fi
-        elif [ "$OUTPUT_START" == "1" ]; then
-            if echo $LINE | grep "logout" 1>/dev/null; then
-                OUTPUT_END=1
+		if [ "$OUTPUT_START" == "0" ]; then
+			if echo $LINE | grep "Name" 1>/dev/null; then
+				OUTPUT_START=1
+				continue
+			fi
+		elif [ "$OUTPUT_START" == "1" ]; then
+			if echo $LINE | grep "logout" 1>/dev/null; then
+				OUTPUT_END=1
 		# don't forget to spit out that last lun thats in our cached variables
-                echo "$AUTHID $AUTHIP $AUTHMETH $AUTHUSER $AUTHAPPLY"
-                continue
-            fi
-        fi
-        if [ "$OUTPUT_START" == "1" ] && [ "$OUTPUT_END" == "0" ]; then
-            if echo $LINE | grep "Initiator.*AuthMethod" 1>/dev/null; then
-                continue
-            fi
-            if echo $LINE | grep "\-\-\-\-\-" 1>/dev/null; then
-                continue
-            fi
-	    if echo "$LINE" | grep "^  " 1>/dev/null; then
-                 # this line is the remainder of the previous username definition
-                 ADDTOUSER=`echo $LINE | awk '{ print $1 }'`
-                 AUTHUSER=${AUTHUSER}${ADDTOUSER}
-	    else
-                  # spit out the old variables when there weren't any appendable lines in the output
+				echo "$AUTHID $AUTHIP $AUTHMETH $AUTHUSER $AUTHAPPLY"
+				continue
+			fi
+		fi
+		if [ "$OUTPUT_START" == "1" ] && [ "$OUTPUT_END" == "0" ]; then
+			if echo $LINE | grep "Initiator.*AuthMethod" 1>/dev/null; then
+				continue
+			fi
+			if echo $LINE | grep "\-\-\-\-\-" 1>/dev/null; then
+				continue
+			fi
+		if echo "$LINE" | grep "^  " 1>/dev/null; then
+				 # this line is the remainder of the previous username definition
+				 local ADDTOUSER=`echo $LINE | awk '{ print $1 }'`
+				 local AUTHUSER=${AUTHUSER}${ADDTOUSER}
+		else
+				  # spit out the old variables when there weren't any appendable lines in the output
 		   if [ "x$AUTHUSER" != "x" ]; then
-                        echo "$AUTHID $AUTHIP $AUTHMETH $AUTHUSER $AUTHAPPLY"
-                   fi
+						echo "$AUTHID $AUTHIP $AUTHMETH $AUTHUSER $AUTHAPPLY"
+				   fi
 
-                   # this is a access definition line, set the variables
-                   AUTHID=`echo $LINE | awk '{ print $1 }'`
-                   AUTHIP=`echo $LINE | awk '{ print $2 }'`
-                   AUTHMETH=`echo $LINE | awk '{ print $3 }'`
-                   AUTHUSER=`echo $LINE | awk '{ print $4 }'`
-                   AUTHAPPLY=`echo $LINE | awk '{ print $5 }'`
-	    fi
-        fi
-    done
-    IFS=$OLD_IFS
+				   # this is a access definition line, set the variables
+				   local AUTHID=`echo $LINE | awk '{ print $1 }'`
+				   local AUTHIP=`echo $LINE | awk '{ print $2 }'`
+				   local AUTHMETH=`echo $LINE | awk '{ print $3 }'`
+				   local AUTHUSER=`echo $LINE | awk '{ print $4 }'`
+				   local AUTHAPPLY=`echo $LINE | awk '{ print $5 }'`
+		fi
+		fi
+	done
+	IFS=$OLD_IFS
 
 
 }
 
 
-equallogic_storage_storage_log openqrm-equallogic-storage "!!! Running: $0 $@ as `whoami` in `pwd`" | logger
+equallogic_storage_storage_log openqrm-equallogic-storage "Running: $0 $@ as `whoami` in `pwd`" | logger
 
 function eqlog() {
 	equallogic_storage_storage_log openqrm-equallogic-storage "$*" | logger
@@ -258,21 +261,21 @@ done
 
 # main
 if [ "$EQUALLOGIC_COMMAND" == "" ]; then
-    equallogic_storage_usage
+	equallogic_storage_usage
 fi
 if [ "$EQUALLOGIC_PASSWORD" == "" ]; then
-    equallogic_storage_usage
+	equallogic_storage_usage
 fi
 if [ "$EQUALLOGIC_USERNAME" == "" ]; then
-    equallogic_storage_usage
+	equallogic_storage_usage
 fi
 if [ "$EQUALLOGIC_SERVER_IP" == "" ]; then
-    equallogic_storage_usage
+	equallogic_storage_usage
 fi
 
 
 if [ "$EQUALLOGIC_COMMAND" == "post_luns" ] || [ "$EQUALLOGIC_COMMAND" == "post_identifier" ]; then
-    :
+	:
 else
 	if [ "$EQUALLOGIC_COMMAND" != "list" ] && [ "$EQUALLOGIC_COMMAND" != "auth" ]; then
 		if [ "$EQUALLOGIC_IMAGE_NAME" == "" ]; then
@@ -288,7 +291,6 @@ case "$EQUALLOGIC_COMMAND" in
 	add)
 		if [ "$EQUALLOGIC_IMAGE_SIZE" == "" ]; then
 			EQUALLOGIC_IMAGE_SIZE=$DEFAULT_IMAGE_SIZE
-			eqlog "Using default size of $DEFAULT_IMAGE_SIZE MB!"
 		fi
 		export EQUALLOGIC_IMAGE_SIZE
 		eqlog "Creating EQUALLOGIC Lun for image $EQUALLOGIC_IMAGE_NAME"
@@ -309,16 +311,15 @@ case "$EQUALLOGIC_COMMAND" in
 		eqlog Snapshotting currently unsupported
 		exit 1
 		if [ "$EQUALLOGIC_IMAGE_SNAPSHOT_NAME" == "" ]; then
-			eqlog "ERROR: Please give a name for the snapshot using the -s cmdline parmeter"
 			equallogic_storage_usage
 		fi
-		
+
 		# check that source fs-images exist
 		if [ ! -f $EQUALLOGIC_STORAGE_SERVER_IMAGE_DIRECTORY/$EQUALLOGIC_IMAGE_NAME ]; then
 			eqlog "ERROR: Could not find source image $EQUALLOGIC_STORAGE_SERVER_IMAGE_DIRECTORY/$EQUALLOGIC_IMAGE_NAME on the storage-server"
 			exit 1
 		fi
-		echo -n "Creating snapshot from image $EQUALLOGIC_IMAGE_NAME -> $EQUALLOGIC_IMAGE_SNAPSHOT_NAME"
+		#echo -n "Creating snapshot from image $EQUALLOGIC_IMAGE_NAME -> $EQUALLOGIC_IMAGE_SNAPSHOT_NAME"
 		equallogic_storage_lock aquire
 
 		equallogic_storage_lock release
@@ -327,7 +328,6 @@ case "$EQUALLOGIC_COMMAND" in
 
 	auth)
 		EQUALLOGIC_IMAGE_LUN=`basename $EQUALLOGIC_IMAGE_ROOTDEVICE`
-		eqlog "Authenticating EQUALLOGIC Lun $EQUALLOGIC_IMAGE_ROOTDEVICE for image $EQUALLOGIC_IMAGE_NAME"
 		equallogic_storage_lock aquire
 
 		# we first have to check if there is an existing access control
@@ -338,13 +338,19 @@ case "$EQUALLOGIC_COMMAND" in
 		$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/equallogic-storage/bin/openqrm-equallogic-cmd $EQUALLOGIC_SERVER_IP $EQUALLOGIC_USERNAME $EQUALLOGIC_PASSWORD "volume select $EQUALLOGIC_IMAGE_LUN access show" > $TMPLISTFILE
 		equallogic_parse_access_output $TMPLISTFILE > $ACCESS_STATUS_TMP
 		for access_id in `grep "$EQUALLOGIC_IMAGE_NAME " $ACCESS_STATUS_TMP | awk {' print $1 '}`; do
-			eqlog "Revoking existing access to $EQUALLOGIC_IMAGE_LUN for user $EQUALLOGIC_IMAGE_NAME"
+			#eqlog "Revoking existing access to $EQUALLOGIC_IMAGE_LUN for user $EQUALLOGIC_IMAGE_NAME"
 			$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/equallogic-storage/bin/openqrm-equallogic-cmd $EQUALLOGIC_SERVER_IP $EQUALLOGIC_USERNAME $EQUALLOGIC_PASSWORD "volume select $EQUALLOGIC_IMAGE_LUN access delete $access_id"
 		done
 		#/bin/rm -f $TMPLISTFILE $ACCESS_STATUS_TMP
 		eqlog "Granting access to $EQUALLOGIC_IMAGE_LUN for user $EQUALLOGIC_IMAGE_NAME"
 		$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/equallogic-storage/bin/openqrm-equallogic-cmd $EQUALLOGIC_SERVER_IP $EQUALLOGIC_USERNAME $EQUALLOGIC_PASSWORD "chapuser delete $EQUALLOGIC_IMAGE_NAME" "chapuser create $EQUALLOGIC_IMAGE_NAME password $EQUALLOGIC_IMAGE_PASSWORD" "volume select $EQUALLOGIC_IMAGE_LUN access create username $EQUALLOGIC_IMAGE_NAME"
 		equallogic_storage_lock release
+		# if we have an image name send back to openQRM that storage auth finished to remvoe the storage-auth-blocker
+		if [ "$OPENQRM_USERNAME" != "" ] && [ "$OPENQRM_PASSWORD" != "" ] && [ "$EQUALLOGIC_IMAGE_NAME" != "" ]; then
+			if ! wget -q $WGET_NO_CERT_CHECK -O /dev/null --http-user=$OPENQRM_USERNAME --http-password=$OPENQRM_PASSWORD "$openqrm_web_protocol://$OPENQRM_SERVER_IP_ADDRESS/openqrm/base/plugins/equallogic-storage/equallogic-storage-action.php?equallogic_storage_command=auth_finished&eq_image_name=$EQUALLOGIC_IMAGE_NAME"; then
+				eqlog "ERROR: Could not remove the storage-auth-blocker from the openQRM-server at $OPENQRM_SERVER_IP_ADDRESS!"
+			fi
+		fi
 		;;
 
 	list)
@@ -356,7 +362,7 @@ case "$EQUALLOGIC_COMMAND" in
 		equallogic_storage_lock release
 		;;
 	post_luns)
-		eqlog "Posting current equallogic-luns to the openQRM-server"
+		#eqlog "Posting current equallogic-luns to the openQRM-server"
 		equallogic_storage_lock aquire
 		if [ ! -d $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/equallogic-storage/web/storage ]; then
 			mkdir -p $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/equallogic-storage/web/storage
@@ -371,7 +377,7 @@ case "$EQUALLOGIC_COMMAND" in
 		;;
 	post_identifier)
 		# note: do we really need this for equallogic? where is it used?
-		eqlog "Posting current equallogic-identifier to the openQRM-server"
+		#eqlog "Posting current equallogic-identifier to the openQRM-server"
 		equallogic_storage_lock aquire
 		if [ ! -d $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/equallogic-storage/web/storage ]; then
 			mkdir -p $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/equallogic-storage/web/storage
@@ -386,53 +392,44 @@ case "$EQUALLOGIC_COMMAND" in
 		;;
 	resize)
 		if [ "$EQUALLOGIC_IMAGE_SIZE" == "" ]; then
-			eqlog "Error: no size given to resize $EQUALLOGIC_IMAGE_NAME to"
-        		/bin/rm -f $TMPLISTFILE
+			openqrm_post_event 0 "snap" 3 "openqrm-equallogic-storage" "No size given to resize $EQUALLOGIC_IMAGE_NAME to!"
+			/bin/rm -f $TMPLISTFILE
 			exit 1
 		fi
 		export EQUALLOGIC_IMAGE_SIZE
 		eqlog "Resizing EQUALLOGIC image $EQUALLOGIC_IMAGE_NAME to $EQUALLOGIC_IMAGE_SIZE"
 		equallogic_storage_lock aquire
-        	$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/equallogic-storage/bin/openqrm-equallogic-cmd $EQUALLOGIC_SERVER_IP $EQUALLOGIC_USERNAME $EQUALLOGIC_PASSWORD "volume select $EQUALLOGIC_IMAGE_NAME size $EQUALLOGIC_IMAGE_SIZE"
+		$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/equallogic-storage/bin/openqrm-equallogic-cmd $EQUALLOGIC_SERVER_IP $EQUALLOGIC_USERNAME $EQUALLOGIC_PASSWORD "volume select $EQUALLOGIC_IMAGE_NAME size $EQUALLOGIC_IMAGE_SIZE"
 		equallogic_storage_lock release
 		$0 post_luns -u $EQUALLOGIC_USERNAME -p $EQUALLOGIC_PASSWORD -e $EQUALLOGIC_SERVER_IP
-        	/bin/rm -f $TMPLISTFILE
+		/bin/rm -f $TMPLISTFILE
 		;;
 	clone)
 		if [ "$EQUALLOGIC_IMAGE_SNAPSHOT_NAME" == "" ]; then
-			eqlog "ERROR: Please give a name for the clone using the -s cmdline parmeter"
 			equallogic_storage_usage
 		fi
-		
 		# we either clone for the cloud, in which case we do care about OPENQRM_CLONE_NAME
 		# or we clone from the eq plugin, and then we don't care nor post that we're finished
-
-		if [ "x$OPENQRM_CLONE_NAME" != "x" ]; then 
+		if [ "x$OPENQRM_CLONE_NAME" != "x" ]; then
 			eqlog "Creating clone from lun $EQUALLOGIC_IMAGE_NAME -> $EQUALLOGIC_IMAGE_SNAPSHOT_NAME for image $OPENQRM_CLONE_NAME"
 		else
 			eqlog "Creating clone from lun $EQUALLOGIC_IMAGE_NAME -> $EQUALLOGIC_IMAGE_SNAPSHOT_NAME"
-		fi	
+		fi
 		equallogic_storage_lock aquire
-
-        	$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/equallogic-storage/bin/openqrm-equallogic-cmd $EQUALLOGIC_SERVER_IP $EQUALLOGIC_USERNAME $EQUALLOGIC_PASSWORD "volume select $EQUALLOGIC_IMAGE_NAME clone $EQUALLOGIC_IMAGE_SNAPSHOT_NAME"
-
+		$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/equallogic-storage/bin/openqrm-equallogic-cmd $EQUALLOGIC_SERVER_IP $EQUALLOGIC_USERNAME $EQUALLOGIC_PASSWORD "volume select $EQUALLOGIC_IMAGE_NAME clone $EQUALLOGIC_IMAGE_SNAPSHOT_NAME"
 		equallogic_storage_lock release
-
-		if [ "x$OPENQRM_CLONE_NAME" != "x" ]; then 
+		if [ "x$OPENQRM_CLONE_NAME" != "x" ]; then
 			# we have an image name, so lets post that we're done
 			CLONE_TMPDIR=`mktemp -d /tmp/eq-clone.XXXXXXXXXX`
-		        CLONE_FINISHED="$CLONE_TMPDIR/$OPENQRM_CLONE_NAME.clone"
-	        	touch $CLONE_FINISHED
-
+			CLONE_FINISHED="$CLONE_TMPDIR/$OPENQRM_CLONE_NAME.clone"
+			touch $CLONE_FINISHED
 			if ! wget -q $WGET_NO_CERT_CHECK -O /dev/null --http-user=$OPENQRM_USERNAME --http-password=$OPENQRM_PASSWORD  --post-file=`$OPENQRM_POSTENCODE $CLONE_FINISHED` $openqrm_web_protocol://${resource_openqrmserver}/openqrm/base/plugins/equallogic-storage/equallogic-storage-action.php?equallogic_storage_command=clone_finished; then
-	 	               eqlog "ERROR: Could not post clone-finished status to the openQRM-server at ${resource_openqrmserver}!"
-	                else
-			       eqlog "Posted clone-finished status to the openQRM-server at $resource_openqrmserver!" | logger
+				openqrm_post_event 0 "snap" 3 "openqrm-equallogic-storage" "Could not post clone-finished status to the openQRM-server at $OPENQRM_SERVER_IP_ADDRESS!"
+			else
+				eqlog "Posted clone-finished status to the openQRM-server at $OPENQRM_SERVER_IP_ADDRESS"
 			fi
-	
 			rm -rf $CLONE_TMPDIR
 		fi
-
 		$0 post_luns -u $EQUALLOGIC_USERNAME -p $EQUALLOGIC_PASSWORD -e $EQUALLOGIC_SERVER_IP
 		;;
 

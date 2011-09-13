@@ -21,4 +21,4 @@
 #	IMG
 #	Target
 ..|Windows
-...|About|plugins/windows/windows-about.php
+...|插件介绍|plugins/windows/windows-about.php

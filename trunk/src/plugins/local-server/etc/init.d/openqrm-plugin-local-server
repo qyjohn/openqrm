@@ -42,7 +42,7 @@ function openqrm_plugin_local_server_uninstall() {
 	if [ "$USERNAME" == "" ] && [ "$PASSWORD" == "" ]; then
 		echo -n "local-server: Please give a username to uninstall the plugin : "
 		read USERNAME
-		echo	
+		echo
 		echo -n "local-server: Please give the password for user $USERNAME : "
 		read PASSWORD
 		echo
@@ -61,7 +61,7 @@ function openqrm_plugin_local_server_init() {
 	if [ "$USERNAME" == "" ] && [ "$PASSWORD" == "" ]; then
 		echo -n "local-server: Please give a username to init the plugin : "
 		read USERNAME
-		echo	
+		echo
 		echo -n "local-server: Please give the password for user $USERNAME : "
 		read PASSWORD
 		echo

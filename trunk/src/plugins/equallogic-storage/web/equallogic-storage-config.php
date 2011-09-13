@@ -6,19 +6,19 @@
 /*
   This file is part of openQRM.
 
-    openQRM is free software: you can redistribute it and/or modify
-    it under the terms of the GNU General Public License version 2
-    as published by the Free Software Foundation.
+	openQRM is free software: you can redistribute it and/or modify
+	it under the terms of the GNU General Public License version 2
+	as published by the Free Software Foundation.
 
-    openQRM is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    GNU General Public License for more details.
+	openQRM is distributed in the hope that it will be useful,
+	but WITHOUT ANY WARRANTY; without even the implied warranty of
+	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+	GNU General Public License for more details.
 
-    You should have received a copy of the GNU General Public License
-    along with openQRM.  If not, see <http://www.gnu.org/licenses/>.
+	You should have received a copy of the GNU General Public License
+	along with openQRM.  If not, see <http://www.gnu.org/licenses/>.
 
-    Copyright 2009, Matthias Rechenburg <matt@openqrm.com>
+	Copyright 2009, Matthias Rechenburg <matt@openqrm.com>
 */
 
 
@@ -55,38 +55,41 @@ function redirect($strMsg, $currenttab = 'tab0', $eq_id) {
 
 // running the actions
 if(htmlobject_request('action') != '') {
-	switch (htmlobject_request('action')) {
-		case 'update':
-			if (isset($_REQUEST['identifier'])) {
-                foreach($_REQUEST['identifier'] as $id) {
-                    $eq_storage = new equallogic_storage();
-                    $eq_storage->get_instance_by_storage_id($id);
+	if ($OPENQRM_USER->role == "administrator") {
 
-                    if (!strlen($eq_storage->storage_id)) {
-        				$strMsg = "EqualLogic Storage server $id not configured yet. Adding configuration<br>";
-                        $eq_storage_fields['eq_id'] = openqrm_db_get_free_id('eq_id', $eq_storage->_db_table);
-                        $eq_storage_fields['eq_storage_id'] = $id;
-                        $eq_storage_fields['eq_storage_user'] = $equallogic_storage_fields['storage_user'];
-                        $eq_storage_fields['eq_storage_password'] = $equallogic_storage_fields['storage_password'];
-                        $eq_storage_fields['eq_storage_comment'] = $equallogic_storage_fields['storage_comment'];
-                        $eq_storage->add($eq_storage_fields);
-                    } else {
-                        $strMsg = "Updating EqualLogic Storage configuration of server $id<br>";
-                        $eq_storage_fields['eq_storage_user'] = $equallogic_storage_fields['storage_user'];
-                        $eq_storage_fields['eq_storage_password'] = $equallogic_storage_fields['storage_password'];
-                        $eq_storage_fields['eq_storage_comment'] = $equallogic_storage_fields['storage_comment'];
-                        $eq_storage->update($eq_storage->id, $eq_storage_fields);
-                    }
-    				redirect($strMsg, 'tab0', $id);
-                }
-            }
-			break;
+		switch (htmlobject_request('action')) {
+			case 'update':
+				if (isset($_REQUEST['identifier'])) {
+					foreach($_REQUEST['identifier'] as $id) {
+						$eq_storage = new equallogic_storage();
+						$eq_storage->get_instance_by_storage_id($id);
 
-		default:
-			$event->log("$equallogic_storage_command", $_SERVER['REQUEST_TIME'], 3, "equallogic-storage-action", "No such equallogic-storage command ($equallogic_storage_command)", "", "", 0, 0, 0);
-			break;
+						if (!strlen($eq_storage->storage_id)) {
+							$strMsg = "EqualLogic Storage server $id not configured yet. Adding configuration<br>";
+							$eq_storage_fields['eq_id'] = openqrm_db_get_free_id('eq_id', $eq_storage->_db_table);
+							$eq_storage_fields['eq_storage_id'] = $id;
+							$eq_storage_fields['eq_storage_user'] = $equallogic_storage_fields['storage_user'];
+							$eq_storage_fields['eq_storage_password'] = $equallogic_storage_fields['storage_password'];
+							$eq_storage_fields['eq_storage_comment'] = $equallogic_storage_fields['storage_comment'];
+							$eq_storage->add($eq_storage_fields);
+						} else {
+							$strMsg = "Updating EqualLogic Storage configuration of server $id<br>";
+							$eq_storage_fields['eq_storage_user'] = $equallogic_storage_fields['storage_user'];
+							$eq_storage_fields['eq_storage_password'] = $equallogic_storage_fields['storage_password'];
+							$eq_storage_fields['eq_storage_comment'] = $equallogic_storage_fields['storage_comment'];
+							$eq_storage->update($eq_storage->id, $eq_storage_fields);
+						}
+						redirect($strMsg, 'tab0', $id);
+					}
+				}
+				break;
+
+			default:
+				$event->log("$equallogic_storage_command", $_SERVER['REQUEST_TIME'], 3, "equallogic-storage-action", "No such equallogic-storage command ($equallogic_storage_command)", "", "", 0, 0, 0);
+				break;
 
 
+		}
 	}
 }
 
@@ -137,16 +140,20 @@ function equallogic_storage_configuration($equallogic_storage_id) {
 	if (file_exists($_SERVER["DOCUMENT_ROOT"]."/".$storage_icon)) {
 		$resource_icon_default=$storage_icon;
 	}
-    // get defaults if existing
-    $eq_storage = new equallogic_storage();
-    $eq_storage->get_instance_by_storage_id($equallogic_storage_id);
-    if (strlen($eq_storage->storage_id)) {
-        $eq_storage_user = $eq_storage->storage_user;
-        $eq_storage_password = $eq_storage->storage_password;
-        $eq_storage_comment = $eq_storage->storage_comment;
-    }
-    // eq storage config
-    $arBody[] = array(
+	// get defaults if existing
+	$eq_storage = new equallogic_storage();
+	$eq_storage->get_instance_by_storage_id($equallogic_storage_id);
+	if (strlen($eq_storage->storage_id)) {
+		$eq_storage_user = $eq_storage->storage_user;
+		$eq_storage_password = $eq_storage->storage_password;
+		$eq_storage_comment = $eq_storage->storage_comment;
+	} else {
+		$eq_storage_user = '';
+		$eq_storage_password = '';
+		$eq_storage_comment = '';
+	}
+	// eq storage config
+	$arBody[] = array(
 		'storage_state' => "<img src=$state_icon>",
 		'storage_icon' => "<img width=24 height=24 src=$resource_icon_default>",
 		'storage_id' => $storage->id,
@@ -173,7 +180,7 @@ function equallogic_storage_configuration($equallogic_storage_id) {
 	$backlink = "<a href=\"equallogic-storage-manager.php?identifier[]=$equallogic_storage_id&action=refresh\">back</a>";
 
    // set template
-    $t = new Template_PHPLIB();
+	$t = new Template_PHPLIB();
 	$t->debug = false;
 	$t->setFile('tplfile', './tpl/' . 'equallogic-storage-config.tpl.php');
 	$t->setVar(array(

@@ -2,19 +2,19 @@
 /*
   This file is part of openQRM.
 
-    openQRM is free software: you can redistribute it and/or modify
-    it under the terms of the GNU General Public License version 2
-    as published by the Free Software Foundation.
+	openQRM is free software: you can redistribute it and/or modify
+	it under the terms of the GNU General Public License version 2
+	as published by the Free Software Foundation.
 
-    openQRM is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    GNU General Public License for more details.
+	openQRM is distributed in the hope that it will be useful,
+	but WITHOUT ANY WARRANTY; without even the implied warranty of
+	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+	GNU General Public License for more details.
 
-    You should have received a copy of the GNU General Public License
-    along with openQRM.  If not, see <http://www.gnu.org/licenses/>.
+	You should have received a copy of the GNU General Public License
+	along with openQRM.  If not, see <http://www.gnu.org/licenses/>.
 
-    Copyright 2009, Matthias Rechenburg <matt@openqrm.com>
+	Copyright 2009, Matthias Rechenburg <matt@openqrm.com>
 */
 
 
@@ -81,7 +81,7 @@ class equallogic_storage {
 		if ("$id" != "") {
 			$equallogic_storage_array = &$db->Execute("select * from $EQUALLOGIC_STORAGE_SERVER_TABLE where eq_id=$id");
 		} else if ("$eq_storage_id" != "") {
-            $equallogic_storage_array = &$db->Execute("select * from $EQUALLOGIC_STORAGE_SERVER_TABLE where eq_storage_id=$eq_storage_id");
+			$equallogic_storage_array = &$db->Execute("select * from $EQUALLOGIC_STORAGE_SERVER_TABLE where eq_storage_id=$eq_storage_id");
 		} else {
 			$event->log("get_instance", $_SERVER['REQUEST_TIME'], 2, "coulduser.class.php", "Could not create instance of equalogic_storage without data", "", "", 0, 0, 0);
 			return;
@@ -181,8 +181,7 @@ class equallogic_storage {
 		$db=openqrm_get_db_connection();
 		unset($eq_fields["eq_id"]);
 		$result = $db->AutoExecute($this->_db_table, $eq_fields, 'UPDATE', "eq_id = $eq_id");
-    	$this->_event->log("update", $_SERVER['REQUEST_TIME'], 2, "equallogic_storage.class.php", "!!! updating $this->_db_table", "", "", 0, 0, 0);
-	if (! $result) {
+		if (! $result) {
 			$this->_event->log("update", $_SERVER['REQUEST_TIME'], 2, "equallogic_storage.class.php", "Failed updating EqualLogic Storage server $eq_id", "", "", 0, 0, 0);
 		}
 	}

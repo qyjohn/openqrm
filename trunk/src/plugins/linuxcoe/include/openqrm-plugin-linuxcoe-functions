@@ -40,7 +40,7 @@ function linuxcoe_log() {
 function linuxcoe_lock() {
 	local COMMAND=$1
 	local RET=1
-	
+
 	if [ ! -d `dirname $LINUXCOE_LOCK_FILE` ]; then
 		mkdir -p `dirname $LINUXCOE_LOCK_FILE`
 	fi
@@ -60,7 +60,7 @@ function linuxcoe_lock() {
 		*)
 			linuxcoe_log linuxcoe_lock "No such command. Try 'aquire' or 'release'"
 			return 1
-			;;	
+			;;
 	esac
 }
 

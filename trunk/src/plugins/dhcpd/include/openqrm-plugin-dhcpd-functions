@@ -60,7 +60,7 @@ function dhcpd_lock() {
 		*)
 			dhcpd_log dhcpd_lock "No such command. Try 'aquire' or 'release'"
 			return 1
-			;;	
+			;;
 	esac
 }
 
@@ -86,29 +86,29 @@ print ntoa(argton($ARGV[1]) & argton($ARGV[0]))."\n";
 # input argument to number
 sub argton
 {
-    my $arg = shift;
-    my $i = 24;
-    my $n = 0;
+	my $arg = shift;
+	my $i = 24;
+	my $n = 0;
 
-    if ($arg =~ /^(\d{1,3})\.(\d{1,3})\.(\d{1,3})\.(\d{1,3})$/) {
-        my @decimals = ($1,$2,$3,$4);
-        foreach (@decimals) {
-            if ($_ > 255 || $_ < 0) {
-                return -1;
-            }
-            $n += $_ << $i;
-            $i -= 8;
-        }
-        return $n;
-    } else {
-        return -1;
-    }
+	if ($arg =~ /^(\d{1,3})\.(\d{1,3})\.(\d{1,3})\.(\d{1,3})$/) {
+		my @decimals = ($1,$2,$3,$4);
+		foreach (@decimals) {
+			if ($_ > 255 || $_ < 0) {
+				return -1;
+			}
+			$n += $_ << $i;
+			$i -= 8;
+		}
+		return $n;
+	} else {
+		return -1;
+	}
 }
 
 # number to dotted decimal address
 sub ntoa
 {
-    return join ".",unpack("CCCC",pack("N",shift));
+	return join ".",unpack("CCCC",pack("N",shift));
 }
 EOF
 }

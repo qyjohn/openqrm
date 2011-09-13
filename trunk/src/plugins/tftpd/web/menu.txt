@@ -20,5 +20,5 @@
 #	Alt
 #	IMG
 #	Target
-..|Tftpd
-...|About|plugins/tftpd/tftpd-about.php|How to use|tftpd/plugin.png
+..|TFTP
+...|插件介绍|plugins/tftpd/tftpd-about.php|How to use|tftpd/plugin.png

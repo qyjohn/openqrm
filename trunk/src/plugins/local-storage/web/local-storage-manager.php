@@ -2,24 +2,24 @@
 <html lang="en">
 <head>
 	<title>Select Local Storage</title>
-    <link rel="stylesheet" type="text/css" href="../../css/htmlobject.css" />
-    <link rel="stylesheet" type="text/css" href="local-storage.css" />
-    <link type="text/css" href="/openqrm/base/js/jquery/development-bundle/themes/smoothness/ui.all.css" rel="stylesheet" />
-    <script type="text/javascript" src="/openqrm/base/js/jquery/js/jquery-1.3.2.min.js"></script>
-    <script type="text/javascript" src="/openqrm/base/js/jquery/js/jquery-ui-1.7.1.custom.min.js"></script>
+	<link rel="stylesheet" type="text/css" href="../../css/htmlobject.css" />
+	<link rel="stylesheet" type="text/css" href="local-storage.css" />
+	<link type="text/css" href="/openqrm/base/js/jquery/development-bundle/themes/smoothness/ui.all.css" rel="stylesheet" />
+	<script type="text/javascript" src="/openqrm/base/js/jquery/js/jquery-1.3.2.min.js"></script>
+	<script type="text/javascript" src="/openqrm/base/js/jquery/js/jquery-ui-1.7.1.custom.min.js"></script>
 
 <style type="text/css">
 
 .ui-progressbar-value {
-    background-image: url(/openqrm/base/img/progress.gif);
+	background-image: url(/openqrm/base/img/progress.gif);
 }
 
 #progressbar {
-    position: absolute;
-    left: 150px;
-    top: 250px;
-    width: 400px;
-    height: 20px;
+	position: absolute;
+	left: 150px;
+	top: 250px;
+	width: 400px;
+	height: 20px;
 }
 
 
@@ -37,19 +37,19 @@
 /*
   This file is part of openQRM.
 
-    openQRM is free software: you can redistribute it and/or modify
-    it under the terms of the GNU General Public License version 2
-    as published by the Free Software Foundation.
+	openQRM is free software: you can redistribute it and/or modify
+	it under the terms of the GNU General Public License version 2
+	as published by the Free Software Foundation.
 
-    openQRM is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    GNU General Public License for more details.
+	openQRM is distributed in the hope that it will be useful,
+	but WITHOUT ANY WARRANTY; without even the implied warranty of
+	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+	GNU General Public License for more details.
 
-    You should have received a copy of the GNU General Public License
-    along with openQRM.  If not, see <http://www.gnu.org/licenses/>.
+	You should have received a copy of the GNU General Public License
+	along with openQRM.  If not, see <http://www.gnu.org/licenses/>.
 
-    Copyright 2009, Matthias Rechenburg <matt@openqrm.com>
+	Copyright 2009, Matthias Rechenburg <matt@openqrm.com>
 */
 
 
@@ -82,371 +82,375 @@ $refresh_loop_max=20;
 
 
 function redirect_vg($strMsg, $local_storage_id) {
-    global $thisfile;
-    global $action;
-    $url = $thisfile.'?strMsg='.urlencode($strMsg).'&currenttab=tab0&redirect=yes&action='.$action.'&identifier[]='.$local_storage_id;
-    echo "<meta http-equiv=\"refresh\" content=\"0; URL=$url\">";
-    exit;
+	global $thisfile;
+	global $action;
+	$url = $thisfile.'?strMsg='.urlencode($strMsg).'&currenttab=tab0&redirect=yes&action='.$action.'&identifier[]='.$local_storage_id;
+	echo "<meta http-equiv=\"refresh\" content=\"0; URL=$url\">";
+	exit;
 }
 
 function redirect_lv($strMsg, $local_storage_id, $local_volume_group) {
-    global $thisfile;
-    global $action;
-    $url = $thisfile.'?strMsg='.urlencode($strMsg).'&currenttab=tab0&redirect=yes&action='.$action.'&local_storage_id='.$local_storage_id.'&identifier[]='.$local_volume_group;
-    echo "<meta http-equiv=\"refresh\" content=\"0; URL=$url\">";
-    exit;
+	global $thisfile;
+	global $action;
+	$url = $thisfile.'?strMsg='.urlencode($strMsg).'&currenttab=tab0&redirect=yes&action='.$action.'&local_storage_id='.$local_storage_id.'&identifier[]='.$local_volume_group;
+	echo "<meta http-equiv=\"refresh\" content=\"0; URL=$url\">";
+	exit;
 }
 
 function redirect_localgmt($strMsg, $local_storage_id, $local_volume_group) {
-    global $thisfile;
-    global $action;
-    $url = $thisfile.'?strMsg='.urlencode($strMsg).'&currenttab=tab0&redirect=yes&action='.$action.'&local_storage_id='.$local_storage_id.'&local_volume_group='.$local_volume_group;
-    echo "<meta http-equiv=\"refresh\" content=\"0; URL=$url\">";
-    exit;
+	global $thisfile;
+	global $action;
+	$url = $thisfile.'?strMsg='.urlencode($strMsg).'&currenttab=tab0&redirect=yes&action='.$action.'&local_storage_id='.$local_storage_id.'&local_volume_group='.$local_volume_group;
+	echo "<meta http-equiv=\"refresh\" content=\"0; URL=$url\">";
+	exit;
 }
 
 function wait_for_statfile($sfile) {
-    global $refresh_delay;
-    global $refresh_loop_max;
-    $refresh_loop=0;
-    while (!file_exists($sfile)) {
-        sleep($refresh_delay);
-        $refresh_loop++;
-        flush();
-        if ($refresh_loop > $refresh_loop_max)  {
-            return false;
-        }
-    }
-    return true;
+	global $refresh_delay;
+	global $refresh_loop_max;
+	$refresh_loop=0;
+	while (!file_exists($sfile)) {
+		sleep($refresh_delay);
+		$refresh_loop++;
+		flush();
+		if ($refresh_loop > $refresh_loop_max)  {
+			return false;
+		}
+	}
+	return true;
 }
 
 
 function show_progressbar() {
 ?>
-    <script type="text/javascript">
-        $("#progressbar").progressbar({
+	<script type="text/javascript">
+		$("#progressbar").progressbar({
 			value: 100
 		});
-        var options = {};
-        $("#progressbar").effect("shake",options,2000,null);
+		var options = {};
+		$("#progressbar").effect("shake",options,2000,null);
 	</script>
 <?php
-        flush();
+		flush();
 }
 
 
 function validate_input($var, $type) {
-    switch ($type) {
-        case 'string':
-            // remove allowed chars
-            $var = str_replace(".", "", $var);
-            $var = str_replace("-", "", $var);
-            $var = str_replace("_", "", $var);
-            for ($i = 0; $i<strlen($var); $i++) {
-                if (!ctype_alpha($var[$i])) {
-                    if (!ctype_digit($var[$i])) {
-                        return false;
-                    }
-                }
-            }
-            return true;
-            break;
-        case 'number';
-            for ($i = 0; $i<strlen($var); $i++) {
-                if (!ctype_digit($var[$i])) {
-                    return false;
-                }
-            }
-            return true;
-            break;
-    }
+	switch ($type) {
+		case 'string':
+			// remove allowed chars
+			$var = str_replace(".", "", $var);
+			$var = str_replace("-", "", $var);
+			$var = str_replace("_", "", $var);
+			for ($i = 0; $i<strlen($var); $i++) {
+				if (!ctype_alpha($var[$i])) {
+					if (!ctype_digit($var[$i])) {
+						return false;
+					}
+				}
+			}
+			return true;
+			break;
+		case 'number';
+			for ($i = 0; $i<strlen($var); $i++) {
+				if (!ctype_digit($var[$i])) {
+					return false;
+				}
+			}
+			return true;
+			break;
+	}
 }
 
 
 
 // running the actions
+$redir_msg = '';
 if(htmlobject_request('redirect') != 'yes') {
-    if(htmlobject_request('action') != '') {
-        switch (htmlobject_request('action')) {
-            case 'refresh':
-                if (isset($_REQUEST['identifier'])) {
-                    foreach($_REQUEST['identifier'] as $id) {
-                        show_progressbar();
-                        $storage = new storage();
-                        $storage->get_instance_by_id($id);
-                        $deployment = new deployment();
-                        $deployment->get_instance_by_id($storage->type);
-                        $storage_resource = new resource();
-                        $storage_resource->get_instance_by_id($storage->resource_id);
-                        // post vg status
-                        $resource_command="$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/local-storage/bin/openqrm-local-storage post_vg -u $OPENQRM_USER->name -p $OPENQRM_USER->password";
-                        // remove current stat file
-                        $storage_resource_id = $storage_resource->id;
-                        $statfile="storage/".$storage_resource_id.".vg.stat";
-                        if (file_exists($statfile)) {
-                            unlink($statfile);
-                        }
-                        // send command
-                        $storage_resource->send_command($storage_resource->ip, $resource_command);
-                        // and wait for the resulting statfile
-                        if (!wait_for_statfile($statfile)) {
-                            $redir_msg = "Error during refreshing volume group ! Please check the Event-Log";
-                        } else {
-                            $redir_msg = "Displaying volume groups on storage id $id";
-                        }
-                        redirect_vg($redir_msg, $id);
-                    }
-                }
-                break;
+	if(htmlobject_request('action') != '') {
+		if ($OPENQRM_USER->role == "administrator") {
 
-            case 'select':
-                if (isset($_REQUEST['identifier'])) {
-                    foreach($_REQUEST['identifier'] as $id) {
-                        show_progressbar();
-                        $storage = new storage();
-                        $storage->get_instance_by_id($id);
-                        $deployment = new deployment();
-                        $deployment->get_instance_by_id($storage->type);
-                        $storage_resource = new resource();
-                        $storage_resource->get_instance_by_id($storage->resource_id);
-                        // post vg status
-                        $resource_command="$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/local-storage/bin/openqrm-local-storage post_vg -u $OPENQRM_USER->name -p $OPENQRM_USER->password";
-                        // remove current stat file
-                        $storage_resource_id = $storage_resource->id;
-                        $statfile="storage/".$storage_resource_id.".vg.stat";
-                        if (file_exists($statfile)) {
-                            unlink($statfile);
-                        }
-                        // send command
-                        $storage_resource->send_command($storage_resource->ip, $resource_command);
-                        // and wait for the resulting statfile
-                        if (!wait_for_statfile($statfile)) {
-                            $redir_msg = "Error during selecting volume group ! Please check the Event-Log";
-                        } else {
-                            $redir_msg = "Displaying volume groups on storage id $id";
-                        }
-                        redirect_vg($redir_msg, $id);
-                    }
-                }
-                break;
+			switch (htmlobject_request('action')) {
+				case 'refresh':
+					if (isset($_REQUEST['identifier'])) {
+						foreach($_REQUEST['identifier'] as $id) {
+							show_progressbar();
+							$storage = new storage();
+							$storage->get_instance_by_id($id);
+							$deployment = new deployment();
+							$deployment->get_instance_by_id($storage->type);
+							$storage_resource = new resource();
+							$storage_resource->get_instance_by_id($storage->resource_id);
+							// post vg status
+							$resource_command="$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/local-storage/bin/openqrm-local-storage post_vg -u $OPENQRM_ADMIN->name -p $OPENQRM_ADMIN->password";
+							// remove current stat file
+							$storage_resource_id = $storage_resource->id;
+							$statfile="storage/".$storage_resource_id.".vg.stat";
+							if (file_exists($statfile)) {
+								unlink($statfile);
+							}
+							// send command
+							$storage_resource->send_command($storage_resource->ip, $resource_command);
+							// and wait for the resulting statfile
+							if (!wait_for_statfile($statfile)) {
+								$redir_msg = "Error during refreshing volume group ! Please check the Event-Log";
+							} else {
+								$redir_msg = "Displaying volume groups on storage id $id";
+							}
+							redirect_vg($redir_msg, $id);
+						}
+					}
+					break;
 
-            case 'select-vg':
-                if (isset($_REQUEST['identifier'])) {
-                    foreach($_REQUEST['identifier'] as $local_volume_group) {
-                        show_progressbar();
-                        $storage = new storage();
-                        $storage->get_instance_by_id($local_storage_id);
-                        $deployment = new deployment();
-                        $deployment->get_instance_by_id($storage->type);
-                        $storage_resource = new resource();
-                        $storage_resource->get_instance_by_id($storage->resource_id);
-                        // post lv status
-                        $resource_command="$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/local-storage/bin/openqrm-local-storage post_lv -u $OPENQRM_USER->name -p $OPENQRM_USER->password -v $local_volume_group";
-                        // remove current stat file
-                        $storage_resource_id = $storage_resource->id;
-                        $statfile="storage/".$storage_resource_id.".".$local_volume_group.".lv.stat";
-                        if (file_exists($statfile)) {
-                            unlink($statfile);
-                        }
-                        // send command
-                        $storage_resource->send_command($storage_resource->ip, $resource_command);
-                        // and wait for the resulting statfile
-                        if (!wait_for_statfile($statfile)) {
-                            $redir_msg = "Error during selecting volume group ! Please check the Event-Log";
-                        } else {
-                            $redir_msg = "Displaying volume groups on storage id $local_storage_id";
-                        }
-                        redirect_lv($redir_msg, $local_storage_id, $local_volume_group);
-                    }
-                }
-                break;
+				case 'select':
+					if (isset($_REQUEST['identifier'])) {
+						foreach($_REQUEST['identifier'] as $id) {
+							show_progressbar();
+							$storage = new storage();
+							$storage->get_instance_by_id($id);
+							$deployment = new deployment();
+							$deployment->get_instance_by_id($storage->type);
+							$storage_resource = new resource();
+							$storage_resource->get_instance_by_id($storage->resource_id);
+							// post vg status
+							$resource_command="$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/local-storage/bin/openqrm-local-storage post_vg -u $OPENQRM_ADMIN->name -p $OPENQRM_ADMIN->password";
+							// remove current stat file
+							$storage_resource_id = $storage_resource->id;
+							$statfile="storage/".$storage_resource_id.".vg.stat";
+							if (file_exists($statfile)) {
+								unlink($statfile);
+							}
+							// send command
+							$storage_resource->send_command($storage_resource->ip, $resource_command);
+							// and wait for the resulting statfile
+							if (!wait_for_statfile($statfile)) {
+								$redir_msg = "Error during selecting volume group ! Please check the Event-Log";
+							} else {
+								$redir_msg = "Displaying volume groups on storage id $id";
+							}
+							redirect_vg($redir_msg, $id);
+						}
+					}
+					break;
 
-
-            case 'add':
-                $local_lun_name = htmlobject_request('local_lun_name');
-                show_progressbar();
-                if (!strlen($local_lun_name)) {
-                    $redir_msg = "Got emtpy logical volume name. Not adding ...";
-                    redirect_localgmt($redir_msg, $local_storage_id, $local_volume_group);
-                    exit(0);
-                } else if (!validate_input($local_lun_name, 'string')) {
-                    $redir_msg = "Got invalid logical volume name. Not adding ...<br>(allowed characters are [a-z][A-z][0-9].-_)";
-                    redirect_localgmt($redir_msg, $local_storage_id, $local_volume_group);
-                    exit(0);
-                }
-                $local_lun_size = htmlobject_request('local_lun_size');
-                if (!strlen($local_lun_size)) {
-                    $local_lun_size=2000;
-                } else if (!validate_input($local_lun_size, 'number')) {
-                    $redir_msg = "Got invalid logical volume size. Not adding ...";
-                    redirect_localgmt($redir_msg, $local_storage_id, $local_volume_group);
-                    exit(0);
-                }
-                $storage = new storage();
-                $storage->get_instance_by_id($local_storage_id);
-                $storage_resource = new resource();
-                $storage_resource->get_instance_by_id($storage->resource_id);
-                $storage_deployment = new deployment();
-                $storage_deployment->get_instance_by_id($storage->type);
-                // in case of local-iscsi we have to send a password when adding a lun
-                if (!strcmp($storage_deployment->type, "local-iscsi-deployment")) {
-                    $image = new image();
-                    // generate a password for the image
-                    $image_password = $image->generatePassword(12);
-                    $resource_command="$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/local-storage/bin/openqrm-local-storage add -n $local_lun_name -v $local_volume_group -m $local_lun_size -i $image_password -u $OPENQRM_USER->name -p $OPENQRM_USER->password";
-                } else {
-                    $resource_command="$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/local-storage/bin/openqrm-local-storage add -n $local_lun_name -v $local_volume_group -m $local_lun_size -u $OPENQRM_USER->name -p $OPENQRM_USER->password";
-                }
-                // remove current stat file
-                $storage_resource_id = $storage_resource->id;
-                $statfile="storage/".$storage_resource_id.".".$local_volume_group.".lv.stat";
-                if (file_exists($statfile)) {
-                    unlink($statfile);
-                }
-                // send command
-                $storage_resource->send_command($storage_resource->ip, $resource_command);
-                // and wait for the resulting statfile
-                if (!wait_for_statfile($statfile)) {
-                    $redir_msg = "Error during adding logical volume $local_lun_name to Volume group $local_volume_group ! Please check the Event-Log";
-                } else {
-                    $redir_msg = "Added volume $local_lun_name to Volume group $local_volume_group";
-                }
-                redirect_localgmt($redir_msg, $local_storage_id, $local_volume_group);
-                break;
-
-            case 'remove':
-                if (isset($_REQUEST['identifier'])) {
-                    show_progressbar();
-                    foreach($_REQUEST['identifier'] as $local_lun_name) {
-                        $storage = new storage();
-                        $storage->get_instance_by_id($local_storage_id);
-                        $storage_resource = new resource();
-                        $storage_resource->get_instance_by_id($storage->resource_id);
-                        $storage_deployment = new deployment();
-                        $storage_deployment->get_instance_by_id($storage->type);
-                        $resource_command="$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/local-storage/bin/openqrm-local-storage remove -n $local_lun_name -v $local_volume_group -u $OPENQRM_USER->name -p $OPENQRM_USER->password";
-                        // remove current stat file
-                        $storage_resource_id = $storage_resource->id;
-                        $statfile="storage/".$storage_resource_id.".".$local_volume_group.".lv.stat";
-                        if (file_exists($statfile)) {
-                            unlink($statfile);
-                        }
-                        // send command
-                        $storage_resource->send_command($storage_resource->ip, $resource_command);
-                        // and wait for the resulting statfile
-                        if (!wait_for_statfile($statfile)) {
-                            $redir_msg .= "Error during removing volume $local_lun_name from Volume group $local_volume_group ! Please check the Event-Log<br>";
-                        } else {
-                            $redir_msg .= "Removed volume $local_lun_name from Volume group $local_volume_group<br>";
-                        }
-                    }
-                    redirect_localgmt($redir_msg, $local_storage_id, $local_volume_group);
-                } else {
-                    $redir_msg = "No Local Storage location selected. Skipping removal !";
-                    redirect_localgmt($redir_msg, $local_storage_id, $local_volume_group);
-                }
-                break;
+				case 'select-vg':
+					if (isset($_REQUEST['identifier'])) {
+						foreach($_REQUEST['identifier'] as $local_volume_group) {
+							show_progressbar();
+							$storage = new storage();
+							$storage->get_instance_by_id($local_storage_id);
+							$deployment = new deployment();
+							$deployment->get_instance_by_id($storage->type);
+							$storage_resource = new resource();
+							$storage_resource->get_instance_by_id($storage->resource_id);
+							// post lv status
+							$resource_command="$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/local-storage/bin/openqrm-local-storage post_lv -u $OPENQRM_ADMIN->name -p $OPENQRM_ADMIN->password -v $local_volume_group";
+							// remove current stat file
+							$storage_resource_id = $storage_resource->id;
+							$statfile="storage/".$storage_resource_id.".".$local_volume_group.".lv.stat";
+							if (file_exists($statfile)) {
+								unlink($statfile);
+							}
+							// send command
+							$storage_resource->send_command($storage_resource->ip, $resource_command);
+							// and wait for the resulting statfile
+							if (!wait_for_statfile($statfile)) {
+								$redir_msg = "Error during selecting volume group ! Please check the Event-Log";
+							} else {
+								$redir_msg = "Displaying volume groups on storage id $local_storage_id";
+							}
+							redirect_lv($redir_msg, $local_storage_id, $local_volume_group);
+						}
+					}
+					break;
 
 
-            case 'reload':
-                show_progressbar();
-                $storage = new storage();
-                $storage->get_instance_by_id($local_storage_id);
-                $deployment = new deployment();
-                $deployment->get_instance_by_id($storage->type);
-                $storage_resource = new resource();
-                $storage_resource->get_instance_by_id($storage->resource_id);
-                // post lv status
-                $resource_command="$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/local-storage/bin/openqrm-local-storage post_lv -u $OPENQRM_USER->name -p $OPENQRM_USER->password -v $local_volume_group";
-                // remove current stat file
-                $storage_resource_id = $storage_resource->id;
-                $statfile="storage/".$storage_resource_id.".".$local_volume_group.".lv.stat";
-                if (file_exists($statfile)) {
-                    unlink($statfile);
-                }
-                // send command
-                $storage_resource->send_command($storage_resource->ip, $resource_command);
-                // and wait for the resulting statfile
-                if (!wait_for_statfile($statfile)) {
-                    $redir_msg = "Error during displaying logical volumes on Volume group $local_volume_group ! Please check the Event-Log";
-                } else {
-                    $redir_msg = "Displaying logical volumes on Volume group $local_volume_group";
-                }
-                redirect_localgmt($redir_msg, $local_storage_id, $local_volume_group);
-                break;
+				case 'add':
+					$local_lun_name = htmlobject_request('local_lun_name');
+					show_progressbar();
+					if (!strlen($local_lun_name)) {
+						$redir_msg = "Got emtpy logical volume name. Not adding ...";
+						redirect_localgmt($redir_msg, $local_storage_id, $local_volume_group);
+						exit(0);
+					} else if (!validate_input($local_lun_name, 'string')) {
+						$redir_msg = "Got invalid logical volume name. Not adding ...<br>(allowed characters are [a-z][A-z][0-9].-_)";
+						redirect_localgmt($redir_msg, $local_storage_id, $local_volume_group);
+						exit(0);
+					}
+					$local_lun_size = htmlobject_request('local_lun_size');
+					if (!strlen($local_lun_size)) {
+						$local_lun_size=2000;
+					} else if (!validate_input($local_lun_size, 'number')) {
+						$redir_msg = "Got invalid logical volume size. Not adding ...";
+						redirect_localgmt($redir_msg, $local_storage_id, $local_volume_group);
+						exit(0);
+					}
+					$storage = new storage();
+					$storage->get_instance_by_id($local_storage_id);
+					$storage_resource = new resource();
+					$storage_resource->get_instance_by_id($storage->resource_id);
+					$storage_deployment = new deployment();
+					$storage_deployment->get_instance_by_id($storage->type);
+					// in case of local-iscsi we have to send a password when adding a lun
+					if (!strcmp($storage_deployment->type, "local-iscsi-deployment")) {
+						$image = new image();
+						// generate a password for the image
+						$image_password = $image->generatePassword(12);
+						$resource_command="$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/local-storage/bin/openqrm-local-storage add -n $local_lun_name -v $local_volume_group -m $local_lun_size -i $image_password -u $OPENQRM_ADMIN->name -p $OPENQRM_ADMIN->password";
+					} else {
+						$resource_command="$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/local-storage/bin/openqrm-local-storage add -n $local_lun_name -v $local_volume_group -m $local_lun_size -u $OPENQRM_ADMIN->name -p $OPENQRM_ADMIN->password";
+					}
+					// remove current stat file
+					$storage_resource_id = $storage_resource->id;
+					$statfile="storage/".$storage_resource_id.".".$local_volume_group.".lv.stat";
+					if (file_exists($statfile)) {
+						unlink($statfile);
+					}
+					// send command
+					$storage_resource->send_command($storage_resource->ip, $resource_command);
+					// and wait for the resulting statfile
+					if (!wait_for_statfile($statfile)) {
+						$redir_msg = "Error during adding logical volume $local_lun_name to Volume group $local_volume_group ! Please check the Event-Log";
+					} else {
+						$redir_msg = "Added volume $local_lun_name to Volume group $local_volume_group";
+					}
+					redirect_localgmt($redir_msg, $local_storage_id, $local_volume_group);
+					break;
+
+				case 'remove':
+					if (isset($_REQUEST['identifier'])) {
+						show_progressbar();
+						foreach($_REQUEST['identifier'] as $local_lun_name) {
+							$storage = new storage();
+							$storage->get_instance_by_id($local_storage_id);
+							$storage_resource = new resource();
+							$storage_resource->get_instance_by_id($storage->resource_id);
+							$storage_deployment = new deployment();
+							$storage_deployment->get_instance_by_id($storage->type);
+							$resource_command="$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/local-storage/bin/openqrm-local-storage remove -n $local_lun_name -v $local_volume_group -u $OPENQRM_ADMIN->name -p $OPENQRM_ADMIN->password";
+							// remove current stat file
+							$storage_resource_id = $storage_resource->id;
+							$statfile="storage/".$storage_resource_id.".".$local_volume_group.".lv.stat";
+							if (file_exists($statfile)) {
+								unlink($statfile);
+							}
+							// send command
+							$storage_resource->send_command($storage_resource->ip, $resource_command);
+							// and wait for the resulting statfile
+							if (!wait_for_statfile($statfile)) {
+								$redir_msg .= "Error during removing volume $local_lun_name from Volume group $local_volume_group ! Please check the Event-Log<br>";
+							} else {
+								$redir_msg .= "Removed volume $local_lun_name from Volume group $local_volume_group<br>";
+							}
+						}
+						redirect_localgmt($redir_msg, $local_storage_id, $local_volume_group);
+					} else {
+						$redir_msg = "No Local Storage location selected. Skipping removal !";
+						redirect_localgmt($redir_msg, $local_storage_id, $local_volume_group);
+					}
+					break;
 
 
-            case 'snap':
-                if (strlen($local_lun_snap_name)) {
-                    show_progressbar();
-                    if (!strlen($local_lun_snap_size)) {
-                        $local_lun_snap_size=5000;
-                    } else if (!validate_input($local_lun_snap_size, 'number')) {
-                        $redir_msg = "Got invalid logical volume clone size. Not adding ...";
-                        redirect_localgmt($redir_msg, $local_storage_id, $local_volume_group);
-                        exit(0);
-                    }
-                    if (!strlen($local_lun_name)) {
-                        $redir_msg = "Got emtpy logical volume name. Not adding ...";
-                        redirect_localgmt($redir_msg, $local_storage_id, $local_volume_group);
-                        exit(0);
-                    } else if (!validate_input($local_lun_name, 'string')) {
-                        $redir_msg = "Got invalid logical volume name. Not adding ...<br>(allowed characters are [a-z][A-z][0-9].-_)";
-                        redirect_localgmt($redir_msg, $local_storage_id, $local_volume_group);
-                        exit(0);
-                    }
+				case 'reload':
+					show_progressbar();
+					$storage = new storage();
+					$storage->get_instance_by_id($local_storage_id);
+					$deployment = new deployment();
+					$deployment->get_instance_by_id($storage->type);
+					$storage_resource = new resource();
+					$storage_resource->get_instance_by_id($storage->resource_id);
+					// post lv status
+					$resource_command="$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/local-storage/bin/openqrm-local-storage post_lv -u $OPENQRM_ADMIN->name -p $OPENQRM_ADMIN->password -v $local_volume_group";
+					// remove current stat file
+					$storage_resource_id = $storage_resource->id;
+					$statfile="storage/".$storage_resource_id.".".$local_volume_group.".lv.stat";
+					if (file_exists($statfile)) {
+						unlink($statfile);
+					}
+					// send command
+					$storage_resource->send_command($storage_resource->ip, $resource_command);
+					// and wait for the resulting statfile
+					if (!wait_for_statfile($statfile)) {
+						$redir_msg = "Error during displaying logical volumes on Volume group $local_volume_group ! Please check the Event-Log";
+					} else {
+						$redir_msg = "Displaying logical volumes on Volume group $local_volume_group";
+					}
+					redirect_localgmt($redir_msg, $local_storage_id, $local_volume_group);
+					break;
 
-                    if (!strlen($local_lun_snap_name)) {
-                        $redir_msg = "Got emtpy logical volume clone name. Not adding ...";
-                        redirect_localgmt($redir_msg, $local_storage_id, $local_volume_group);
-                        exit(0);
-                    } else if (!validate_input($local_lun_snap_name, 'string')) {
-                        $redir_msg = "Got invalid logical volume clone name. Not adding ...<br>(allowed characters are [a-z][A-z][0-9].-_)";
-                        redirect_localgmt($redir_msg, $local_storage_id, $local_volume_group);
-                        exit(0);
-                    }
 
-                    // generate a new password
-                    $image = new image();
-                    $local_chap_password = $image->generatePassword(14);
-                    // snap
-                    $storage = new storage();
-                    $storage->get_instance_by_id($local_storage_id);
-                    $storage_resource = new resource();
-                    $storage_resource->get_instance_by_id($storage->resource_id);
-                    $deployment = new deployment();
-                    $deployment->get_instance_by_id($storage->type);
-                    // in case of local-iscsi we have to send a password when adding a lun
-                    if (!strcmp($deployment->type, "local-iscsi-deployment")) {
-                        $image = new image();
-                        // generate a password for the image
-                        $image_password = $image->generatePassword(12);
-                        $resource_command="$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/local-storage/bin/openqrm-local-storage snap -n $local_lun_name -v $local_volume_group -s $local_lun_snap_name -m $local_lun_snap_size -i $image_password -u $OPENQRM_USER->name -p $OPENQRM_USER->password";
-                    } else {
-                        $resource_command="$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/local-storage/bin/openqrm-local-storage snap -n $local_lun_name -v $local_volume_group -s $local_lun_snap_name -m $local_lun_snap_size -u $OPENQRM_USER->name -p $OPENQRM_USER->password";
-                    }
-                    // remove current stat file
-                    $storage_resource_id = $storage_resource->id;
-                    $statfile="storage/".$storage_resource_id.".".$local_volume_group.".lv.stat";
-                    if (file_exists($statfile)) {
-                        unlink($statfile);
-                    }
-                    // send command
-                    $storage_resource->send_command($storage_resource->ip, $resource_command);
-                    // and wait for the resulting statfile
-                    if (!wait_for_statfile($statfile)) {
-                        $redir_msg = "Error during snapshotting volume $local_lun_name -> $local_lun_snap_name on Volume Group $local_volume_group ! Please check the Event-Log";
-                    } else {
-                        $redir_msg = "Created snapshot of volume $local_lun_name -> $local_lun_snap_name on Volume Group $local_volume_group";
-                    }
-                    redirect_localgmt($redir_msg, $local_storage_id, $local_volume_group);
-                } else {
-                    $redir_msg = "Got empty snapshot name. Skipping clone procedure !";
-                    redirect_localgmt($redir_msg, $local_storage_id, $local_volume_group);
-                }
-                break;
+				case 'snap':
+					if (strlen($local_lun_snap_name)) {
+						show_progressbar();
+						if (!strlen($local_lun_snap_size)) {
+							$local_lun_snap_size=5000;
+						} else if (!validate_input($local_lun_snap_size, 'number')) {
+							$redir_msg = "Got invalid logical volume clone size. Not adding ...";
+							redirect_localgmt($redir_msg, $local_storage_id, $local_volume_group);
+							exit(0);
+						}
+						if (!strlen($local_lun_name)) {
+							$redir_msg = "Got emtpy logical volume name. Not adding ...";
+							redirect_localgmt($redir_msg, $local_storage_id, $local_volume_group);
+							exit(0);
+						} else if (!validate_input($local_lun_name, 'string')) {
+							$redir_msg = "Got invalid logical volume name. Not adding ...<br>(allowed characters are [a-z][A-z][0-9].-_)";
+							redirect_localgmt($redir_msg, $local_storage_id, $local_volume_group);
+							exit(0);
+						}
 
-        }
+						if (!strlen($local_lun_snap_name)) {
+							$redir_msg = "Got emtpy logical volume clone name. Not adding ...";
+							redirect_localgmt($redir_msg, $local_storage_id, $local_volume_group);
+							exit(0);
+						} else if (!validate_input($local_lun_snap_name, 'string')) {
+							$redir_msg = "Got invalid logical volume clone name. Not adding ...<br>(allowed characters are [a-z][A-z][0-9].-_)";
+							redirect_localgmt($redir_msg, $local_storage_id, $local_volume_group);
+							exit(0);
+						}
+
+						// generate a new password
+						$image = new image();
+						$local_chap_password = $image->generatePassword(14);
+						// snap
+						$storage = new storage();
+						$storage->get_instance_by_id($local_storage_id);
+						$storage_resource = new resource();
+						$storage_resource->get_instance_by_id($storage->resource_id);
+						$deployment = new deployment();
+						$deployment->get_instance_by_id($storage->type);
+						// in case of local-iscsi we have to send a password when adding a lun
+						if (!strcmp($deployment->type, "local-iscsi-deployment")) {
+							$image = new image();
+							// generate a password for the image
+							$image_password = $image->generatePassword(12);
+							$resource_command="$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/local-storage/bin/openqrm-local-storage snap -n $local_lun_name -v $local_volume_group -s $local_lun_snap_name -m $local_lun_snap_size -i $image_password -u $OPENQRM_ADMIN->name -p $OPENQRM_ADMIN->password";
+						} else {
+							$resource_command="$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/local-storage/bin/openqrm-local-storage snap -n $local_lun_name -v $local_volume_group -s $local_lun_snap_name -m $local_lun_snap_size -u $OPENQRM_ADMIN->name -p $OPENQRM_ADMIN->password";
+						}
+						// remove current stat file
+						$storage_resource_id = $storage_resource->id;
+						$statfile="storage/".$storage_resource_id.".".$local_volume_group.".lv.stat";
+						if (file_exists($statfile)) {
+							unlink($statfile);
+						}
+						// send command
+						$storage_resource->send_command($storage_resource->ip, $resource_command);
+						// and wait for the resulting statfile
+						if (!wait_for_statfile($statfile)) {
+							$redir_msg = "Error during snapshotting volume $local_lun_name -> $local_lun_snap_name on Volume Group $local_volume_group ! Please check the Event-Log";
+						} else {
+							$redir_msg = "Created snapshot of volume $local_lun_name -> $local_lun_snap_name on Volume Group $local_volume_group";
+						}
+						redirect_localgmt($redir_msg, $local_storage_id, $local_volume_group);
+					} else {
+						$redir_msg = "Got empty snapshot name. Skipping clone procedure !";
+						redirect_localgmt($redir_msg, $local_storage_id, $local_volume_group);
+					}
+					break;
+
+			}
+		}
 	}
 }
 
@@ -489,8 +493,8 @@ function local_select_storage() {
 
 	$storage_count=0;
 	$arBody = array();
-    $t_deployment = new deployment();
-    $t_deployment->get_instance_by_type("local-storage");
+	$t_deployment = new deployment();
+	$t_deployment->get_instance_by_type("local-storage");
 	$storage_tmp = new storage();
 	$storage_array = $storage_tmp->display_overview_per_type($t_deployment->id, $table->offset, $table->limit, $table->sort, $table->order);
 	foreach ($storage_array as $index => $storage_db) {
@@ -500,36 +504,36 @@ function local_select_storage() {
 		$storage_resource->get_instance_by_id($storage->resource_id);
 		$deployment = new deployment();
 		$deployment->get_instance_by_id($storage->type);
-        $storage_count++;
-        $resource_icon_default="/openqrm/base/img/resource.png";
-        $storage_icon="/openqrm/base/plugins/local-storage/img/storage.png";
-        $state_icon="/openqrm/base/img/$storage_resource->state.png";
-        if (!file_exists($_SERVER["DOCUMENT_ROOT"]."/".$state_icon)) {
-            $state_icon="/openqrm/base/img/unknown.png";
-        }
-        if (file_exists($_SERVER["DOCUMENT_ROOT"]."/".$storage_icon)) {
-            $resource_icon_default=$storage_icon;
-        }
-        $arBody[] = array(
-            'storage_state' => "<img src=$state_icon>",
-            'storage_icon' => "<img width=24 height=24 src=$resource_icon_default>",
-            'storage_id' => $storage->id,
-            'storage_name' => $storage->name,
-            'storage_resource_id' => $storage->resource_id,
-            'storage_resource_ip' => $storage_resource->ip,
-            'storage_type' => "$deployment->storagedescription",
-            'storage_comment' => $storage_resource->comment,
-        );
-    }
+		$storage_count++;
+		$resource_icon_default="/openqrm/base/img/resource.png";
+		$storage_icon="/openqrm/base/plugins/local-storage/img/storage.png";
+		$state_icon="/openqrm/base/img/$storage_resource->state.png";
+		if (!file_exists($_SERVER["DOCUMENT_ROOT"]."/".$state_icon)) {
+			$state_icon="/openqrm/base/img/unknown.png";
+		}
+		if (file_exists($_SERVER["DOCUMENT_ROOT"]."/".$storage_icon)) {
+			$resource_icon_default=$storage_icon;
+		}
+		$arBody[] = array(
+			'storage_state' => "<img src=$state_icon>",
+			'storage_icon' => "<img width=24 height=24 src=$resource_icon_default>",
+			'storage_id' => $storage->id,
+			'storage_name' => $storage->name,
+			'storage_resource_id' => $storage->resource_id,
+			'storage_resource_ip' => $storage_resource->ip,
+			'storage_type' => "$deployment->storagedescription",
+			'storage_comment' => $storage->comment,
+		);
+	}
 
 	$table->id = 'Tabelle';
 	$table->css = 'htmlobject_table';
 	$table->border = 1;
 	$table->cellspacing = 0;
 	$table->cellpadding = 3;
-    $table->identifier_type = "radio";
+	$table->identifier_type = "radio";
 	$table->form_action = $thisfile;
-    $table->identifier_type = "radio";
+	$table->identifier_type = "radio";
 	$table->head = $arHead;
 	$table->body = $arBody;
 	if ($OPENQRM_USER->role == "administrator") {
@@ -538,13 +542,27 @@ function local_select_storage() {
 	}
 	$table->max = $storage_tmp->get_count_per_type($t_deployment->id);
 
+	// are there any storage server yet ?
+	if(count($arBody) > 0) {
+		$disp = $table->get_string();
+	} else {
+		$box = new htmlobject_box();
+		$box->id = 'htmlobject_box_add_storage';
+		$box->css = 'htmlobject_box';
+		$box->label = '<br><nobr><b>No storage configured yet!</b></nobr>';
+		$box_content = '<br><br><br><br>Please create a '.$t_deployment->storagedescription.' first!<br>';
+		$box_content .= '<a href="/openqrm/base/server/storage/storage-new.php?currenttab=tab1"><b>New storage</b></a><br>';
+		$box->content = $box_content;
+		$disp = $box->get_string();
+	}
+
    // set template
 	$t = new Template_PHPLIB();
 	$t->debug = false;
 	$t->setFile('tplfile', './tpl/' . 'local-storage-select.tpl.php');
 	$t->setVar(array(
 		'formaction' => $thisfile,
-		'storage_server_table' => $table->get_string(),
+		'storage_server_table' => $disp,
 	));
 	$disp =  $t->parse('out', 'tplfile');
 	return $disp;
@@ -613,8 +631,8 @@ function local_storage_display($local_storage_id) {
 		'storage_resource_id' => $storage->resource_id,
 		'storage_resource_ip' => $storage_resource->ip,
 		'storage_type' => "$deployment->storagedescription",
-		'storage_comment' => $storage_resource->comment,
-		'storage_capabilities' => $storage_resource->capabilities,
+		'storage_comment' => $storage->comment,
+		'storage_capabilities' => $storage->capabilities,
 	);
 
 
@@ -630,14 +648,14 @@ function local_storage_display($local_storage_id) {
 	$table->max = $storage_count;
 
 
-    // vg table
+	// vg table
 	$table1 = new htmlobject_table_builder('vg_name', '', '', '', 'vgs');
 	$arHead1 = array();
 	$arHead1['vg_icon'] = array();
 	$arHead1['vg_icon']['title'] ='';
 	$arHead1['vg_icon']['sortable'] = false;
 
-    $arHead1['vg_name'] = array();
+	$arHead1['vg_name'] = array();
 	$arHead1['vg_name']['title'] ='Name';
 
 	$arHead1['vg_pv'] = array();
@@ -660,56 +678,56 @@ function local_storage_display($local_storage_id) {
 
 	$arBody1 = array();
 	$vg_count=0;
-    $storage_vg_list="storage/$storage_resource->id.vg.stat";
+	$storage_vg_list="storage/$storage_resource->id.vg.stat";
 	if (file_exists($storage_vg_list)) {
 		$storage_vg_content=file($storage_vg_list);
 		foreach ($storage_vg_content as $index => $local) {
-            $vg_line = trim($local);
+			$vg_line = trim($local);
 
-            $first_at_pos = strpos($vg_line, "@");
-            $first_at_pos++;
-            $vg_line_first_at_removed = substr($vg_line, $first_at_pos, strlen($vg_line)-$first_at_pos);
-            $second_at_pos = strpos($vg_line_first_at_removed, "@");
-            $second_at_pos++;
-            $vg_line_second_at_removed = substr($vg_line_first_at_removed, $second_at_pos, strlen($vg_line_first_at_removed)-$second_at_pos);
-            $third_at_pos = strpos($vg_line_second_at_removed, "@");
-            $third_at_pos++;
-            $vg_line_third_at_removed = substr($vg_line_second_at_removed, $third_at_pos, strlen($vg_line_second_at_removed)-$third_at_pos);
-            $fourth_at_pos = strpos($vg_line_third_at_removed, "@");
-            $fourth_at_pos++;
-            $vg_line_fourth_at_removed = substr($vg_line_third_at_removed, $fourth_at_pos, strlen($vg_line_third_at_removed)-$fourth_at_pos);
-            $fivth_at_pos = strpos($vg_line_fourth_at_removed, "@");
-            $fivth_at_pos++;
-            $vg_line_fivth_at_removed = substr($vg_line_fourth_at_removed, $fivth_at_pos, strlen($vg_line_fourth_at_removed)-$fivth_at_pos);
-            $sixth_at_pos = strpos($vg_line_fivth_at_removed, "@");
-            $sixth_at_pos++;
-            $vg_line_sixth_at_removed = substr($vg_line_fivth_at_removed, $sixth_at_pos, strlen($vg_line_fivth_at_removed)-$sixth_at_pos);
-            $seventh_at_pos = strpos($vg_line_sixth_at_removed, "@");
-            $seventh_at_pos++;
+			$first_at_pos = strpos($vg_line, "@");
+			$first_at_pos++;
+			$vg_line_first_at_removed = substr($vg_line, $first_at_pos, strlen($vg_line)-$first_at_pos);
+			$second_at_pos = strpos($vg_line_first_at_removed, "@");
+			$second_at_pos++;
+			$vg_line_second_at_removed = substr($vg_line_first_at_removed, $second_at_pos, strlen($vg_line_first_at_removed)-$second_at_pos);
+			$third_at_pos = strpos($vg_line_second_at_removed, "@");
+			$third_at_pos++;
+			$vg_line_third_at_removed = substr($vg_line_second_at_removed, $third_at_pos, strlen($vg_line_second_at_removed)-$third_at_pos);
+			$fourth_at_pos = strpos($vg_line_third_at_removed, "@");
+			$fourth_at_pos++;
+			$vg_line_fourth_at_removed = substr($vg_line_third_at_removed, $fourth_at_pos, strlen($vg_line_third_at_removed)-$fourth_at_pos);
+			$fivth_at_pos = strpos($vg_line_fourth_at_removed, "@");
+			$fivth_at_pos++;
+			$vg_line_fivth_at_removed = substr($vg_line_fourth_at_removed, $fivth_at_pos, strlen($vg_line_fourth_at_removed)-$fivth_at_pos);
+			$sixth_at_pos = strpos($vg_line_fivth_at_removed, "@");
+			$sixth_at_pos++;
+			$vg_line_sixth_at_removed = substr($vg_line_fivth_at_removed, $sixth_at_pos, strlen($vg_line_fivth_at_removed)-$sixth_at_pos);
+			$seventh_at_pos = strpos($vg_line_sixth_at_removed, "@");
+			$seventh_at_pos++;
 
-            $vg_name = trim(substr($vg_line, 0, $first_at_pos-1));
-            $vg_pv = trim(substr($vg_line_first_at_removed, 0, $second_at_pos-1));
-            $vg_lv = trim(substr($vg_line_second_at_removed, 0, $third_at_pos-1));
-            $vg_sn = trim(substr($vg_line_third_at_removed, 0, $fourth_at_pos-1));
-            $vg_attr = trim(substr($vg_line_fourth_at_removed, 0, $fivth_at_pos-1));
-            $vg_vsize = trim(substr($vg_line_fivth_at_removed, 0, $sixth_at_pos-1));
-            $vg_vfree = trim(substr($vg_line_sixth_at_removed, 0, $seventh_at_pos-1));
+			$vg_name = trim(substr($vg_line, 0, $first_at_pos-1));
+			$vg_pv = trim(substr($vg_line_first_at_removed, 0, $second_at_pos-1));
+			$vg_lv = trim(substr($vg_line_second_at_removed, 0, $third_at_pos-1));
+			$vg_sn = trim(substr($vg_line_third_at_removed, 0, $fourth_at_pos-1));
+			$vg_attr = trim(substr($vg_line_fourth_at_removed, 0, $fivth_at_pos-1));
+			$vg_vsize = trim(substr($vg_line_fivth_at_removed, 0, $sixth_at_pos-1));
+			$vg_vfree = trim(substr($vg_line_sixth_at_removed, 0, $seventh_at_pos-1));
 
-            $arBody1[] = array(
-                'vg_icon' => "<img width=24 height=24 src=$storage_icon>",
-                'vg_name' => $vg_name,
-                'vg_pv' => $vg_pv,
-                'vg_lv' => $vg_lv,
-                'vg_sn' => $vg_sn,
-                'vg_attr' => $vg_attr,
-                'vg_vsize' => $vg_vsize,
-                'vg_vfree' => $vg_vfree,
-            );
-            $vg_count++;
+			$arBody1[] = array(
+				'vg_icon' => "<img width=24 height=24 src=$storage_icon>",
+				'vg_name' => $vg_name,
+				'vg_pv' => $vg_pv,
+				'vg_lv' => $vg_lv,
+				'vg_sn' => $vg_sn,
+				'vg_attr' => $vg_attr,
+				'vg_vsize' => $vg_vsize,
+				'vg_vfree' => $vg_vfree,
+			);
+			$vg_count++;
 		}
 	}
 
-    $table1->add_headrow("<input type='hidden' name='local_storage_id' value=$local_storage_id>");
+	$table1->add_headrow("<input type='hidden' name='local_storage_id' value=$local_storage_id>");
 	$table1->id = 'Tabelle';
 	$table1->css = 'htmlobject_table';
 	$table1->border = 1;
@@ -726,7 +744,7 @@ function local_storage_display($local_storage_id) {
 	}
 	$table1->max = $vg_count;
 
-    // set template
+	// set template
 	$t = new Template_PHPLIB();
 	$t->debug = false;
 	$t->setFile('tplfile', './tpl/' . 'local-storage-vgs.tpl.php');
@@ -757,15 +775,15 @@ function local_storage_lv_display($local_storage_id, $local_volume_group) {
 	$deployment = new deployment();
 	$deployment->get_instance_by_id($storage->type);
 
-    // local table
-    $table = new htmlobject_table_builder('local_luns', '', '', '', 'luns');
+	// local table
+	$table = new htmlobject_table_builder('local_lun_name', '', '', '', 'luns');
 
 	$arHead = array();
 	$arHead['local_lun_icon'] = array();
 	$arHead['local_lun_icon']['title'] ='';
 	$arHead['local_lun_icon']['sortable'] = false;
 
-    $arHead['local_lun_name'] = array();
+	$arHead['local_lun_name'] = array();
 	$arHead['local_lun_name']['title'] ='Lun';
 
 	$arHead['local_lun_attr'] = array();
@@ -780,58 +798,58 @@ function local_storage_lv_display($local_storage_id, $local_volume_group) {
 	$arBody = array();
 	$local_lun_count=0;
 	$storage_icon="/openqrm/base/plugins/local-storage/img/storage.png";
-    $storage_export_list="storage/".$storage->resource_id.".".$local_volume_group.".lv.stat";
+	$storage_export_list="storage/".$storage->resource_id.".".$local_volume_group.".lv.stat";
 	if (file_exists($storage_export_list)) {
 		$storage_vg_content=file($storage_export_list);
 		foreach ($storage_vg_content as $index => $local) {
-            $local_line = trim($local);
-            $first_at_pos = strpos($local_line, "@");
-            $first_at_pos++;
-            $local_line_first_at_removed = substr($local_line, $first_at_pos, strlen($local_line)-$first_at_pos);
-            $second_at_pos = strpos($local_line_first_at_removed, "@");
-            $second_at_pos++;
-            $local_line_second_at_removed = substr($local_line_first_at_removed, $second_at_pos, strlen($local_line_first_at_removed)-$second_at_pos);
-            $third_at_pos = strpos($local_line_second_at_removed, "@");
-            $third_at_pos++;
-            $local_line_third_at_removed = substr($local_line_second_at_removed, $third_at_pos, strlen($local_line_second_at_removed)-$third_at_pos);
-            $fourth_at_pos = strpos($local_line_third_at_removed, "@");
-            $fourth_at_pos++;
-            $local_line_fourth_at_removed = substr($local_line_third_at_removed, $fourth_at_pos, strlen($local_line_third_at_removed)-$fourth_at_pos);
-            $fivth_at_pos = strpos($local_line_fourth_at_removed, "@");
-            $fivth_at_pos++;
-            $local_line_fivth_at_removed = substr($local_line_fourth_at_removed, $fivth_at_pos, strlen($local_line_fourth_at_removed)-$fivth_at_pos);
-            $sixth_at_pos = strpos($local_line_fivth_at_removed, "@");
-            $sixth_at_pos++;
-            $local_line_sixth_at_removed = substr($local_line_fivth_at_removed, $sixth_at_pos, strlen($local_line_fivth_at_removed)-$sixth_at_pos);
-            $seventh_at_pos = strpos($local_line_sixth_at_removed, "@");
-            $seventh_at_pos++;
+			$local_line = trim($local);
+			$first_at_pos = strpos($local_line, "@");
+			$first_at_pos++;
+			$local_line_first_at_removed = substr($local_line, $first_at_pos, strlen($local_line)-$first_at_pos);
+			$second_at_pos = strpos($local_line_first_at_removed, "@");
+			$second_at_pos++;
+			$local_line_second_at_removed = substr($local_line_first_at_removed, $second_at_pos, strlen($local_line_first_at_removed)-$second_at_pos);
+			$third_at_pos = strpos($local_line_second_at_removed, "@");
+			$third_at_pos++;
+			$local_line_third_at_removed = substr($local_line_second_at_removed, $third_at_pos, strlen($local_line_second_at_removed)-$third_at_pos);
+			$fourth_at_pos = strpos($local_line_third_at_removed, "@");
+			$fourth_at_pos++;
+			$local_line_fourth_at_removed = substr($local_line_third_at_removed, $fourth_at_pos, strlen($local_line_third_at_removed)-$fourth_at_pos);
+			$fivth_at_pos = strpos($local_line_fourth_at_removed, "@");
+			$fivth_at_pos++;
+			$local_line_fivth_at_removed = substr($local_line_fourth_at_removed, $fivth_at_pos, strlen($local_line_fourth_at_removed)-$fivth_at_pos);
+			$sixth_at_pos = strpos($local_line_fivth_at_removed, "@");
+			$sixth_at_pos++;
+			$local_line_sixth_at_removed = substr($local_line_fivth_at_removed, $sixth_at_pos, strlen($local_line_fivth_at_removed)-$sixth_at_pos);
+			$seventh_at_pos = strpos($local_line_sixth_at_removed, "@");
+			$seventh_at_pos++;
 
-            $local_lun_name = trim(substr($local_line, 0, $first_at_pos-1));
-            $local_lun_vol = trim(substr($local_line_first_at_removed, 0, $second_at_pos-1));
-            $local_lun_attr = trim(substr($local_line_second_at_removed, 0, $third_at_pos-1));
-            $local_lun_lsize = trim(substr($local_line_third_at_removed, 0, $fourth_at_pos-1));
-            // build the snap-shot input
-            $local_lun_snap = "<form action=\"$thisfile\" method=\"GET\">";
-            $local_lun_snap .= "<input type='hidden' name='local_storage_id' value=$local_storage_id>";
-            $local_lun_snap .= "<input type='hidden' name='local_volume_group' value=$local_volume_group>";
-            $local_lun_snap .= "<input type='hidden' name='local_lun_name' value=$local_lun_name>";
-            $local_lun_snap .= "<input type='text' name='local_lun_snap_name' value='' size='10' maxlength='20'>";
-            $local_lun_snap .= "<input type='text' name='local_lun_snap_size' value='' size='5' maxlength='10'> MB ";
-            $local_lun_snap .= "<input type='submit' name='action' value='snap'>";
-            $local_lun_snap .= "</form>";
+			$local_lun_name = trim(substr($local_line, 0, $first_at_pos-1));
+			$local_lun_vol = trim(substr($local_line_first_at_removed, 0, $second_at_pos-1));
+			$local_lun_attr = trim(substr($local_line_second_at_removed, 0, $third_at_pos-1));
+			$local_lun_lsize = trim(substr($local_line_third_at_removed, 0, $fourth_at_pos-1));
+			// build the snap-shot input
+			$local_lun_snap = "<form action=\"$thisfile\" method=\"GET\">";
+			$local_lun_snap .= "<input type='hidden' name='local_storage_id' value=$local_storage_id>";
+			$local_lun_snap .= "<input type='hidden' name='local_volume_group' value=$local_volume_group>";
+			$local_lun_snap .= "<input type='hidden' name='local_lun_name' value=$local_lun_name>";
+			$local_lun_snap .= "<input type='text' name='local_lun_snap_name' value='' size='10' maxlength='20'>";
+			$local_lun_snap .= "<input type='text' name='local_lun_snap_size' value='' size='5' maxlength='10'> MB ";
+			$local_lun_snap .= "<input type='submit' name='action' value='snap'>";
+			$local_lun_snap .= "</form>";
 
-            $arBody[] = array(
-                'local_lun_icon' => "<img width=24 height=24 src=$storage_icon>",
-                'local_lun_name' => $local_lun_name,
-                'local_lun_attr' => $local_lun_attr,
-                'local_lun_lsize' => $local_lun_lsize,
-                'local_lun_snap' => $local_lun_snap,
-            );
-            $local_lun_count++;
+			$arBody[] = array(
+				'local_lun_icon' => "<img width=24 height=24 src=$storage_icon>",
+				'local_lun_name' => $local_lun_name,
+				'local_lun_attr' => $local_lun_attr,
+				'local_lun_lsize' => $local_lun_lsize,
+				'local_lun_snap' => $local_lun_snap,
+			);
+			$local_lun_count++;
 		}
 	}
 
-    $table->add_headrow("<input type='hidden' name='local_storage_id' value=$local_storage_id><input type='hidden' name='local_volume_group' value=$local_volume_group>");
+	$table->add_headrow("<input type='hidden' name='local_storage_id' value=$local_storage_id><input type='hidden' name='local_volume_group' value=$local_volume_group>");
 	$table->id = 'Tabelle';
 	$table->css = 'htmlobject_table';
 	$table->border = 1;
@@ -849,7 +867,7 @@ function local_storage_lv_display($local_storage_id, $local_volume_group) {
 	$table->max = $local_lun_count;
 
 
-    // set template
+	// set template
 	$t = new Template_PHPLIB();
 	$t->debug = false;
 	$t->setFile('tplfile', './tpl/' . 'local-storage-luns.tpl.php');
@@ -861,7 +879,7 @@ function local_storage_lv_display($local_storage_id, $local_volume_group) {
 		'local_lun_name' => htmlobject_input('local_lun_name', array("value" => '', "label" => 'Lun Name'), 'text', 20),
 		'local_lun_size' => htmlobject_input('local_lun_size', array("value" => '2000', "label" => 'Lun Size (MB)'), 'text', 20),
 		'hidden_local_volume_group' => "<input type='hidden' name='local_volume_group' value=$local_volume_group>",
-    	'hidden_local_storage_id' => "<input type='hidden' name='local_storage_id' value=$local_storage_id>",
+		'hidden_local_storage_id' => "<input type='hidden' name='local_storage_id' value=$local_storage_id>",
 		'submit' => htmlobject_input('action', array("value" => 'add', "label" => 'Add'), 'submit'),
 	));
 	$disp =  $t->parse('out', 'tplfile');
@@ -880,38 +898,38 @@ $output = array();
 if(htmlobject_request('action') != '') {
 	switch (htmlobject_request('action')) {
 		case 'select':
-            if (isset($_REQUEST['identifier'])) {
-                foreach($_REQUEST['identifier'] as $id) {
-                    $output[] = array('label' => 'Local Storage Admin', 'value' => local_storage_display($id));
-                }
-            } else {
-            	$output[] = array('label' => 'Select', 'value' => local_select_storage());
-            }
-            break;
+			if (isset($_REQUEST['identifier'])) {
+				foreach($_REQUEST['identifier'] as $id) {
+					$output[] = array('label' => 'Local Storage Admin', 'value' => local_storage_display($id));
+				}
+			} else {
+				$output[] = array('label' => 'Select', 'value' => local_select_storage());
+			}
+			break;
 		case 'select-vg':
-            if (isset($_REQUEST['identifier'])) {
-                foreach($_REQUEST['identifier'] as $local_volume_group) {
-                    $output[] = array('label' => $local_volume_group, 'value' => local_storage_lv_display($local_storage_id, $local_volume_group));
-                }
-            } else {
-                $output[] = array('label' => 'Local Storage Admin', 'value' => local_storage_display($local_storage_id));
-            }
+			if (isset($_REQUEST['identifier'])) {
+				foreach($_REQUEST['identifier'] as $local_volume_group) {
+					$output[] = array('label' => $local_volume_group, 'value' => local_storage_lv_display($local_storage_id, $local_volume_group));
+				}
+			} else {
+				$output[] = array('label' => 'Local Storage Admin', 'value' => local_storage_display($local_storage_id));
+			}
 			break;
 
 		case 'add':
-            $output[] = array('label' => $local_volume_group, 'value' => local_storage_lv_display($local_storage_id, $local_volume_group));
+			$output[] = array('label' => $local_volume_group, 'value' => local_storage_lv_display($local_storage_id, $local_volume_group));
 			break;
 
-        case 'remove':
-            $output[] = array('label' => $local_volume_group, 'value' => local_storage_lv_display($local_storage_id, $local_volume_group));
+		case 'remove':
+			$output[] = array('label' => $local_volume_group, 'value' => local_storage_lv_display($local_storage_id, $local_volume_group));
 			break;
 
-        case 'reload':
-            $output[] = array('label' => $local_volume_group, 'value' => local_storage_lv_display($local_storage_id, $local_volume_group));
+		case 'reload':
+			$output[] = array('label' => $local_volume_group, 'value' => local_storage_lv_display($local_storage_id, $local_volume_group));
 			break;
 
-        case 'snap':
-            $output[] = array('label' => $local_volume_group, 'value' => local_storage_lv_display($local_storage_id, $local_volume_group));
+		case 'snap':
+			$output[] = array('label' => $local_volume_group, 'value' => local_storage_lv_display($local_storage_id, $local_volume_group));
 			break;
 
 
@@ -921,10 +939,17 @@ if(htmlobject_request('action') != '') {
 } else if (strlen($local_volume_group)) {
 	$output[] = array('label' => 'Logical Volume Admin', 'value' => local_storage_lv_display($local_storage_id, $local_volume_group));
 } else if (strlen($local_storage_id)) {
-    $output[] = array('label' => 'Local Storage Admin', 'value' => local_storage_display($local_storage_id));
+	$output[] = array('label' => 'Local Storage Admin', 'value' => local_storage_display($local_storage_id));
 } else  {
 	$output[] = array('label' => 'Select', 'value' => local_select_storage());
 }
+
+
+?>
+<script type="text/javascript">
+	$("#progressbar").remove();
+</script>
+<?php
 
 
 echo htmlobject_tabmenu($output);

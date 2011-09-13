@@ -22,15 +22,22 @@ OPENQRM_SERVER_BASE_DIR=$(pushd $OPENQRM_SERVER_BASE_DIR > /dev/null && echo $PW
 . $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/netapp-storage/include/openqrm-plugin-netapp-storage-functions
 OPENQRM_POSTENCODE="$OPENQRM_SERVER_BASE_DIR/openqrm/sbin/openqrm-postencode"
 . $OPENQRM_SERVER_BASE_DIR/openqrm/etc/openqrm-server.conf
-OPENQRM_SERVER_IP=localhost
+. $OPENQRM_SERVER_BASE_DIR/openqrm/include/openqrm-server-functions
+openqrm_server_get_config
+OPENQRM_SERVER_IP=$OPENQRM_SERVER_IP_ADDRESS
 resource_id=0
 resource_openqrmserver=$OPENQRM_SERVER_IP_ADDRESS
+openqrm_web_protocol=$OPENQRM_WEB_PROTOCOL
 export LANG=C
 
 NETAPP_DEFAULT_VOL="/vol"
 NETAPP_BASE_IQN="iqn.1993-08.org.debian:01"
 DEFAULT_IMAGE_SIZE="1000"
 
+# define wget to use with https
+if [ "$openqrm_web_protocol" == "https" ]; then
+	WGET_NO_CERT_CHECK="--no-check-certificate"
+fi
 
 function netapp_storage_usage() {
 	echo "Usage : $0 add/remove/snap/list <-n image-name> <-i image-password> <-a aggregate> <-p na-password> <-e na-server-ip>"
@@ -84,6 +91,19 @@ while [ $# -ne 0 ]; do
 			NETAPP_SERVER_IP=$2
 			shift
 			;;
+		-t)
+			NETAPP_IMAGE_TYPE=$2
+			shift
+			;;
+		-ou)
+			OPENQRM_USERNAME=$2
+			shift
+			;;
+		-op)
+			OPENQRM_PASSWORD=$2
+			shift
+			;;
+
 		*)
 			echo "ERROR: Free commandline arguments are not allowed"
 			netapp_storage_usage
@@ -101,15 +121,15 @@ if [ "$NETAPP_COMMAND" == "" ]; then
 	netapp_storage_usage
 fi
 if [ "$NETAPP_PASSWORD" == "" ]; then
-    netapp_storage_usage
+	netapp_storage_usage
 fi
 if [ "$NETAPP_SERVER_IP" == "" ]; then
-    netapp_storage_usage
+	netapp_storage_usage
 fi
 
 
 if [ "$NETAPP_COMMAND" == "post_luns" ] || [ "$NETAPP_COMMAND" == "post_identifier" ]; then
-    :
+	:
 else
 	if [ "$NETAPP_COMMAND" != "list" ] && [ "$NETAPP_COMMAND" != "auth" ]; then
 		if [ "$NETAPP_IMAGE_NAME" == "" ]; then
@@ -125,31 +145,31 @@ case "$NETAPP_COMMAND" in
 	add)
 		if [ "$NETAPP_IMAGE_PASSWORD" == "" ]; then
 			echo "No image password was given. Exiting ..."
-            exit 1
+			exit 1
 		fi
 		if [ "$NETAPP_AGGREGATE" == "" ]; then
 			echo "No aggregate name was given. Exiting ..."
-            exit 1
+			exit 1
 		fi
 		if [ "$NETAPP_IMAGE_SIZE" == "" ]; then
 			NETAPP_IMAGE_SIZE=$DEFAULT_IMAGE_SIZE
 			echo "Using default size of $DEFAULT_IMAGE_SIZE MB!"
 		fi
-        # calulating the volume size -> + 40%
-        let NETAPP_VOLUME_SIZE=$NETAPP_IMAGE_SIZE/100*140
-        NETAPP_VOLUME_SIZE=$NETAPP_VOLUME_SIZE""M
+		# calulating the volume size -> + 40%
+		let NETAPP_VOLUME_SIZE=$NETAPP_IMAGE_SIZE/100*140
+		NETAPP_VOLUME_SIZE=$NETAPP_VOLUME_SIZE""M
 		NETAPP_IMAGE_SIZE=$NETAPP_IMAGE_SIZE""M
 		netapp_storage_lock aquire
 		echo "Creating NETAPP volume for image $NETAPP_IMAGE_NAME (size $NETAPP_VOLUME_SIZE)"
-        $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/netapp-storage/bin/openqrm-netapp-cmd  $NETAPP_SERVER_IP "vol create $NETAPP_DEFAULT_VOL/$NETAPP_IMAGE_NAME -l en $NETAPP_AGGREGATE $NETAPP_VOLUME_SIZE" $NETAPP_PASSWORD
+		$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/netapp-storage/bin/openqrm-netapp-cmd  $NETAPP_SERVER_IP "vol create $NETAPP_DEFAULT_VOL/$NETAPP_IMAGE_NAME -l en $NETAPP_AGGREGATE $NETAPP_VOLUME_SIZE" $NETAPP_PASSWORD
 		echo "Creating NETAPP iSCSI Lun for image $NETAPP_IMAGE_NAME (size $NETAPP_IMAGE_SIZE)"
-        $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/netapp-storage/bin/openqrm-netapp-cmd  $NETAPP_SERVER_IP "lun create -s $NETAPP_IMAGE_SIZE -t linux $NETAPP_DEFAULT_VOL/$NETAPP_IMAGE_NAME/lun" $NETAPP_PASSWORD
-        $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/netapp-storage/bin/openqrm-netapp-cmd  $NETAPP_SERVER_IP "igroup create -i -t linux $NETAPP_IMAGE_NAME" $NETAPP_PASSWORD
-        $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/netapp-storage/bin/openqrm-netapp-cmd  $NETAPP_SERVER_IP "igroup add $NETAPP_IMAGE_NAME $NETAPP_BASE_IQN:$NETAPP_IMAGE_NAME" $NETAPP_PASSWORD
-        # iscsi security add -i <iSCSI node name> -s CHAP -p <password> -n <username>
-        $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/netapp-storage/bin/openqrm-netapp-cmd  $NETAPP_SERVER_IP "iscsi security add -i $NETAPP_BASE_IQN:$NETAPP_IMAGE_NAME -s CHAP -p $NETAPP_IMAGE_PASSWORD -n $NETAPP_IMAGE_NAME" $NETAPP_PASSWORD
-        # lun map <full path to LUN> <igroup name> <LUN ID>
-        $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/netapp-storage/bin/openqrm-netapp-cmd  $NETAPP_SERVER_IP "lun map $NETAPP_DEFAULT_VOL/$NETAPP_IMAGE_NAME/lun $NETAPP_IMAGE_NAME 1" $NETAPP_PASSWORD
+		$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/netapp-storage/bin/openqrm-netapp-cmd  $NETAPP_SERVER_IP "lun create -s $NETAPP_IMAGE_SIZE -t linux $NETAPP_DEFAULT_VOL/$NETAPP_IMAGE_NAME/lun" $NETAPP_PASSWORD
+		$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/netapp-storage/bin/openqrm-netapp-cmd  $NETAPP_SERVER_IP "igroup create -i -t linux $NETAPP_IMAGE_NAME" $NETAPP_PASSWORD
+		$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/netapp-storage/bin/openqrm-netapp-cmd  $NETAPP_SERVER_IP "igroup add $NETAPP_IMAGE_NAME $NETAPP_BASE_IQN:$NETAPP_IMAGE_NAME" $NETAPP_PASSWORD
+		# iscsi security add -i <iSCSI node name> -s CHAP -p <password> -n <username>
+		$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/netapp-storage/bin/openqrm-netapp-cmd  $NETAPP_SERVER_IP "iscsi security add -i $NETAPP_BASE_IQN:$NETAPP_IMAGE_NAME -s CHAP -p $NETAPP_IMAGE_PASSWORD -n $NETAPP_IMAGE_NAME" $NETAPP_PASSWORD
+		# lun map <full path to LUN> <igroup name> <LUN ID>
+		$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/netapp-storage/bin/openqrm-netapp-cmd  $NETAPP_SERVER_IP "lun map $NETAPP_DEFAULT_VOL/$NETAPP_IMAGE_NAME/lun $NETAPP_IMAGE_NAME 1" $NETAPP_PASSWORD
 
 		netapp_storage_lock release
 		$0 post_luns -p $NETAPP_PASSWORD -e $NETAPP_SERVER_IP
@@ -157,16 +177,16 @@ case "$NETAPP_COMMAND" in
 	remove)
 		echo -n "Removing NETAPP Lun for image $NETAPP_IMAGE_NAME"
 		netapp_storage_lock aquire
-        # unmap
-        $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/netapp-storage/bin/openqrm-netapp-cmd  $NETAPP_SERVER_IP "lun unmap $NETAPP_DEFAULT_VOL/$NETAPP_IMAGE_NAME/lun $NETAPP_IMAGE_NAME" $NETAPP_PASSWORD
-        # remove igroup
-        $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/netapp-storage/bin/openqrm-netapp-cmd  $NETAPP_SERVER_IP "igroup destroy -f $NETAPP_IMAGE_NAME" $NETAPP_PASSWORD
-        # offline
-        $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/netapp-storage/bin/openqrm-netapp-cmd $NETAPP_SERVER_IP "vol offline $NETAPP_IMAGE_NAME" $NETAPP_PASSWORD
-        # destroy
-        $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/netapp-storage/bin/openqrm-netapp-cmd $NETAPP_SERVER_IP "vol destroy $NETAPP_IMAGE_NAME -f" $NETAPP_PASSWORD
-        # remove iscsi security
-        $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/netapp-storage/bin/openqrm-netapp-cmd  $NETAPP_SERVER_IP "iscsi security delete -i $NETAPP_BASE_IQN:$NETAPP_IMAGE_NAME" $NETAPP_PASSWORD
+		# unmap
+		$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/netapp-storage/bin/openqrm-netapp-cmd  $NETAPP_SERVER_IP "lun unmap $NETAPP_DEFAULT_VOL/$NETAPP_IMAGE_NAME/lun $NETAPP_IMAGE_NAME" $NETAPP_PASSWORD
+		# remove igroup
+		$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/netapp-storage/bin/openqrm-netapp-cmd  $NETAPP_SERVER_IP "igroup destroy -f $NETAPP_IMAGE_NAME" $NETAPP_PASSWORD
+		# offline
+		$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/netapp-storage/bin/openqrm-netapp-cmd $NETAPP_SERVER_IP "vol offline $NETAPP_IMAGE_NAME" $NETAPP_PASSWORD
+		# destroy
+		$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/netapp-storage/bin/openqrm-netapp-cmd $NETAPP_SERVER_IP "vol destroy $NETAPP_IMAGE_NAME -f" $NETAPP_PASSWORD
+		# remove iscsi security
+		$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/netapp-storage/bin/openqrm-netapp-cmd  $NETAPP_SERVER_IP "iscsi security delete -i $NETAPP_BASE_IQN:$NETAPP_IMAGE_NAME" $NETAPP_PASSWORD
 		netapp_storage_lock release
 		$0 post_luns -p $NETAPP_PASSWORD -e $NETAPP_SERVER_IP
 		;;
@@ -184,19 +204,19 @@ case "$NETAPP_COMMAND" in
 		fi
 		echo -n "Creating snapshot from image $NETAPP_IMAGE_NAME -> $NETAPP_IMAGE_SNAPSHOT_NAME"
 		netapp_storage_lock aquire
-        # clone
-        $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/netapp-storage/bin/openqrm-netapp-cmd  $NETAPP_SERVER_IP "vol clone create $NETAPP_IMAGE_SNAPSHOT_NAME -b $NETAPP_IMAGE_NAME" $NETAPP_PASSWORD
-        # unmap
-        $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/netapp-storage/bin/openqrm-netapp-cmd  $NETAPP_SERVER_IP "lun unmap $NETAPP_DEFAULT_VOL/$NETAPP_IMAGE_SNAPSHOT_NAME/lun $NETAPP_IMAGE_NAME" $NETAPP_PASSWORD
-        # create igroup
-        $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/netapp-storage/bin/openqrm-netapp-cmd  $NETAPP_SERVER_IP "igroup create -i -t linux $NETAPP_IMAGE_SNAPSHOT_NAME" $NETAPP_PASSWORD
-        $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/netapp-storage/bin/openqrm-netapp-cmd  $NETAPP_SERVER_IP "igroup add $NETAPP_IMAGE_SNAPSHOT_NAME $NETAPP_BASE_IQN:$NETAPP_IMAGE_SNAPSHOT_NAME" $NETAPP_PASSWORD
-        # iscsi security add -i <iSCSI node name> -s CHAP -p <password> -n <username>
-        $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/netapp-storage/bin/openqrm-netapp-cmd  $NETAPP_SERVER_IP "iscsi security add -i $NETAPP_BASE_IQN:$NETAPP_IMAGE_SNAPSHOT_NAME -s CHAP -p $NETAPP_IMAGE_PASSWORD -n $NETAPP_IMAGE_SNAPSHOT_NAME" $NETAPP_PASSWORD
-        # lun map <full path to LUN> <igroup name> <LUN ID>
-        $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/netapp-storage/bin/openqrm-netapp-cmd  $NETAPP_SERVER_IP "lun map $NETAPP_DEFAULT_VOL/$NETAPP_IMAGE_SNAPSHOT_NAME/lun $NETAPP_IMAGE_SNAPSHOT_NAME 1" $NETAPP_PASSWORD
-        # bring lun online
-        $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/netapp-storage/bin/openqrm-netapp-cmd  $NETAPP_SERVER_IP "lun online $NETAPP_DEFAULT_VOL/$NETAPP_IMAGE_SNAPSHOT_NAME/lun" $NETAPP_PASSWORD
+		# clone
+		$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/netapp-storage/bin/openqrm-netapp-cmd  $NETAPP_SERVER_IP "vol clone create $NETAPP_IMAGE_SNAPSHOT_NAME -b $NETAPP_IMAGE_NAME" $NETAPP_PASSWORD
+		# unmap
+		$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/netapp-storage/bin/openqrm-netapp-cmd  $NETAPP_SERVER_IP "lun unmap $NETAPP_DEFAULT_VOL/$NETAPP_IMAGE_SNAPSHOT_NAME/lun $NETAPP_IMAGE_NAME" $NETAPP_PASSWORD
+		# create igroup
+		$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/netapp-storage/bin/openqrm-netapp-cmd  $NETAPP_SERVER_IP "igroup create -i -t linux $NETAPP_IMAGE_SNAPSHOT_NAME" $NETAPP_PASSWORD
+		$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/netapp-storage/bin/openqrm-netapp-cmd  $NETAPP_SERVER_IP "igroup add $NETAPP_IMAGE_SNAPSHOT_NAME $NETAPP_BASE_IQN:$NETAPP_IMAGE_SNAPSHOT_NAME" $NETAPP_PASSWORD
+		# iscsi security add -i <iSCSI node name> -s CHAP -p <password> -n <username>
+		$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/netapp-storage/bin/openqrm-netapp-cmd  $NETAPP_SERVER_IP "iscsi security add -i $NETAPP_BASE_IQN:$NETAPP_IMAGE_SNAPSHOT_NAME -s CHAP -p $NETAPP_IMAGE_PASSWORD -n $NETAPP_IMAGE_SNAPSHOT_NAME" $NETAPP_PASSWORD
+		# lun map <full path to LUN> <igroup name> <LUN ID>
+		$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/netapp-storage/bin/openqrm-netapp-cmd  $NETAPP_SERVER_IP "lun map $NETAPP_DEFAULT_VOL/$NETAPP_IMAGE_SNAPSHOT_NAME/lun $NETAPP_IMAGE_SNAPSHOT_NAME 1" $NETAPP_PASSWORD
+		# bring lun online
+		$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/netapp-storage/bin/openqrm-netapp-cmd  $NETAPP_SERVER_IP "lun online $NETAPP_DEFAULT_VOL/$NETAPP_IMAGE_SNAPSHOT_NAME/lun" $NETAPP_PASSWORD
 		netapp_storage_lock release
 		$0 post_luns -p $NETAPP_PASSWORD -e $NETAPP_SERVER_IP
 		;;
@@ -204,16 +224,22 @@ case "$NETAPP_COMMAND" in
 	auth)
 		if [ "$NETAPP_IMAGE_PASSWORD" == "" ]; then
 			echo "No image password was given. Exiting ..."
-            exit 1
+			exit 1
 		fi
-        NETAPP_LUN_NAME=`basename $NETAPP_IMAGE_ROOTDEVICE`
+		NETAPP_LUN_NAME=`basename $NETAPP_IMAGE_ROOTDEVICE`
 		echo -n "Authenticating NETAPP Lun $NETAPP_IMAGE_ROOTDEVICE for image $NETAPP_IMAGE_NAME (lun $NETAPP_LUN_NAME)"
 		netapp_storage_lock aquire
-        # remove iscsi security
-        $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/netapp-storage/bin/openqrm-netapp-cmd  $NETAPP_SERVER_IP "iscsi security delete -i $NETAPP_BASE_IQN:$NETAPP_LUN_NAME" $NETAPP_PASSWORD
-        # iscsi security add -i <iSCSI node name> -s CHAP -p <password> -n <username>
-        $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/netapp-storage/bin/openqrm-netapp-cmd  $NETAPP_SERVER_IP "iscsi security add -i $NETAPP_BASE_IQN:$NETAPP_LUN_NAME -s CHAP -p $NETAPP_IMAGE_PASSWORD -n $NETAPP_LUN_NAME" $NETAPP_PASSWORD
+		# remove iscsi security
+		$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/netapp-storage/bin/openqrm-netapp-cmd  $NETAPP_SERVER_IP "iscsi security delete -i $NETAPP_BASE_IQN:$NETAPP_LUN_NAME" $NETAPP_PASSWORD
+		# iscsi security add -i <iSCSI node name> -s CHAP -p <password> -n <username>
+		$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/netapp-storage/bin/openqrm-netapp-cmd  $NETAPP_SERVER_IP "iscsi security add -i $NETAPP_BASE_IQN:$NETAPP_LUN_NAME -s CHAP -p $NETAPP_IMAGE_PASSWORD -n $NETAPP_LUN_NAME" $NETAPP_PASSWORD
 		netapp_storage_lock release
+		# if we have an image name send back to openQRM that storage auth finished to remvoe the storage-auth-blocker
+		if [ "$OPENQRM_USERNAME" != "" ] && [ "$OPENQRM_PASSWORD" != "" ] && [ "$NETAPP_IMAGE_NAME" != "" ]; then
+			if ! wget -q $WGET_NO_CERT_CHECK -O /dev/null --http-user=$OPENQRM_USERNAME --http-password=$OPENQRM_PASSWORD "$openqrm_web_protocol://$OPENQRM_SERVER_IP_ADDRESS/openqrm/base/plugins/netapp-storage/netapp-storage-action.php?netapp_storage_command=auth_finished&netapp_image_name=$NETAPP_IMAGE_NAME"; then
+				netapp_storage_log auth "ERROR: Could not remove the storage-auth-blocker from the openQRM-server at $OPENQRM_SERVER_IP_ADDRESS!"
+			fi
+		fi
 		;;
 
 	list)
@@ -224,29 +250,29 @@ case "$NETAPP_COMMAND" in
 	post_luns)
 		# echo "Posting current netapp-luns to the openQRM-server"
 		netapp_storage_lock aquire
-        if [ ! -d $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/netapp-storage/web/storage ]; then
-            mkdir -p $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/netapp-storage/web/storage
-        fi
-        # and also post the aggregates
+		if [ ! -d $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/netapp-storage/web/storage ]; then
+			mkdir -p $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/netapp-storage/web/storage
+		fi
+		# and also post the aggregates
 		STORAGE_AGGR_STATUS_TMP="$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/netapp-storage/web/storage/$NETAPP_SERVER_IP.netapp_aggr.stat"
 		$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/netapp-storage/bin/openqrm-netapp-cmd $NETAPP_SERVER_IP "aggr status" $NETAPP_PASSWORD | grep online | awk {' print $1 '} > $STORAGE_AGGR_STATUS_TMP
-        # now post the luns
+		# now post the luns
 		STORAGE_STATUS_TMP="$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/netapp-storage/web/storage/$NETAPP_SERVER_IP.netapp_luns.stat"
 		$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/netapp-storage/bin/openqrm-netapp-cmd $NETAPP_SERVER_IP "lun show" $NETAPP_PASSWORD | grep /vol | awk {' print $1" "$2" "$3" "$4" "$5'} > $STORAGE_STATUS_TMP
-        sed -i -e "s/ \{1,\}/@/g" $STORAGE_STATUS_TMP
-        chmod -R 777 $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/netapp-storage/web/storage
+		sed -i -e "s/ \{1,\}/@/g" $STORAGE_STATUS_TMP
+		chmod -R 777 $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/netapp-storage/web/storage
 		netapp_storage_lock release
 		;;
 	post_identifier)
 		#echo "Posting current netapp-identifier to the openQRM-server"
 		netapp_storage_lock aquire
-        if [ ! -d $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/netapp-storage/web/storage ]; then
-            mkdir -p $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/netapp-storage/web/storage
-        fi
-        STORAGE_STATUS_TMP="$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/netapp-storage/web/storage/$NETAPP_SERVER_IP.netapp.ident"
+		if [ ! -d $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/netapp-storage/web/storage ]; then
+			mkdir -p $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/netapp-storage/web/storage
+		fi
+		STORAGE_STATUS_TMP="$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/netapp-storage/web/storage/$NETAPP_SERVER_IP.netapp.ident"
 		$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/netapp-storage/bin/openqrm-netapp-cmd $NETAPP_SERVER_IP "lun show" $NETAPP_PASSWORD | grep /vol | awk {' print $1 '} > $STORAGE_STATUS_TMP
-        sed -i -e "s/ \{1,\}/@/g" $STORAGE_STATUS_TMP
-        chmod -R 777 $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/netapp-storage/web/storage
+		sed -i -e "s/ \{1,\}/@/g" $STORAGE_STATUS_TMP
+		chmod -R 777 $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/netapp-storage/web/storage
 		netapp_storage_lock release
 		;;
 	*)

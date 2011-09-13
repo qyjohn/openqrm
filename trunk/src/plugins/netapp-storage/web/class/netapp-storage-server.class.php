@@ -2,19 +2,19 @@
 /*
   This file is part of openQRM.
 
-    openQRM is free software: you can redistribute it and/or modify
-    it under the terms of the GNU General Public License version 2
-    as published by the Free Software Foundation.
+	openQRM is free software: you can redistribute it and/or modify
+	it under the terms of the GNU General Public License version 2
+	as published by the Free Software Foundation.
 
-    openQRM is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    GNU General Public License for more details.
+	openQRM is distributed in the hope that it will be useful,
+	but WITHOUT ANY WARRANTY; without even the implied warranty of
+	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+	GNU General Public License for more details.
 
-    You should have received a copy of the GNU General Public License
-    along with openQRM.  If not, see <http://www.gnu.org/licenses/>.
+	You should have received a copy of the GNU General Public License
+	along with openQRM.  If not, see <http://www.gnu.org/licenses/>.
 
-    Copyright 2009, Matthias Rechenburg <matt@openqrm.com>
+	Copyright 2009, Matthias Rechenburg <matt@openqrm.com>
 */
 
 
@@ -68,7 +68,7 @@ class netapp_storage {
 		$this->_event = new event();
 		$this->_db_table = $NETAPP_STORAGE_SERVER_TABLE;
 		$this->_base_dir = $OPENQRM_SERVER_BASE_DIR;
-        $this->storage_user = "root";
+		$this->storage_user = "root";
 	}
 
 
@@ -85,7 +85,7 @@ class netapp_storage {
 		if ("$id" != "") {
 			$netapp_storage_array = &$db->Execute("select * from $NETAPP_STORAGE_SERVER_TABLE where na_id=$id");
 		} else if ("$na_storage_id" != "") {
-            $netapp_storage_array = &$db->Execute("select * from $NETAPP_STORAGE_SERVER_TABLE where na_storage_id=$na_storage_id");
+			$netapp_storage_array = &$db->Execute("select * from $NETAPP_STORAGE_SERVER_TABLE where na_storage_id=$na_storage_id");
 		} else {
 			$event->log("get_instance", $_SERVER['REQUEST_TIME'], 2, "netapp-storage.class.php", "Could not create instance of netapp_storage without data", "", "", 0, 0, 0);
 			return;
@@ -95,7 +95,7 @@ class netapp_storage {
 			$this->id = $netapp_storage["na_id"];
 			$this->storage_id = $netapp_storage["na_storage_id"];
 			$this->storage_name = $netapp_storage["na_storage_name"];
-			$this->storage_user = $netapp_admin_user;
+			$this->storage_user = $netapp_storage["na_storage_user"];
 			$this->storage_password = $netapp_storage["na_storage_password"];
 			$this->storage_comment = $netapp_storage["na_storage_comment"];
 		}
@@ -148,8 +148,8 @@ class netapp_storage {
 			$event->log("add", $_SERVER['REQUEST_TIME'], 2, "netapp_storage.class.php", "netapp_storage_fields not well defined", "", "", 0, 0, 0);
 			return 1;
 		}
-        // set defatul admin user
-        $netapp_storage_fields['na_storage_user'] = $netapp_admin_user;
+		// set defatul admin user
+		$netapp_storage_fields['na_storage_user'] = $netapp_admin_user;
 		// set stop time and status to now
 		$now=$_SERVER['REQUEST_TIME'];
 		$db=openqrm_get_db_connection();
@@ -180,16 +180,15 @@ class netapp_storage {
 	function update($na_id, $na_fields) {
 		global $NETAPP_STORAGE_SERVER_TABLE;
 		global $event;
-		if ($cl_id < 0 || ! is_array($na_fields)) {
-			$this->_event->log("update", $_SERVER['REQUEST_TIME'], 2, "netapp_storage.class.php", "Unable to update EqualLogic Storage server $na_id", "", "", 0, 0, 0);
+		if ($na_id < 0 || ! is_array($na_fields)) {
+			$this->_event->log("update", $_SERVER['REQUEST_TIME'], 2, "netapp_storage.class.php", "Unable to update NetApp Storage server $na_id", "", "", 0, 0, 0);
 			return 1;
 		}
 		$db=openqrm_get_db_connection();
 		unset($na_fields["na_id"]);
 		$result = $db->AutoExecute($this->_db_table, $na_fields, 'UPDATE', "na_id = $na_id");
-    	$this->_event->log("update", $_SERVER['REQUEST_TIME'], 2, "netapp_storage.class.php", "!!! updating $this->_db_table", "", "", 0, 0, 0);
-	if (! $result) {
-			$this->_event->log("update", $_SERVER['REQUEST_TIME'], 2, "netapp_storage.class.php", "Failed updating EqualLogic Storage server $na_id", "", "", 0, 0, 0);
+		if (! $result) {
+			$this->_event->log("update", $_SERVER['REQUEST_TIME'], 2, "netapp_storage.class.php", "Failed updating NetApp Storage server $na_id", "", "", 0, 0, 0);
 		}
 	}
 

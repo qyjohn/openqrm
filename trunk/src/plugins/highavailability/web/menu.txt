@@ -21,5 +21,6 @@
 #	IMG
 #	Target
 ..|Appliance HA
-...|About|plugins/highavailability/highavailability-about.php|How to use|highavailability/plugin.png
-...|HA-Manager|plugins/highavailability/highavailability-manager.php|Appliance HA Manager|highavailability/setup.png
+...|插件介绍|plugins/highavailability/highavailability-about.php|How to use|highavailability/plugin.png
+...|HA管理器|plugins/highavailability/highavailability-manager.php|Appliance HA Manager|highavailability/setup.png
+...|配置管理|plugins/highavailability/highavailability-manager.php?currenttab=tab1|HA Configuration|highavailability/setup.png

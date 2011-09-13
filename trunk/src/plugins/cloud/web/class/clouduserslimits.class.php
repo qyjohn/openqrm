@@ -32,8 +32,6 @@ require_once "$RootDir/class/event.class.php";
 require_once "$RootDir/plugins/cloud/class/clouduser.class.php";
 require_once "$RootDir/plugins/cloud/class/cloudrequest.class.php";
 require_once "$RootDir/plugins/cloud/class/cloudconfig.class.php";
-require_once "$RootDir/plugins/cloud/class/cloudipgroup.class.php";
-require_once "$RootDir/plugins/cloud/class/cloudiptables.class.php";
 require_once "$RootDir/plugins/cloud/class/cloudimage.class.php";
 require_once "$RootDir/plugins/cloud/class/cloudappliance.class.php";
 
@@ -75,12 +73,12 @@ class clouduserlimits {
 		$this->_base_dir = $OPENQRM_SERVER_BASE_DIR;
 	}
 
-	
-	
+
+
 	// ---------------------------------------------------------------------------------
 	// methods to create an instance of a clouduserlimits object filled from the db
 	// ---------------------------------------------------------------------------------
-	
+
 	// returns an appliance from the db selected by id or name
 	function get_instance($id, $cu_id) {
 		global $CLOUD_USER_LIMITS_TABLE;
@@ -94,7 +92,7 @@ class clouduserlimits {
 			$event->log("get_instance", $_SERVER['REQUEST_TIME'], 2, "coulduser.class.php", "Could not create instance of event without data", "", "", 0, 0, 0);
 			return;
 		}
-	
+
 		foreach ($clouduserlimits_array as $index => $clouduserlimits) {
 			$this->id = $clouduserlimits["cl_id"];
 			$this->cu_id = $clouduserlimits["cl_cu_id"];
@@ -108,27 +106,27 @@ class clouduserlimits {
 		return $this;
 	}
 
-	
+
 	// returns an appliance from the db selected by id
 	function get_instance_by_id($id) {
 		$this->get_instance($id, "");
 		return $this;
 	}
-	
+
 	// returns an appliance from the db selected by cu_id
 	function get_instance_by_cu_id($cu_id) {
 		$this->get_instance("", $cu_id);
 		return $this;
 	}
-	
-	
+
+
 	// ---------------------------------------------------------------------------------
 	// general clouduserlimits methods
 	// ---------------------------------------------------------------------------------
-	
-	
-	
-	
+
+
+
+
 	// checks if given clouduserlimits id is free in the db
 	function is_id_free($clouduserlimits_id) {
 		global $CLOUD_USER_LIMITS_TABLE;
@@ -144,8 +142,8 @@ class clouduserlimits {
 			return false;
 		}
 	}
-	
-	
+
+
 	// adds clouduserlimits to the database
 	function add($clouduserlimits_fields) {
 		global $CLOUD_USER_LIMITS_TABLE;
@@ -162,23 +160,23 @@ class clouduserlimits {
 			$event->log("add", $_SERVER['REQUEST_TIME'], 2, "clouduserlimits.class.php", "Failed adding new clouduserlimits to database", "", "", 0, 0, 0);
 		}
 	}
-	
-	
-	
+
+
+
 	// removes clouduserlimits from the database
 	function remove($clouduserlimits_id) {
 		global $CLOUD_USER_LIMITS_TABLE;
 		$db=openqrm_get_db_connection();
 		$rs = $db->Execute("delete from $CLOUD_USER_LIMITS_TABLE where cl_id=$clouduserlimits_id");
 	}
-	
+
 	// removes clouduserlimits from the database by clouduserlimits_name
 	function remove_by_cu_id($cu_id) {
 		global $CLOUD_USER_LIMITS_TABLE;
 		$db=openqrm_get_db_connection();
 		$rs = $db->Execute("delete from $CLOUD_USER_LIMITS_TABLE where cl_cu_id='$cu_id'");
 	}
-	
+
 
 	// updates clouduserlimits for a cloud user
 	function update($cl_id, $cl_fields) {
@@ -197,8 +195,8 @@ class clouduserlimits {
 	}
 
 
-	
-	
+
+
 	// returns the number of clouduserlimitss for an clouduserlimits type
 	function get_count() {
 		global $CLOUD_USER_LIMITS_TABLE;
@@ -212,9 +210,9 @@ class clouduserlimits {
 		}
 		return $count;
 	}
-	
-	
-	
+
+
+
 	// returns a list of all clouduserlimits names
 	function get_list() {
 		global $CLOUD_USER_LIMITS_TABLE;
@@ -223,8 +221,8 @@ class clouduserlimits {
 		$clouduserlimits_name_array = openqrm_db_get_result_double ($query);
 		return $clouduserlimits_name_array;
 	}
-	
-	
+
+
 	// returns a list of all clouduserlimits ids
 	function get_all_ids() {
 		global $CLOUD_USER_LIMITS_TABLE;
@@ -241,9 +239,9 @@ class clouduserlimits {
 			$rs->MoveNext();
 		}
 		return $clouduserlimits_list;
-	
+
 	}
-	
+
 
 
 	// checks clouduserlimits before adding the request
@@ -283,7 +281,7 @@ class clouduserlimits {
 				$users_global_disk_consumption = $users_global_disk_consumption + $rc_tmp_cr->disk_req;
 				$users_global_network_consumption = $users_global_network_consumption + $rc_tmp_cr->network_req;
 				$users_global_cpu_consumption = $users_global_cpu_consumption + $rc_tmp_cr->cpu_req;
-				
+
 			}
 			// check resource_quantity limit
 			if ($users_appliance_count >= $this->resource_limit) {
@@ -345,8 +343,8 @@ class clouduserlimits {
 	}
 
 
-	
-	
+
+
 	// displays the clouduserlimits-overview
 	function display_overview($offset, $limit, $sort, $order) {
 		global $CLOUD_USER_LIMITS_TABLE;
@@ -362,12 +360,12 @@ class clouduserlimits {
 				$recordSet->MoveNext();
 			}
 			$recordSet->Close();
-		}		
+		}
 		return $clouduserlimits_array;
 	}
-	
-	
-	
+
+
+
 	
 	
 	

@@ -273,12 +273,35 @@ if(htmlobject_request('action_table1') != '') {
                 if (isset($_REQUEST['identifier_table1'])) {
                     show_progressbar();
                     foreach($_REQUEST['identifier_table1'] as $vmw_vm) {
+                        // check if the resource still belongs to an appliance, if yes we do not remove it
+                        $vmware_vm_mac = $vmware_vm_mac_ar[$vmw_vm];
+                        $vmware_vm_resource = new resource();
+                        $vmware_vm_resource->get_instance_by_mac($vmware_vm_mac);
+                        $vmware_vm_id=$vmware_vm_resource->id;
+                        $resource_is_used_by_appliance = "";
+                        $remove_error = 0;
+                        $appliance = new appliance();
+                        $appliance_id_list = $appliance->get_all_ids();
+                        foreach($appliance_id_list as $appliance_list) {
+                            $appliance_id = $appliance_list['appliance_id'];
+                            $app_resource_remove_check = new appliance();
+                            $app_resource_remove_check->get_instance_by_id($appliance_id);
+                            if ($app_resource_remove_check->resources == $vmware_vm_id) {
+                                $resource_is_used_by_appliance .= $appliance_id." ";
+                                $remove_error = 1;
+                            }
+                        }
+                        if ($remove_error == 1) {
+                            $strMsg .= "VM Resource id ".$vmware_vm_id." is used by appliance(s): ".$resource_is_used_by_appliance." <br>";
+                            $strMsg .= "Not removing VM resource id ".$vmware_vm_id." !<br>";
+                            continue;
+                        }
+                        // remove vm
                         $vmware_appliance = new appliance();
                         $vmware_appliance->get_instance_by_id($vmware_server_id);
                         $vmware_server = new resource();
                         $vmware_server->get_instance_by_id($vmware_appliance->resources);
                         $resource_command="$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/vmware-server2/bin/openqrm-vmware-server2 delete -n $vmw_vm -u $OPENQRM_USER->name -p $OPENQRM_USER->password";
-                        $vmware_vm_mac = $vmware_vm_mac_ar[$vmw_vm];
                         // remove current stat file
                         $vmware_server_resource_id = $vmware_server->id;
                         $statfile="vmware-server2-stat/".$vmware_server_resource_id.".vm_list";
@@ -288,9 +311,6 @@ if(htmlobject_request('action_table1') != '') {
                         // send command
                         $vmware_server->send_command($vmware_server->ip, $resource_command);
                         // we should remove the resource of the vm !
-                        $vmware_vm_resource = new resource();
-                        $vmware_vm_resource->get_instance_by_mac($vmware_vm_mac);
-                        $vmware_vm_id=$vmware_vm_resource->id;
                         $vmware_vm_resource->remove($vmware_vm_id, $vmware_vm_mac);
                         // and wait for the resulting statfile
                         if (!wait_for_statfile($statfile)) {
@@ -715,6 +735,13 @@ if(htmlobject_request('action') != '') {
 } else  {
 	$output[] = array('label' => 'VMware Server2 VM Manager', 'value' => vmware_server_select());
 }
+
+
+?>
+<script type="text/javascript">
+    $("#progressbar").remove();
+</script>
+<?php
 
 echo htmlobject_tabmenu($output);
 

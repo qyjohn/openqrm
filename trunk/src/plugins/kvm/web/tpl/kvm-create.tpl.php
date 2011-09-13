@@ -24,15 +24,15 @@
 </style>
 <form action="{formaction}" method="GET">
 
-<h1><img border=0 src="/openqrm/base/plugins/kvm/img/manager.png"> KVM Create VM</h1>
+<h1><img border=0 src="/openqrm/base/plugins/kvm/img/manager.png">创建KVM虚拟机</h1>
 
 <div style="border: solid 1px #ccc; padding: 10px 10px 0 10px;">
 
-<h4>Add new VM to KVM Host id {kvm_server_id}</h4>
+<h4>在KVM Host {kvm_server_id} 上创建一个新虚拟机</h4>
 <div style="float:left;">
 {kvm_server_name}
 
-<h4>VM Configuration</h4>
+<h4>虚拟机配置</h4>
 {kvm_server_cpus}
 {kvm_server_mac}
 {kvm_server_ram}
@@ -42,12 +42,12 @@
 
 
 <div style="float:right;">
-    <strong>Select the Networkcard model for the VM</strong>
+    <strong>选择网卡：</strong>
     <div style="border: solid 1px #ccc; padding: 10px 10px 0 10px;">
 
-        <input type="radio" name="kvm_nic_model" value="virtio" checked="checked" /> virtio - Best performance, Linux only <br>
-        <input type="radio" name="kvm_nic_model" value="e1000" /> e1000 - Server Operating systems <br>
-        <input type="radio" name="kvm_nic_model" value="rtl8139" /> rtl8139 - Best supported <br><br>
+        <input type="radio" name="kvm_nic_model" value="virtio" checked="checked" /> virtio - 最佳性能（仅针对Linux操作系统）<br>
+        <input type="radio" name="kvm_nic_model" value="e1000" /> e1000 - 常用于服务器操作系统<br>
+        <input type="radio" name="kvm_nic_model" value="rtl8139" /> rtl8139 - 非常稳定，社区支持广泛<br><br>
     </div>
 </div>
 

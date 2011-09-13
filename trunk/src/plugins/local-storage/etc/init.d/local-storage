@@ -30,82 +30,82 @@ export OPENQRM_SOURCE_DIR="$resource_basedir/openqrm/"
 DD_BLOCKSIZE=1024
 # define wget to use with https
 if [ "$openqrm_web_protocol" == "https" ]; then
-    WGET_NO_CERT_CHECK="--no-check-certificate"
+	WGET_NO_CERT_CHECK="--no-check-certificate"
 fi
 
 function local_storage_start() {
 	local_storage_stop 1>/dev/null 2>&1
 
-    # are we still on the initrd ?
-    # do not run on idle resources
-    if [ "$resource_image" == "idle" ] && [ -f /etc/initrd-devices.conf ]; then
-    	echo "Starting the openQRM local_storage-plugin (initrd)"
-        # check if we are at the end of a grab phase
-        if [ "$LOCAL_STORAGE_GRAB" != "" ]; then
-        	echo "local-storage: Detected 'after-grab' phase"
-            # send token to the openQRM server to remove the grab-appliance + resource capability
-            echo "local-storage: Sending 'after-grab' to the openQRM server"
-            if ! wget $WGET_NO_CERT_CHECK -q "$openqrm_web_protocol://$resource_openqrmserver/openqrm/boot-service/local-storage-state.php?action=after-grab&token=$LOCAL_STORAGE_GRAB"; then
-                echo "local-storage: Error sending 'after-grab' to the openQRM server"
-                /bin/bash
-            fi
+	# are we still on the initrd ?
+	# do not run on idle resources
+	if [ "$resource_image" == "idle" ] && [ -f /etc/initrd-devices.conf ]; then
+		echo "Starting the openQRM local_storage-plugin (initrd)"
+		# check if we are at the end of a grab phase
+		if [ "$LOCAL_STORAGE_GRAB" != "" ]; then
+			echo "local-storage: Detected 'after-grab' phase"
+			# send token to the openQRM server to remove the grab-appliance + resource capability
+			echo "local-storage: Sending 'after-grab' to the openQRM server"
+			if ! wget $WGET_NO_CERT_CHECK -q "$openqrm_web_protocol://$resource_openqrmserver/openqrm/boot-service/local-storage-state.php?action=after-grab&token=$LOCAL_STORAGE_GRAB"; then
+				echo "local-storage: Error sending 'after-grab' to the openQRM server"
+				/bin/bash
+			fi
 
-        elif [ "$LOCAL_STORAGE_DEPLOYMENT" != "" ]; then
-        	echo "local-storage: Detected 'after-deployment' phase"
-            if [ "$LOCAL_STORAGE_INAME" == "" ]; then
-                echo "local-storage: Could not find image-name. Exiting .."
-                exit 1
-            fi
-            # saving back the disk content
-            modprobe sunrpc 1>/dev/null 2>&1
-            modprobe lockd 1>/dev/null 2>&1
-            modprobe nfs 1>/dev/null 2>&1
-            modprobe ext3 1>/dev/null 2>&1
-            rm -rf /dev/null
-            mknod -m 666 /dev/null c 1 3
-            openqrm_portmap_start
+		elif [ "$LOCAL_STORAGE_DEPLOYMENT" != "" ]; then
+			echo "local-storage: Detected 'after-deployment' phase"
+			if [ "$LOCAL_STORAGE_INAME" == "" ]; then
+				echo "local-storage: Could not find image-name. Exiting .."
+				exit 1
+			fi
+			# saving back the disk content
+			modprobe sunrpc 1>/dev/null 2>&1
+			modprobe lockd 1>/dev/null 2>&1
+			modprobe nfs 1>/dev/null 2>&1
+			modprobe ext3 1>/dev/null 2>&1
+			rm -rf /dev/null
+			mknod -m 666 /dev/null c 1 3
+			openqrm_portmap_start
 
-            mkdir -p /mnt
-            if ! mount -t nfs -o rw,nolock $LOCAL_STORAGE_RESTORE /mnt; then
-                echo "ERROR: Could not mount $LOCAL_STORAGE_RESTORE by nfs"
-                # give a shell for the admin
-                /bin/bash
-            else
-                echo "local-storage: Mounted $LOCAL_STORAGE_RESTORE rw"
-            fi
+			mkdir -p /mnt
+			if ! mount -t nfs -o rw,nolock $LOCAL_STORAGE_RESTORE /mnt; then
+				echo "ERROR: Could not mount $LOCAL_STORAGE_RESTORE by nfs"
+				# give a shell for the admin
+				/bin/bash
+			else
+				echo "local-storage: Mounted $LOCAL_STORAGE_RESTORE rw"
+			fi
 
-            # grab
-            echo "local-storage: Starting grab-phase. Transfering disk-content to $LOCAL_STORAGE_INAME"
-            # grab all disks
-            for HARD_DISK in `cat /proc/partitions | grep -v major | sed -e '/^$/d' | awk {' print $4 '} | grep -v [0-9]`; do
-                echo "local-storage: Processing device /dev/$HARD_DISK"
-                INAME="/mnt/"$LOCAL_STORAGE_INAME"_x_"$HARD_DISK"_ping.img"
-                BSNAME="/mnt/"$LOCAL_STORAGE_INAME"_x_"$HARD_DISK"_bs.img"
-                rm -f $INAME
-                dd if=/dev/$HARD_DISK of=$INAME bs=$DD_BLOCKSIZE
-                # gzip is too slow
-                # nice -n 19 dd if=/dev/$HARD_DISK | gzip -9 > $INAME
-                echo "local-storage: Saving the MBR of /dev/$HARD_DISK"
-                dd if=/dev/$HARD_DISK of=$BSNAME bs=512 count=1
-                echo "local-storage: Cleaning device /dev/$HARD_DISK"
-                dd if=/dev/zero of=/dev/$HARD_DISK bs=$DD_BLOCKSIZE 2> /local-storage.err
-                rm -f /local-storage.err
-            done
-            echo "local-storage: Umounting image-store"
-            umount /mnt
+			# grab
+			echo "local-storage: Starting grab-phase. Transfering disk-content to $LOCAL_STORAGE_INAME"
+			# grab all disks
+			for HARD_DISK in `cat /proc/partitions | grep -v major | sed -e '/^$/d' | awk {' print $4 '} | grep -v [0-9]`; do
+				echo "local-storage: Processing device /dev/$HARD_DISK"
+				INAME="/mnt/"$LOCAL_STORAGE_INAME"_x_"$HARD_DISK"_ping.img"
+				BSNAME="/mnt/"$LOCAL_STORAGE_INAME"_x_"$HARD_DISK"_bs.img"
+				rm -f $INAME
+				dd if=/dev/$HARD_DISK of=$INAME bs=$DD_BLOCKSIZE
+				# gzip is too slow
+				# nice -n 19 dd if=/dev/$HARD_DISK | gzip -9 > $INAME
+				echo "local-storage: Saving the MBR of /dev/$HARD_DISK"
+				dd if=/dev/$HARD_DISK of=$BSNAME bs=512 count=1
+				echo "local-storage: Cleaning device /dev/$HARD_DISK"
+				dd if=/dev/zero of=/dev/$HARD_DISK bs=$DD_BLOCKSIZE 2> /local-storage.err
+				rm -f /local-storage.err
+			done
+			echo "local-storage: Umounting image-store"
+			umount /mnt
 
-            echo "local-storage: Sending 'finished-restore' to the openQRM server"
-            if ! wget $WGET_NO_CERT_CHECK -q "$openqrm_web_protocol://$resource_openqrmserver/openqrm/boot-service/local-storage-state.php?action=finished-restore&token=$LOCAL_STORAGE_DEPLOYMENT"; then
-                echo "local-storage: Error sending 'finished-restore' to the openQRM server"
-                /bin/bash
-            fi
-        fi
+			echo "local-storage: Sending 'finished-restore' to the openQRM server"
+			if ! wget $WGET_NO_CERT_CHECK -q "$openqrm_web_protocol://$resource_openqrmserver/openqrm/boot-service/local-storage-state.php?action=finished-restore&token=$LOCAL_STORAGE_DEPLOYMENT"; then
+				echo "local-storage: Error sending 'finished-restore' to the openQRM server"
+				/bin/bash
+			fi
+		fi
 
-    else
-        # we are in the reglar init phase
-        # nothing much to do yet
-    	echo "Starting the openQRM local_storage-plugin (regular init)"
-    fi
+	else
+		# we are in the reglar init phase
+		# nothing much to do yet
+		echo "Starting the openQRM local_storage-plugin (regular init)"
+	fi
 	return 0
 }
 

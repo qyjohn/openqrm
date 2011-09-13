@@ -2,21 +2,21 @@
 <html lang="en">
 <head>
 	<title>Puppet manager</title>
-    <link rel="stylesheet" type="text/css" href="../../css/htmlobject.css" />
-    <link rel="stylesheet" type="text/css" href="kvm.css" />
-    <link type="text/css" href="/openqrm/base/js/jquery/development-bundle/themes/smoothness/ui.all.css" rel="stylesheet" />
-    <script type="text/javascript" src="/openqrm/base/js/jquery/js/jquery-1.3.2.min.js"></script>
-    <script type="text/javascript" src="/openqrm/base/js/jquery/js/jquery-ui-1.7.1.custom.min.js"></script>
+	<link rel="stylesheet" type="text/css" href="../../css/htmlobject.css" />
+	<link rel="stylesheet" type="text/css" href="puppet.css" />
+	<link type="text/css" href="/openqrm/base/js/jquery/development-bundle/themes/smoothness/ui.all.css" rel="stylesheet" />
+	<script type="text/javascript" src="/openqrm/base/js/jquery/js/jquery-1.3.2.min.js"></script>
+	<script type="text/javascript" src="/openqrm/base/js/jquery/js/jquery-ui-1.7.1.custom.min.js"></script>
 <style type="text/css">
 .ui-progressbar-value {
-    background-image: url(/openqrm/base/img/progress.gif);
+	background-image: url(/openqrm/base/img/progress.gif);
 }
 #progressbar {
-    position: absolute;
-    left: 150px;
-    top: 250px;
-    width: 400px;
-    height: 20px;
+	position: absolute;
+	left: 150px;
+	top: 250px;
+	width: 400px;
+	height: 20px;
 }
 </style>
 </head>
@@ -29,19 +29,19 @@
 /*
   This file is part of openQRM.
 
-    openQRM is free software: you can redistribute it and/or modify
-    it under the terms of the GNU General Public License version 2
-    as published by the Free Software Foundation.
+	openQRM is free software: you can redistribute it and/or modify
+	it under the terms of the GNU General Public License version 2
+	as published by the Free Software Foundation.
 
-    openQRM is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    GNU General Public License for more details.
+	openQRM is distributed in the hope that it will be useful,
+	but WITHOUT ANY WARRANTY; without even the implied warranty of
+	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+	GNU General Public License for more details.
 
-    You should have received a copy of the GNU General Public License
-    along with openQRM.  If not, see <http://www.gnu.org/licenses/>.
+	You should have received a copy of the GNU General Public License
+	along with openQRM.  If not, see <http://www.gnu.org/licenses/>.
 
-    Copyright 2009, Matthias Rechenburg <matt@openqrm.com>
+	Copyright 2009, Matthias Rechenburg <matt@openqrm.com>
 */
 
 
@@ -72,7 +72,7 @@ $refresh_loop_max=20;
 
 function redirect($strMsg, $puppet_id) {
 	global $thisfile;
-    $url = $thisfile.'?strMsg='.urlencode($strMsg).'&currenttab=tab0&redir=yes&puppet_id='.$puppet_id;
+	$url = $thisfile.'?strMsg='.urlencode($strMsg).'&currenttab=tab0&redir=yes&puppet_id='.$puppet_id;
 	echo "<meta http-equiv=\"refresh\" content=\"0; URL=$url\">";
 	exit;
 }
@@ -80,49 +80,50 @@ function redirect($strMsg, $puppet_id) {
 
 function show_progressbar() {
 ?>
-    <script type="text/javascript">
-        $("#progressbar").progressbar({
+	<script type="text/javascript">
+		$("#progressbar").progressbar({
 			value: 100
 		});
-        var options = {};
-        $("#progressbar").effect("shake",options,2000,null);
+		var options = {};
+		$("#progressbar").effect("shake",options,2000,null);
 	</script>
 <?php
-        flush();
+		flush();
 }
 
 
 
 // action !
+$strMsg = '';
 if(htmlobject_request('redir') != 'yes') {
-    if(htmlobject_request('action') != '') {
-        switch (htmlobject_request('action')) {
-            case 'update':
-                show_progressbar();
-                $puppet_id = htmlobject_request('puppet_id');
-                // get the appliance name
-                $appliance = new appliance();
-                $appliance->get_instance_by_id($puppet_id);
-                $appliance_name = $appliance->name;
-                $puppet_groups_to_activate_array = array();
-                $identifier_array = htmlobject_request('identifier');
-                $puppet = new puppet();
-                // clean up all current puppet groups from the appliance
-                $puppet->remove_appliance($appliance_name);
-                // set new groups if any
-                if (is_array($identifier_array)) {
-                    foreach($identifier_array as $puppet_group) {
-                        $puppet_groups_to_activate_array[] .= $puppet_group;
-                    }
-                    $puppet->set_groups($appliance_name, $puppet_groups_to_activate_array);
-                    $strMsg .="Updated Puppet groups for appliance $appliance_name<br>";
-                } else {
-                    $strMsg .="Removed Puppet groups from appliance $appliance_name<br>";
-                }
-                redirect($strMsg, $puppet_id);
-                break;
-        }
-    }
+	if(htmlobject_request('action') != '') {
+		switch (htmlobject_request('action')) {
+			case 'update':
+				show_progressbar();
+				$puppet_id = htmlobject_request('puppet_id');
+				// get the appliance name
+				$appliance = new appliance();
+				$appliance->get_instance_by_id($puppet_id);
+				$appliance_name = $appliance->name;
+				$puppet_groups_to_activate_array = array();
+				$identifier_array = htmlobject_request('identifier');
+				$puppet = new puppet();
+				// clean up all current puppet groups from the appliance
+				$puppet->remove_appliance($appliance_name);
+				// set new groups if any
+				if (is_array($identifier_array)) {
+					foreach($identifier_array as $puppet_group) {
+						$puppet_groups_to_activate_array[] .= $puppet_group;
+					}
+					$puppet->set_groups($appliance_name, $puppet_groups_to_activate_array);
+					$strMsg .="Updated Puppet groups for appliance $appliance_name<br>";
+				} else {
+					$strMsg .="Removed Puppet groups from appliance $appliance_name<br>";
+				}
+				redirect($strMsg, $puppet_id);
+				break;
+		}
+	}
 }
 
 
@@ -132,7 +133,7 @@ function puppet_select() {
 	global $OPENQRM_USER;
 	global $thisfile;
 
-    $table = new htmlobject_table_builder('appliance_id', '', '', '', 'select');
+	$table = new htmlobject_table_builder('appliance_id', '', '', '', 'select');
 
 	$arHead = array();
 	$arHead['appliance_state'] = array();
@@ -168,7 +169,7 @@ function puppet_select() {
 	foreach ($puppet_array as $index => $puppet_db) {
 		$puppet_app = new appliance();
 		$puppet_app->get_instance_by_id($puppet_db["appliance_id"]);
-		$puppet_app_resources=$puppet_db["appliance_resources"];		
+		$puppet_app_resources=$puppet_db["appliance_resources"];
 		$puppet_resource = new resource();
 		$puppet_resource->get_instance_by_id($puppet_app_resources);
 
@@ -207,13 +208,13 @@ function puppet_select() {
 		$table->bottom = array('select');
 		$table->identifier = 'appliance_id';
 	}
-    $table->max = $puppet_tmp->get_count();
-    // set template
+	$table->max = $puppet_tmp->get_count();
+	// set template
 	$t = new Template_PHPLIB();
 	$t->debug = false;
 	$t->setFile('tplfile', './tpl/' . 'puppet-select.tpl.php');
 	$t->setVar(array(
-        'puppet_appliance_table' => $table->get_string(),
+		'puppet_appliance_table' => $table->get_string(),
 	));
 	$disp =  $t->parse('out', 'tplfile');
 	return $disp;
@@ -226,6 +227,7 @@ function puppet_display($puppet_id) {
 	global $OPENQRM_USER;
 	global $RootDir;
 	global $thisfile;
+	$puppet_count = 0;
 
 	$table = new htmlobject_db_table('puppet_name');
 	$puppet_group_array = array();
@@ -259,9 +261,10 @@ function puppet_display($puppet_id) {
 			'puppet_name' => $puppet_g,
 			'puppet_info' => $puppet_info,
 		);
+		$puppet_count++;
 	}
 
-    $table->add_headrow("<input type=\"hidden\" name=\"puppet_id\" value=\"$puppet_id\">");
+	$table->add_headrow("<input type=\"hidden\" name=\"puppet_id\" value=\"$puppet_id\">");
 	$table->id = 'Tabelle';
 	$table->css = 'htmlobject_table';
 	$table->border = 1;
@@ -270,7 +273,7 @@ function puppet_display($puppet_id) {
 	$table->form_action = $thisfile;
 	$table->identifier_type = "checkbox";
 	$table->identifier_checked = $appliance_puppet_groups;
-    $table->autosort = true;
+	$table->autosort = true;
 	$table->head = $arHead;
 	$table->body = $arBody;
 	if ($OPENQRM_USER->role == "administrator") {
@@ -278,13 +281,13 @@ function puppet_display($puppet_id) {
 		$table->identifier = 'puppet_name';
 	}
 	$table->max = $puppet_count;
-    // set template
+	// set template
 	$t = new Template_PHPLIB();
 	$t->debug = false;
 	$t->setFile('tplfile', './tpl/' . 'puppet-apply.tpl.php');
 	$t->setVar(array(
-        'puppet_groups_table' => $table->get_string(),
-        'appliance_name' => $appliance_name.".".$appliance_domain,
+		'puppet_groups_table' => $table->get_string(),
+		'appliance_name' => $appliance_name.".".$appliance_domain,
 	));
 	$disp =  $t->parse('out', 'tplfile');
 	return $disp;
@@ -292,12 +295,16 @@ function puppet_display($puppet_id) {
 
 
 $output = array();
-$puppet_id = $_REQUEST["puppet_id"];
+$puppet_id = htmlobject_request('puppet_id');
 if(htmlobject_request('action') != '') {
 	switch (htmlobject_request('action')) {
 		case 'select':
-			foreach($_REQUEST['identifier'] as $id) {
-				$output[] = array('label' => 'Puppet Manager', 'value' => puppet_display($id));
+			if (isset($_REQUEST['identifier'])) {
+				foreach($_REQUEST['identifier'] as $id) {
+					$output[] = array('label' => 'Puppet Manager', 'value' => puppet_display($id));
+				}
+			} else {
+				$output[] = array('label' => 'Puppet Manager', 'value' => puppet_select());
 			}
 			break;
 		case 'update':
@@ -309,6 +316,13 @@ if(htmlobject_request('action') != '') {
 } else  {
 	$output[] = array('label' => 'Puppet Manager', 'value' => puppet_select());
 }
+
+
+?>
+<script type="text/javascript">
+	$("#progressbar").remove();
+</script>
+<?php
 
 echo htmlobject_tabmenu($output);
 

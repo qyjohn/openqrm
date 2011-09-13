@@ -32,7 +32,7 @@ elif [ -f $OPENQRM_SERVER_BASE_DIR/openqrm/etc/openqrm-server.conf ]; then
 	OPENQRM_SERVER_IP=$OPENQRM_SERVER_IP_ADDRESS
 	resource_id=0
 	resource_openqrmserver=$OPENQRM_SERVER_IP_ADDRESS
-    openqrm_web_protocol=$OPENQRM_WEB_PROTOCOL
+	openqrm_web_protocol=$OPENQRM_WEB_PROTOCOL
 fi
 OPENQRM_POSTENCODE="$OPENQRM_SERVER_BASE_DIR/openqrm/sbin/openqrm-postencode"
 OPENQRM_VBOX_VM_TEMPLATE="$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/vbox/etc/templates/openqrm-vbox-vm"
@@ -44,7 +44,7 @@ VBOX_DELAY=3
 
 # define wget to use with https
 if [ "$openqrm_web_protocol" == "https" ]; then
-    WGET_NO_CERT_CHECK="--no-check-certificate"
+	WGET_NO_CERT_CHECK="--no-check-certificate"
 fi
 
 # let only root run this script
@@ -56,8 +56,8 @@ fi
 
 VBOX=`which VBoxManage`
 if [ "$VBOX" == "" ]; then
-    echo "ERROR: VBoxManage (VirtualBox) ist not installed on this system !" | logger
-    exit 1
+	echo "ERROR: VBoxManage (VirtualBox) ist not installed on this system !" | logger
+	exit 1
 fi
 
 
@@ -79,94 +79,94 @@ function vbox_usage() {
 
 
 function get_disk_name() {
-    local component=$1
-    case "$component" in
-        1)
-            echo "hda"
-            ;;
-        2)
-            echo "hdb"
-            ;;
-        3)
-            echo "hdc"
-            ;;
-        4)
-            echo "hdd"
-            ;;
-    esac
+	local component=$1
+	case "$component" in
+		1)
+			echo "hda"
+			;;
+		2)
+			echo "hdb"
+			;;
+		3)
+			echo "hdc"
+			;;
+		4)
+			echo "hdd"
+			;;
+	esac
 }
 
 
 
 function generate_vbox_config() {
-    local VBOX_NAME=$1
-    VM_CONF_DIR=$OPENQRM_VM_DIR/$VBOX_VM_NAME
-    echo "- generating VirtualBox configuration for VM $VBOX_NAME"
-    # source vm config
-    . $VM_CONF_DIR/cpus
-    . $VM_CONF_DIR/ram
-    #. $VM_CONF_DIR/disk1
-    #. $VM_CONF_DIR/disk2
-    #. $VM_CONF_DIR/disk3
-    #. $VM_CONF_DIR/disk4
-    . $VM_CONF_DIR/net
-    . $VM_CONF_DIR/net1
-    . $VM_CONF_DIR/net2
-    . $VM_CONF_DIR/net3
-    . $VM_CONF_DIR/net4
-    #. $VM_CONF_DIR/vnc
-    . $VM_CONF_DIR/boot
-    . $VM_CONF_DIR/uuid
-    # write xml config from templates
-    cat $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/vbox/etc/templates/header.xml | sed -e "s/@@VBOX_VM_UUID@@/$VBOX_VM_UUID/g" | sed -e "s/@@VBOX_VM_NAME@@/$VBOX_VM_NAME/g" > $OPENQRM_VM_DIR/$VBOX_NAME/$VBOX_NAME.xml
-    # cpu
-    cat $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/vbox/etc/templates/cpu.xml | sed -e "s/@@VBOX_VM_CPUS@@/$VBOX_VM_CPUS/g" >> $OPENQRM_VM_DIR/$VBOX_NAME/$VBOX_NAME.xml
-    # memory
-    cat $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/vbox/etc/templates/memory.xml | sed -e "s/@@VBOX_VM_RAM@@/$VBOX_VM_RAM/g" >> $OPENQRM_VM_DIR/$VBOX_NAME/$VBOX_NAME.xml
-    # boot
-    cat $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/vbox/etc/templates/boot.xml | sed -e "s/@@VBOX_VM_BOOT@@/$VBOX_VM_BOOT/g" >> $OPENQRM_VM_DIR/$VBOX_NAME/$VBOX_NAME.xml
-    # display
-    cat $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/vbox/etc/templates/display.xml >> $OPENQRM_VM_DIR/$VBOX_NAME/$VBOX_NAME.xml
-    # bios
-    cat $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/vbox/etc/templates/bios.xml >> $OPENQRM_VM_DIR/$VBOX_NAME/$VBOX_NAME.xml
-    # usb
-    cat $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/vbox/etc/templates/usb.xml >> $OPENQRM_VM_DIR/$VBOX_NAME/$VBOX_NAME.xml
-    # net
-    cat $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/vbox/etc/templates/network_begin.xml >> $OPENQRM_VM_DIR/$VBOX_NAME/$VBOX_NAME.xml
-    cat $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/vbox/etc/templates/network.xml | sed -e "s/@@VBOX_VM_MAC@@/$VBOX_VM_MAC/g" | sed -e "s/@@VBOX_VM_BR@@/$VBOX_VM_BR/g" >> $OPENQRM_VM_DIR/$VBOX_NAME/$VBOX_NAME.xml
-    # net1
-    if [ "$VBOX_VM_MAC1" == "" ]; then
-        cat $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/vbox/etc/templates/network1.disabled.xml >> $OPENQRM_VM_DIR/$VBOX_NAME/$VBOX_NAME.xml
-    else
-        cat $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/vbox/etc/templates/network1.xml | sed -e "s/@@VBOX_VM_MAC1@@/$VBOX_VM_MAC1/g" | sed -e "s/@@VBOX_VM_BR1@@/$VBOX_VM_BR1/g" >> $OPENQRM_VM_DIR/$VBOX_NAME/$VBOX_NAME.xml
-    fi
-    # net2
-    if [ "$VBOX_VM_MAC2" == "" ]; then
-        cat $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/vbox/etc/templates/network2.disabled.xml >> $OPENQRM_VM_DIR/$VBOX_NAME/$VBOX_NAME.xml
-    else
-        cat $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/vbox/etc/templates/network2.xml | sed -e "s/@@VBOX_VM_MAC2@@/$VBOX_VM_MAC2/g" | sed -e "s/@@VBOX_VM_BR2@@/$VBOX_VM_BR2/g" >> $OPENQRM_VM_DIR/$VBOX_NAME/$VBOX_NAME.xml
-    fi
-    # net3
-    if [ "$VBOX_VM_MAC3" == "" ]; then
-        cat $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/vbox/etc/templates/network3.disabled.xml >> $OPENQRM_VM_DIR/$VBOX_NAME/$VBOX_NAME.xml
-    else
-        cat $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/vbox/etc/templates/network3.xml | sed -e "s/@@VBOX_VM_MAC3@@/$VBOX_VM_MAC3/g" | sed -e "s/@@VBOX_VM_BR3@@/$VBOX_VM_BR3/g" >> $OPENQRM_VM_DIR/$VBOX_NAME/$VBOX_NAME.xml
-    fi
-    # net4
-    if [ "$VBOX_VM_MAC4" == "" ]; then
-        cat $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/vbox/etc/templates/network4.disabled.xml >> $OPENQRM_VM_DIR/$VBOX_NAME/$VBOX_NAME.xml
-    else
-        cat $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/vbox/etc/templates/network4.xml | sed -e "s/@@VBOX_VM_MAC4@@/$VBOX_VM_MAC4/g" | sed -e "s/@@VBOX_VM_BR4@@/$VBOX_VM_BR4/g" >> $OPENQRM_VM_DIR/$VBOX_NAME/$VBOX_NAME.xml
-    fi
-    cat $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/vbox/etc/templates/network_end.xml >> $OPENQRM_VM_DIR/$VBOX_NAME/$VBOX_NAME.xml
-    # uart
-    cat $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/vbox/etc/templates/uart.xml >> $OPENQRM_VM_DIR/$VBOX_NAME/$VBOX_NAME.xml
-    # lpt
-    cat $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/vbox/etc/templates/lpt.xml >> $OPENQRM_VM_DIR/$VBOX_NAME/$VBOX_NAME.xml
-    # sound
-    cat $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/vbox/etc/templates/sound.xml >> $OPENQRM_VM_DIR/$VBOX_NAME/$VBOX_NAME.xml
-    # footer
-    cat $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/vbox/etc/templates/footer.xml >> $OPENQRM_VM_DIR/$VBOX_NAME/$VBOX_NAME.xml
+	local VBOX_NAME=$1
+	VM_CONF_DIR=$OPENQRM_VM_DIR/$VBOX_VM_NAME
+	echo "- generating VirtualBox configuration for VM $VBOX_NAME"
+	# source vm config
+	. $VM_CONF_DIR/cpus
+	. $VM_CONF_DIR/ram
+	#. $VM_CONF_DIR/disk1
+	#. $VM_CONF_DIR/disk2
+	#. $VM_CONF_DIR/disk3
+	#. $VM_CONF_DIR/disk4
+	. $VM_CONF_DIR/net
+	. $VM_CONF_DIR/net1
+	. $VM_CONF_DIR/net2
+	. $VM_CONF_DIR/net3
+	. $VM_CONF_DIR/net4
+	#. $VM_CONF_DIR/vnc
+	. $VM_CONF_DIR/boot
+	. $VM_CONF_DIR/uuid
+	# write xml config from templates
+	cat $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/vbox/etc/templates/header.xml | sed -e "s/@@VBOX_VM_UUID@@/$VBOX_VM_UUID/g" | sed -e "s/@@VBOX_VM_NAME@@/$VBOX_VM_NAME/g" > $OPENQRM_VM_DIR/$VBOX_NAME/$VBOX_NAME.xml
+	# cpu
+	cat $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/vbox/etc/templates/cpu.xml | sed -e "s/@@VBOX_VM_CPUS@@/$VBOX_VM_CPUS/g" >> $OPENQRM_VM_DIR/$VBOX_NAME/$VBOX_NAME.xml
+	# memory
+	cat $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/vbox/etc/templates/memory.xml | sed -e "s/@@VBOX_VM_RAM@@/$VBOX_VM_RAM/g" >> $OPENQRM_VM_DIR/$VBOX_NAME/$VBOX_NAME.xml
+	# boot
+	cat $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/vbox/etc/templates/boot.xml | sed -e "s/@@VBOX_VM_BOOT@@/$VBOX_VM_BOOT/g" >> $OPENQRM_VM_DIR/$VBOX_NAME/$VBOX_NAME.xml
+	# display
+	cat $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/vbox/etc/templates/display.xml >> $OPENQRM_VM_DIR/$VBOX_NAME/$VBOX_NAME.xml
+	# bios
+	cat $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/vbox/etc/templates/bios.xml >> $OPENQRM_VM_DIR/$VBOX_NAME/$VBOX_NAME.xml
+	# usb
+	cat $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/vbox/etc/templates/usb.xml >> $OPENQRM_VM_DIR/$VBOX_NAME/$VBOX_NAME.xml
+	# net
+	cat $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/vbox/etc/templates/network_begin.xml >> $OPENQRM_VM_DIR/$VBOX_NAME/$VBOX_NAME.xml
+	cat $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/vbox/etc/templates/network.xml | sed -e "s/@@VBOX_VM_MAC@@/$VBOX_VM_MAC/g" | sed -e "s/@@VBOX_VM_BR@@/$VBOX_VM_BR/g" >> $OPENQRM_VM_DIR/$VBOX_NAME/$VBOX_NAME.xml
+	# net1
+	if [ "$VBOX_VM_MAC1" == "" ]; then
+		cat $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/vbox/etc/templates/network1.disabled.xml >> $OPENQRM_VM_DIR/$VBOX_NAME/$VBOX_NAME.xml
+	else
+		cat $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/vbox/etc/templates/network1.xml | sed -e "s/@@VBOX_VM_MAC1@@/$VBOX_VM_MAC1/g" | sed -e "s/@@VBOX_VM_BR1@@/$VBOX_VM_BR1/g" >> $OPENQRM_VM_DIR/$VBOX_NAME/$VBOX_NAME.xml
+	fi
+	# net2
+	if [ "$VBOX_VM_MAC2" == "" ]; then
+		cat $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/vbox/etc/templates/network2.disabled.xml >> $OPENQRM_VM_DIR/$VBOX_NAME/$VBOX_NAME.xml
+	else
+		cat $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/vbox/etc/templates/network2.xml | sed -e "s/@@VBOX_VM_MAC2@@/$VBOX_VM_MAC2/g" | sed -e "s/@@VBOX_VM_BR2@@/$VBOX_VM_BR2/g" >> $OPENQRM_VM_DIR/$VBOX_NAME/$VBOX_NAME.xml
+	fi
+	# net3
+	if [ "$VBOX_VM_MAC3" == "" ]; then
+		cat $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/vbox/etc/templates/network3.disabled.xml >> $OPENQRM_VM_DIR/$VBOX_NAME/$VBOX_NAME.xml
+	else
+		cat $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/vbox/etc/templates/network3.xml | sed -e "s/@@VBOX_VM_MAC3@@/$VBOX_VM_MAC3/g" | sed -e "s/@@VBOX_VM_BR3@@/$VBOX_VM_BR3/g" >> $OPENQRM_VM_DIR/$VBOX_NAME/$VBOX_NAME.xml
+	fi
+	# net4
+	if [ "$VBOX_VM_MAC4" == "" ]; then
+		cat $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/vbox/etc/templates/network4.disabled.xml >> $OPENQRM_VM_DIR/$VBOX_NAME/$VBOX_NAME.xml
+	else
+		cat $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/vbox/etc/templates/network4.xml | sed -e "s/@@VBOX_VM_MAC4@@/$VBOX_VM_MAC4/g" | sed -e "s/@@VBOX_VM_BR4@@/$VBOX_VM_BR4/g" >> $OPENQRM_VM_DIR/$VBOX_NAME/$VBOX_NAME.xml
+	fi
+	cat $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/vbox/etc/templates/network_end.xml >> $OPENQRM_VM_DIR/$VBOX_NAME/$VBOX_NAME.xml
+	# uart
+	cat $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/vbox/etc/templates/uart.xml >> $OPENQRM_VM_DIR/$VBOX_NAME/$VBOX_NAME.xml
+	# lpt
+	cat $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/vbox/etc/templates/lpt.xml >> $OPENQRM_VM_DIR/$VBOX_NAME/$VBOX_NAME.xml
+	# sound
+	cat $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/vbox/etc/templates/sound.xml >> $OPENQRM_VM_DIR/$VBOX_NAME/$VBOX_NAME.xml
+	# footer
+	cat $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/vbox/etc/templates/footer.xml >> $OPENQRM_VM_DIR/$VBOX_NAME/$VBOX_NAME.xml
 
 }
 
@@ -301,11 +301,11 @@ case "$VBOX_COMMAND" in
 		# creating the vbox start script
 		mkdir -p $OPENQRM_VM_DIR/$VBOX_VM_NAME/
 
-        # uuid + name
-        VBOX_VM_UUID=`(date; cat /proc/interrupts) | md5sum | awk {' print $1 '} | sed 's_\([0-9a-z][0-9a-z][0-9a-z][0-9a-z][0-9a-z][0-9a-z][0-9a-z][0-9a-z]\)\([0-9a-z][0-9a-z][0-9a-z][0-9a-z]\)\([0-9a-z][0-9a-z][0-9a-z][0-9a-z]\)\([0-9a-z][0-9a-z][0-9a-z][0-9a-z]\)_\1-\2-\3-\4-_'`
+		# uuid + name
+		VBOX_VM_UUID=`(date; cat /proc/interrupts) | md5sum | awk {' print $1 '} | sed 's_\([0-9a-z][0-9a-z][0-9a-z][0-9a-z][0-9a-z][0-9a-z][0-9a-z][0-9a-z]\)\([0-9a-z][0-9a-z][0-9a-z][0-9a-z]\)\([0-9a-z][0-9a-z][0-9a-z][0-9a-z]\)\([0-9a-z][0-9a-z][0-9a-z][0-9a-z]\)_\1-\2-\3-\4-_'`
 		echo "VBOX_VM_UUID=\"$VBOX_VM_UUID\"" > $OPENQRM_VM_DIR/$VBOX_VM_NAME/uuid
 		echo "VBOX_VM_NAME=\"$VBOX_VM_NAME\"" >> $OPENQRM_VM_DIR/$VBOX_VM_NAME/uuid
-        # cpus
+		# cpus
 		if [ "$VBOX_VM_CPUS" == "" ]; then
 			VBOX_VM_CPUS=1
 		fi
@@ -314,77 +314,77 @@ case "$VBOX_COMMAND" in
 		echo "VBOX_VM_RAM=\"$VBOX_VM_RAM\"" > $OPENQRM_VM_DIR/$VBOX_VM_NAME/ram
 
 		# network
-        if [ "$VBOX_VM_BR" == "" ]; then
-            VBOX_VM_BR=$OPENQRM_PLUGIN_VBOX_BRIDGE_NET
-        fi
-        VBOX_VM_MAC=`echo $VBOX_VM_MAC | sed -e "s/://g"`
+		if [ "$VBOX_VM_BR" == "" ]; then
+			VBOX_VM_BR=$OPENQRM_PLUGIN_VBOX_BRIDGE_NET
+		fi
+		VBOX_VM_MAC=`echo $VBOX_VM_MAC | sed -e "s/://g"`
 		echo "VBOX_VM_MAC=\"$VBOX_VM_MAC\"" > $OPENQRM_VM_DIR/$VBOX_VM_NAME/net
 		echo "VBOX_VM_BR=\"$VBOX_VM_BR\"" >> $OPENQRM_VM_DIR/$VBOX_VM_NAME/net
-        # net1
-        if [ "$VBOX_VM_MAC1" != "" ]; then
-            if [ "$VBOX_VM_BR1" == "" ]; then
-                VBOX_VM_BR1=$OPENQRM_PLUGIN_VBOX_BRIDGE_NET1
-            fi
-            VBOX_VM_MAC1=`echo $VBOX_VM_MAC1 | sed -e "s/://g"`
-            echo "VBOX_VM_MAC1=\"$VBOX_VM_MAC1\"" > $OPENQRM_VM_DIR/$VBOX_VM_NAME/net1
-            echo "VBOX_VM_BR1=\"$VBOX_VM_BR1\"" >> $OPENQRM_VM_DIR/$VBOX_VM_NAME/net1
-        else
-            echo "VBOX_VM_MAC1=\"\"" > $OPENQRM_VM_DIR/$VBOX_VM_NAME/net1
-            echo "VBOX_VM_BR1=\"\"" >> $OPENQRM_VM_DIR/$VBOX_VM_NAME/net1
-        fi
-        # net2
-        if [ "$VBOX_VM_MAC2" != "" ]; then
-            if [ "$VBOX_VM_BR2" == "" ]; then
-                VBOX_VM_BR2=$OPENQRM_PLUGIN_VBOX_BRIDGE_NET2
-            fi
-            VBOX_VM_MAC2=`echo $VBOX_VM_MAC2 | sed -e "s/://g"`
-            echo "VBOX_VM_MAC2=\"$VBOX_VM_MAC2\"" > $OPENQRM_VM_DIR/$VBOX_VM_NAME/net2
-            echo "VBOX_VM_BR2=\"$VBOX_VM_BR2\"" >> $OPENQRM_VM_DIR/$VBOX_VM_NAME/net2
-        else
-            echo "VBOX_VM_MAC2=\"\"" > $OPENQRM_VM_DIR/$VBOX_VM_NAME/net2
-            echo "VBOX_VM_BR2=\"\"" >> $OPENQRM_VM_DIR/$VBOX_VM_NAME/net2
-        fi
-        # net3
-        if [ "$VBOX_VM_MAC3" != "" ]; then
-            if [ "$VBOX_VM_BR3" == "" ]; then
-                VBOX_VM_BR3=$OPENQRM_PLUGIN_VBOX_BRIDGE_NET3
-            fi
-            VBOX_VM_MAC3=`echo $VBOX_VM_MAC3 | sed -e "s/://g"`
-            echo "VBOX_VM_MAC3=\"$VBOX_VM_MAC3\"" > $OPENQRM_VM_DIR/$VBOX_VM_NAME/net3
-            echo "VBOX_VM_BR3=\"$VBOX_VM_BR3\"" >> $OPENQRM_VM_DIR/$VBOX_VM_NAME/net3
-        else
-            echo "VBOX_VM_MAC3=\"\"" > $OPENQRM_VM_DIR/$VBOX_VM_NAME/net3
-            echo "VBOX_VM_BR3=\"\"" >> $OPENQRM_VM_DIR/$VBOX_VM_NAME/net3
-        fi
+		# net1
+		if [ "$VBOX_VM_MAC1" != "" ]; then
+			if [ "$VBOX_VM_BR1" == "" ]; then
+				VBOX_VM_BR1=$OPENQRM_PLUGIN_VBOX_BRIDGE_NET1
+			fi
+			VBOX_VM_MAC1=`echo $VBOX_VM_MAC1 | sed -e "s/://g"`
+			echo "VBOX_VM_MAC1=\"$VBOX_VM_MAC1\"" > $OPENQRM_VM_DIR/$VBOX_VM_NAME/net1
+			echo "VBOX_VM_BR1=\"$VBOX_VM_BR1\"" >> $OPENQRM_VM_DIR/$VBOX_VM_NAME/net1
+		else
+			echo "VBOX_VM_MAC1=\"\"" > $OPENQRM_VM_DIR/$VBOX_VM_NAME/net1
+			echo "VBOX_VM_BR1=\"\"" >> $OPENQRM_VM_DIR/$VBOX_VM_NAME/net1
+		fi
+		# net2
+		if [ "$VBOX_VM_MAC2" != "" ]; then
+			if [ "$VBOX_VM_BR2" == "" ]; then
+				VBOX_VM_BR2=$OPENQRM_PLUGIN_VBOX_BRIDGE_NET2
+			fi
+			VBOX_VM_MAC2=`echo $VBOX_VM_MAC2 | sed -e "s/://g"`
+			echo "VBOX_VM_MAC2=\"$VBOX_VM_MAC2\"" > $OPENQRM_VM_DIR/$VBOX_VM_NAME/net2
+			echo "VBOX_VM_BR2=\"$VBOX_VM_BR2\"" >> $OPENQRM_VM_DIR/$VBOX_VM_NAME/net2
+		else
+			echo "VBOX_VM_MAC2=\"\"" > $OPENQRM_VM_DIR/$VBOX_VM_NAME/net2
+			echo "VBOX_VM_BR2=\"\"" >> $OPENQRM_VM_DIR/$VBOX_VM_NAME/net2
+		fi
+		# net3
+		if [ "$VBOX_VM_MAC3" != "" ]; then
+			if [ "$VBOX_VM_BR3" == "" ]; then
+				VBOX_VM_BR3=$OPENQRM_PLUGIN_VBOX_BRIDGE_NET3
+			fi
+			VBOX_VM_MAC3=`echo $VBOX_VM_MAC3 | sed -e "s/://g"`
+			echo "VBOX_VM_MAC3=\"$VBOX_VM_MAC3\"" > $OPENQRM_VM_DIR/$VBOX_VM_NAME/net3
+			echo "VBOX_VM_BR3=\"$VBOX_VM_BR3\"" >> $OPENQRM_VM_DIR/$VBOX_VM_NAME/net3
+		else
+			echo "VBOX_VM_MAC3=\"\"" > $OPENQRM_VM_DIR/$VBOX_VM_NAME/net3
+			echo "VBOX_VM_BR3=\"\"" >> $OPENQRM_VM_DIR/$VBOX_VM_NAME/net3
+		fi
 
-        # net4
-        if [ "$VBOX_VM_MAC4" != "" ]; then
-            if [ "$VBOX_VM_BR4" == "" ]; then
-                VBOX_VM_BR4=$OPENQRM_PLUGIN_VBOX_BRIDGE_NET4
-            fi
-            VBOX_VM_MAC4=`echo $VBOX_VM_MAC4 | sed -e "s/://g"`
-            echo "VBOX_VM_MAC4=\"$VBOX_VM_MAC4\"" > $OPENQRM_VM_DIR/$VBOX_VM_NAME/net4
-            echo "VBOX_VM_BR4=\"$VBOX_VM_BR4\"" >> $OPENQRM_VM_DIR/$VBOX_VM_NAME/net4
-        else
-            echo "VBOX_VM_MAC4=\"\"" > $OPENQRM_VM_DIR/$VBOX_VM_NAME/net4
-            echo "VBOX_VM_BR4=\"\"" >> $OPENQRM_VM_DIR/$VBOX_VM_NAME/net4
-        fi
+		# net4
+		if [ "$VBOX_VM_MAC4" != "" ]; then
+			if [ "$VBOX_VM_BR4" == "" ]; then
+				VBOX_VM_BR4=$OPENQRM_PLUGIN_VBOX_BRIDGE_NET4
+			fi
+			VBOX_VM_MAC4=`echo $VBOX_VM_MAC4 | sed -e "s/://g"`
+			echo "VBOX_VM_MAC4=\"$VBOX_VM_MAC4\"" > $OPENQRM_VM_DIR/$VBOX_VM_NAME/net4
+			echo "VBOX_VM_BR4=\"$VBOX_VM_BR4\"" >> $OPENQRM_VM_DIR/$VBOX_VM_NAME/net4
+		else
+			echo "VBOX_VM_MAC4=\"\"" > $OPENQRM_VM_DIR/$VBOX_VM_NAME/net4
+			echo "VBOX_VM_BR4=\"\"" >> $OPENQRM_VM_DIR/$VBOX_VM_NAME/net4
+		fi
 
 
-        # boot from network
-        echo "VBOX_VM_BOOT=\"Network\"" >> $OPENQRM_VM_DIR/$VBOX_VM_NAME/boot
-        # vnc
+		# boot from network
+		echo "VBOX_VM_BOOT=\"Network\"" >> $OPENQRM_VM_DIR/$VBOX_VM_NAME/boot
+		# vnc
 		#echo "VBOX_VM_VNC=\"127.0.0.1:$NEW_VNC_ID\"" > $OPENQRM_VM_DIR/$VBOX_VM_NAME/vnc
 
-        # generate the config
-        generate_vbox_config $VBOX_VM_NAME
-        # register vm
-        $VBOX registervm $OPENQRM_VM_DIR/$VBOX_VM_NAME/$VBOX_VM_NAME.xml
+		# generate the config
+		generate_vbox_config $VBOX_VM_NAME
+		# register vm
+		$VBOX registervm $OPENQRM_VM_DIR/$VBOX_VM_NAME/$VBOX_VM_NAME.xml
 		# start
-        $VBOX startvm $VBOX_VM_NAME --type headless
-        touch $OPENQRM_VM_DIR/$VBOX_VM_NAME/autostart
+		$VBOX startvm $VBOX_VM_NAME --type headless
+		touch $OPENQRM_VM_DIR/$VBOX_VM_NAME/autostart
 		# in case we have a username + password post the updated list to the openQRM-server
-        sleep $VBOX_DELAY
+		sleep $VBOX_DELAY
 		if [ "$VBOX_OPENQRM_USERNAME" != "" ] && [ "$VBOX_OPENQRM_PASSWORD" != "" ]; then
 			$0 post_vm_list -u $VBOX_OPENQRM_USERNAME -p $VBOX_OPENQRM_PASSWORD
 		fi
@@ -394,9 +394,9 @@ case "$VBOX_COMMAND" in
 		vbox_lock aquire
 		echo "Starting Vbox vm $VBOX_VM_NAME"
 		 $VBOX startvm $VBOX_VM_NAME --type headless
-        touch $OPENQRM_VM_DIR/$VBOX_VM_NAME/autostart
+		touch $OPENQRM_VM_DIR/$VBOX_VM_NAME/autostart
 		# in case we have a username + password post the updated list to the openQRM-server
-        sleep $VBOX_DELAY
+		sleep $VBOX_DELAY
 		if [ "$VBOX_OPENQRM_USERNAME" != "" ] && [ "$VBOX_OPENQRM_PASSWORD" != "" ]; then
 			$0 post_vm_list -u $VBOX_OPENQRM_USERNAME -p $VBOX_OPENQRM_PASSWORD
 		fi
@@ -405,10 +405,10 @@ case "$VBOX_COMMAND" in
 	stop)
 		vbox_lock aquire
 		echo "Stopping Vbox vm $VBOX_VM_NAME"
-        $VBOX controlvm $VBOX_VM_NAME poweroff
-        rm -f $OPENQRM_VM_DIR/$VBOX_VM_NAME/autostart
+		$VBOX controlvm $VBOX_VM_NAME poweroff
+		rm -f $OPENQRM_VM_DIR/$VBOX_VM_NAME/autostart
 		# in case we have a username + password post the updated list to the openQRM-server
-        sleep $VBOX_DELAY
+		sleep $VBOX_DELAY
 		if [ "$VBOX_OPENQRM_USERNAME" != "" ] && [ "$VBOX_OPENQRM_PASSWORD" != "" ]; then
 			$0 post_vm_list -u $VBOX_OPENQRM_USERNAME -p $VBOX_OPENQRM_PASSWORD
 		fi
@@ -417,10 +417,10 @@ case "$VBOX_COMMAND" in
 	reboot)
 		vbox_lock aquire
 		echo "Rebooting Vbox vm $VBOX_VM_NAME"
-        $VBOX controlvm $VBOX_VM_NAME reset
-        touch $OPENQRM_VM_DIR/$VBOX_VM_NAME/autostart
+		$VBOX controlvm $VBOX_VM_NAME reset
+		touch $OPENQRM_VM_DIR/$VBOX_VM_NAME/autostart
 		# in case we have a username + password post the updated list to the openQRM-server
-        sleep $VBOX_DELAY
+		sleep $VBOX_DELAY
 		if [ "$VBOX_OPENQRM_USERNAME" != "" ] && [ "$VBOX_OPENQRM_PASSWORD" != "" ]; then
 			$0 post_vm_list -u $VBOX_OPENQRM_USERNAME -p $VBOX_OPENQRM_PASSWORD
 		fi
@@ -431,11 +431,11 @@ case "$VBOX_COMMAND" in
 		echo "Deleting Vbox vm $VBOX_VM_NAME"
 		# be sure it is stopped
 		$VBOX controlvm $VBOX_VM_NAME poweroff
-        # unregister
-        $VBOX unregistervm $VBOX_VM_NAME --delete
+		# unregister
+		$VBOX unregistervm $VBOX_VM_NAME --delete
 		rm -rf $OPENQRM_VM_DIR/$VBOX_VM_NAME
 		# in case we have a username + password post the updated list to the openQRM-server
-        sleep $VBOX_DELAY
+		sleep $VBOX_DELAY
 		if [ "$VBOX_OPENQRM_USERNAME" != "" ] && [ "$VBOX_OPENQRM_PASSWORD" != "" ]; then
 			$0 post_vm_list -u $VBOX_OPENQRM_USERNAME -p $VBOX_OPENQRM_PASSWORD
 		fi
@@ -448,40 +448,40 @@ case "$VBOX_COMMAND" in
 	post_vm_list)
 		echo "Posting vm list to the openQRM-server"
 		VM_LIST_TMP=$resource_id.vm_list
-        > $VM_LIST_TMP
-        $VBOX -q list vms -l > $VM_LIST_TMP.tmp
-        OLDIFS=$IFS
-        IFS=$LINE_BREAK
-        for LINE in `cat $VM_LIST_TMP.tmp`; do
-            FIRSTP=`echo $LINE | cut -d':' -f1 | sed -e "s/ \{1,\}//g"`
-            SECONDP=`echo $LINE | cut -d':' -f2- | sed -e "s/ \{1,\}//g"`
+		> $VM_LIST_TMP
+		$VBOX -q list vms -l > $VM_LIST_TMP.tmp
+		OLDIFS=$IFS
+		IFS=$LINE_BREAK
+		for LINE in `cat $VM_LIST_TMP.tmp`; do
+			FIRSTP=`echo $LINE | cut -d':' -f1 | sed -e "s/ \{1,\}//g"`
+			SECONDP=`echo $LINE | cut -d':' -f2- | sed -e "s/ \{1,\}//g"`
 
-            if [ "$FIRSTP" == "Name" ]; then
-                VBOX_VM_NAME=$SECONDP
-            fi
-            if [ "$FIRSTP" == "State" ]; then
-                VBOX_VM_STATE=`echo $SECONDP | cut -d'(' -f1`
-            fi
-            if [ "$FIRSTP" == "UUID" ]; then
-                VBOX_VM_UUID=$SECONDP
-            fi
-            if [ "$FIRSTP" == "NumberofCPUs" ]; then
-                VBOX_VM_CPUS=$SECONDP
-            fi
-            if [ "$FIRSTP" == "Memorysize" ]; then
-                VBOX_VM_MEMORY=`echo $SECONDP | sed -e "s/MB//g"`
-            fi
-            if [ "$FIRSTP" == "NIC1" ]; then
-                VBOX_VM_NIC1=$SECONDP
-                VBOX_VM_MAC=`echo $VBOX_VM_NIC1 | cut -d',' -f1 | cut -d':' -f2`
-                VBOX_VM_MAC=`echo $VBOX_VM_MAC | sed 's_\([0-9A-Z][0-9A-Z]\)\([0-9A-Z][0-9A-Z]\)\([0-9A-Z][0-9A-Z]\)\([0-9A-Z][0-9A-Z]\)\([0-9A-Z][0-9A-Z]\)_\1:\2:\3:\4:\5:_'`
-            fi
-            # last item, write to config
-            if [ "$FIRSTP" == "USB" ]; then
-                echo "$VBOX_VM_STATE""@""$VBOX_VM_NAME""@""$VBOX_VM_MAC""@""$VBOX_VM_CPUS""@""$VBOX_VM_MEMORY""@""$VBOX_VM_UUID""@" >> $VM_LIST_TMP
-            fi
-        done
-        IFS=$OLDIFS
+			if [ "$FIRSTP" == "Name" ]; then
+				VBOX_VM_NAME=$SECONDP
+			fi
+			if [ "$FIRSTP" == "State" ]; then
+				VBOX_VM_STATE=`echo $SECONDP | cut -d'(' -f1`
+			fi
+			if [ "$FIRSTP" == "UUID" ]; then
+				VBOX_VM_UUID=$SECONDP
+			fi
+			if [ "$FIRSTP" == "NumberofCPUs" ]; then
+				VBOX_VM_CPUS=$SECONDP
+			fi
+			if [ "$FIRSTP" == "Memorysize" ]; then
+				VBOX_VM_MEMORY=`echo $SECONDP | sed -e "s/MB//g"`
+			fi
+			if [ "$FIRSTP" == "NIC1" ]; then
+				VBOX_VM_NIC1=$SECONDP
+				VBOX_VM_MAC=`echo $VBOX_VM_NIC1 | cut -d',' -f1 | cut -d':' -f2`
+				VBOX_VM_MAC=`echo $VBOX_VM_MAC | sed 's_\([0-9A-Z][0-9A-Z]\)\([0-9A-Z][0-9A-Z]\)\([0-9A-Z][0-9A-Z]\)\([0-9A-Z][0-9A-Z]\)\([0-9A-Z][0-9A-Z]\)_\1:\2:\3:\4:\5:_'`
+			fi
+			# last item, write to config
+			if [ "$FIRSTP" == "USB" ]; then
+				echo "$VBOX_VM_STATE""@""$VBOX_VM_NAME""@""$VBOX_VM_MAC""@""$VBOX_VM_CPUS""@""$VBOX_VM_MEMORY""@""$VBOX_VM_UUID""@" >> $VM_LIST_TMP
+			fi
+		done
+		IFS=$OLDIFS
 		if ! wget -q $WGET_NO_CERT_CHECK -O /dev/null --http-user=$VBOX_OPENQRM_USERNAME --http-password=$VBOX_OPENQRM_PASSWORD  --post-file=`$OPENQRM_POSTENCODE $VM_LIST_TMP` $openqrm_web_protocol://$OPENQRM_SERVER_IP/openqrm/base/plugins/vbox/vbox-action.php?vbox_server_command=get_vbox_server; then
 			echo "ERROR: Could not post vm list to the openQRM-server at $OPENQRM_SERVER_IP!"
 			echo "ERROR: Could not post vm list to the openQRM-server at $OPENQRM_SERVER_IP!" | logger
@@ -510,12 +510,12 @@ case "$VBOX_COMMAND" in
 #		. $OPENQRM_VM_DIR/$VBOX_VM_NAME/disk4
 #		. $OPENQRM_VM_DIR/$VBOX_VM_NAME/vnc
 		. $OPENQRM_VM_DIR/$VBOX_VM_NAME/boot
-        # translate macs
-        VBOX_VM_MAC=`echo $VBOX_VM_MAC | sed 's_\([0-9A-Z][0-9A-Z]\)\([0-9A-Z][0-9A-Z]\)\([0-9A-Z][0-9A-Z]\)\([0-9A-Z][0-9A-Z]\)\([0-9A-Z][0-9A-Z]\)_\1:\2:\3:\4:\5:_'`
-        VBOX_VM_MAC1=`echo $VBOX_VM_MAC1 | sed 's_\([0-9A-Z][0-9A-Z]\)\([0-9A-Z][0-9A-Z]\)\([0-9A-Z][0-9A-Z]\)\([0-9A-Z][0-9A-Z]\)\([0-9A-Z][0-9A-Z]\)_\1:\2:\3:\4:\5:_'`
-        VBOX_VM_MAC2=`echo $VBOX_VM_MAC2 | sed 's_\([0-9A-Z][0-9A-Z]\)\([0-9A-Z][0-9A-Z]\)\([0-9A-Z][0-9A-Z]\)\([0-9A-Z][0-9A-Z]\)\([0-9A-Z][0-9A-Z]\)_\1:\2:\3:\4:\5:_'`
-        VBOX_VM_MAC3=`echo $VBOX_VM_MAC3 | sed 's_\([0-9A-Z][0-9A-Z]\)\([0-9A-Z][0-9A-Z]\)\([0-9A-Z][0-9A-Z]\)\([0-9A-Z][0-9A-Z]\)\([0-9A-Z][0-9A-Z]\)_\1:\2:\3:\4:\5:_'`
-        VBOX_VM_MAC4=`echo $VBOX_VM_MAC4 | sed 's_\([0-9A-Z][0-9A-Z]\)\([0-9A-Z][0-9A-Z]\)\([0-9A-Z][0-9A-Z]\)\([0-9A-Z][0-9A-Z]\)\([0-9A-Z][0-9A-Z]\)_\1:\2:\3:\4:\5:_'`
+		# translate macs
+		VBOX_VM_MAC=`echo $VBOX_VM_MAC | sed 's_\([0-9A-Z][0-9A-Z]\)\([0-9A-Z][0-9A-Z]\)\([0-9A-Z][0-9A-Z]\)\([0-9A-Z][0-9A-Z]\)\([0-9A-Z][0-9A-Z]\)_\1:\2:\3:\4:\5:_'`
+		VBOX_VM_MAC1=`echo $VBOX_VM_MAC1 | sed 's_\([0-9A-Z][0-9A-Z]\)\([0-9A-Z][0-9A-Z]\)\([0-9A-Z][0-9A-Z]\)\([0-9A-Z][0-9A-Z]\)\([0-9A-Z][0-9A-Z]\)_\1:\2:\3:\4:\5:_'`
+		VBOX_VM_MAC2=`echo $VBOX_VM_MAC2 | sed 's_\([0-9A-Z][0-9A-Z]\)\([0-9A-Z][0-9A-Z]\)\([0-9A-Z][0-9A-Z]\)\([0-9A-Z][0-9A-Z]\)\([0-9A-Z][0-9A-Z]\)_\1:\2:\3:\4:\5:_'`
+		VBOX_VM_MAC3=`echo $VBOX_VM_MAC3 | sed 's_\([0-9A-Z][0-9A-Z]\)\([0-9A-Z][0-9A-Z]\)\([0-9A-Z][0-9A-Z]\)\([0-9A-Z][0-9A-Z]\)\([0-9A-Z][0-9A-Z]\)_\1:\2:\3:\4:\5:_'`
+		VBOX_VM_MAC4=`echo $VBOX_VM_MAC4 | sed 's_\([0-9A-Z][0-9A-Z]\)\([0-9A-Z][0-9A-Z]\)\([0-9A-Z][0-9A-Z]\)\([0-9A-Z][0-9A-Z]\)\([0-9A-Z][0-9A-Z]\)_\1:\2:\3:\4:\5:_'`
 
 		echo "OPENQRM_VBOX_VM_CPUS=\"$VBOX_VM_CPUS\"" > $VM_CONFIG_TMP
 		echo "OPENQRM_VBOX_VM_RAM=\"$VBOX_VM_RAM\"" >> $VM_CONFIG_TMP
@@ -557,10 +557,10 @@ case "$VBOX_COMMAND" in
 		vbox_lock aquire
 		echo "Updating VBOX vm $VBOX_VM_NAME with $VBOX_VM_CPUS CPUs"
 		sed -i -e s"#VBOX_VM_CPUS=.*#VBOX_VM_CPUS=\"$VBOX_VM_CPUS\"#g" $OPENQRM_VM_DIR/$VBOX_VM_NAME/cpus
-        # regenerate the config
-        generate_vbox_config $VBOX_VM_NAME
+		# regenerate the config
+		generate_vbox_config $VBOX_VM_NAME
 		# in case we have a username + password post the updated list to the openQRM-server
-        sleep $VBOX_DELAY
+		sleep $VBOX_DELAY
 		if [ "$VBOX_OPENQRM_USERNAME" != "" ] && [ "$VBOX_OPENQRM_PASSWORD" != "" ]; then
 			$0 post_vm_config -n $VBOX_VM_NAME -u $VBOX_OPENQRM_USERNAME -p $VBOX_OPENQRM_PASSWORD
 		fi
@@ -578,10 +578,10 @@ case "$VBOX_COMMAND" in
 		vbox_lock aquire
 		echo "Updating VBOX vm $VBOX_VM_NAME with $VBOX_VM_RAM Memory"
 		sed -i -e s"#VBOX_VM_RAM=.*#VBOX_VM_RAM=\"$VBOX_VM_RAM\"#g" $OPENQRM_VM_DIR/$VBOX_VM_NAME/ram
-        # regenerate the config
-        generate_vbox_config $VBOX_VM_NAME
+		# regenerate the config
+		generate_vbox_config $VBOX_VM_NAME
 		# in case we have a username + password post the updated list to the openQRM-server
-        sleep $VBOX_DELAY
+		sleep $VBOX_DELAY
 		if [ "$VBOX_OPENQRM_USERNAME" != "" ] && [ "$VBOX_OPENQRM_PASSWORD" != "" ]; then
 			$0 post_vm_config -n $VBOX_VM_NAME -u $VBOX_OPENQRM_USERNAME -p $VBOX_OPENQRM_PASSWORD
 		fi
@@ -599,29 +599,29 @@ case "$VBOX_COMMAND" in
 			vbox_usage
 		fi
 		vbox_lock aquire
-        case "$VBOX_VM_COMPONENT_NUMBER" in
-            1)
-                VBOX_BRIDGE_NET=$OPENQRM_PLUGIN_VBOX_BRIDGE_NET1
-                ;;
-            2)
-                VBOX_BRIDGE_NET=$OPENQRM_PLUGIN_VBOX_BRIDGE_NET2
-                ;;
-            3)
-                VBOX_BRIDGE_NET=$OPENQRM_PLUGIN_VBOX_BRIDGE_NET3
-                ;;
-            4)
-                VBOX_BRIDGE_NET=$OPENQRM_PLUGIN_VBOX_BRIDGE_NET4
-                ;;
-        esac
+		case "$VBOX_VM_COMPONENT_NUMBER" in
+			1)
+				VBOX_BRIDGE_NET=$OPENQRM_PLUGIN_VBOX_BRIDGE_NET1
+				;;
+			2)
+				VBOX_BRIDGE_NET=$OPENQRM_PLUGIN_VBOX_BRIDGE_NET2
+				;;
+			3)
+				VBOX_BRIDGE_NET=$OPENQRM_PLUGIN_VBOX_BRIDGE_NET3
+				;;
+			4)
+				VBOX_BRIDGE_NET=$OPENQRM_PLUGIN_VBOX_BRIDGE_NET4
+				;;
+		esac
 
 		echo "Adding nic $VBOX_VM_COMPONENT_NUMBER Nic to bridge $VBOX_BRIDGE_NET to VBOX vm $VBOX_VM_NAME"
-        VBOX_VM_MAC=`echo $VBOX_VM_MAC | sed -e "s/://g"`
+		VBOX_VM_MAC=`echo $VBOX_VM_MAC | sed -e "s/://g"`
 		sed -i -e s"#VBOX_VM_BR$VBOX_VM_COMPONENT_NUMBER=.*#VBOX_VM_BR$VBOX_VM_COMPONENT_NUMBER=\"$VBOX_BRIDGE_NET\"#g" $OPENQRM_VM_DIR/$VBOX_VM_NAME/net""$VBOX_VM_COMPONENT_NUMBER
 		sed -i -e s"#VBOX_VM_MAC$VBOX_VM_COMPONENT_NUMBER=.*#VBOX_VM_MAC$VBOX_VM_COMPONENT_NUMBER=\"$VBOX_VM_MAC\"#g" $OPENQRM_VM_DIR/$VBOX_VM_NAME/net""$VBOX_VM_COMPONENT_NUMBER
-        # regenerate the config
-        generate_vbox_config $VBOX_VM_NAME
+		# regenerate the config
+		generate_vbox_config $VBOX_VM_NAME
 		# in case we have a username + password post the updated list to the openQRM-server
-        sleep $VBOX_DELAY
+		sleep $VBOX_DELAY
 		if [ "$VBOX_OPENQRM_USERNAME" != "" ] && [ "$VBOX_OPENQRM_PASSWORD" != "" ]; then
 			$0 post_vm_config -n $VBOX_VM_NAME -u $VBOX_OPENQRM_USERNAME -p $VBOX_OPENQRM_PASSWORD
 		fi
@@ -638,10 +638,10 @@ case "$VBOX_COMMAND" in
 		echo "Removing nic $VBOX_VM_COMPONENT_NUMBER from VBOX vm $VBOX_VM_NAME"
 		sed -i -e s"#VBOX_VM_BR$VBOX_VM_COMPONENT_NUMBER=.*#VBOX_VM_BR$VBOX_VM_COMPONENT_NUMBER=\"\"#g" $OPENQRM_VM_DIR/$VBOX_VM_NAME/net""$VBOX_VM_COMPONENT_NUMBER
 		sed -i -e s"#VBOX_VM_MAC$VBOX_VM_COMPONENT_NUMBER=.*#VBOX_VM_MAC$VBOX_VM_COMPONENT_NUMBER=\"\"#g" $OPENQRM_VM_DIR/$VBOX_VM_NAME/net""$VBOX_VM_COMPONENT_NUMBER
-        # regenerate the config
-        generate_vbox_config $VBOX_VM_NAME
+		# regenerate the config
+		generate_vbox_config $VBOX_VM_NAME
 		# in case we have a username + password post the updated list to the openQRM-server
-        sleep $VBOX_DELAY
+		sleep $VBOX_DELAY
 		if [ "$VBOX_OPENQRM_USERNAME" != "" ] && [ "$VBOX_OPENQRM_PASSWORD" != "" ]; then
 			$0 post_vm_config -n $VBOX_VM_NAME -u $VBOX_OPENQRM_USERNAME -p $VBOX_OPENQRM_PASSWORD
 		fi
@@ -659,20 +659,20 @@ case "$VBOX_COMMAND" in
 			vbox_usage
 		fi
 		vbox_lock aquire
-        DISK_NAME=`get_disk_name $VBOX_VM_COMPONENT_NUMBER`
+		DISK_NAME=`get_disk_name $VBOX_VM_COMPONENT_NUMBER`
 		echo "Adding disk $VBOX_VM_COMPONENT_NUMBER ($DISK_NAME) size $VBOX_VM_DISK to VBOX vm $VBOX_VM_NAME"
 		sed -i -e s"#VBOX_VM_DISK_$VBOX_VM_COMPONENT_NUMBER=.*#VBOX_VM_DISK_$VBOX_VM_COMPONENT_NUMBER=\"-$DISK_NAME $OPENQRM_VM_DIR/$VBOX_VM_NAME/disk0$VBOX_VM_COMPONENT_NUMBER.img\"#g" $OPENQRM_VM_DIR/$VBOX_VM_NAME/disk""$VBOX_VM_COMPONENT_NUMBER
 		sed -i -e s"#VBOX_VM_DISK_SIZE_$VBOX_VM_COMPONENT_NUMBER=.*#VBOX_VM_DISK_SIZE_$VBOX_VM_COMPONENT_NUMBER=\"$VBOX_VM_DISK\"#g" $OPENQRM_VM_DIR/$VBOX_VM_NAME/disk""$VBOX_VM_COMPONENT_NUMBER
 		VBOX_DISK_FILE="$OPENQRM_VM_DIR/$VBOX_VM_NAME/disk0$VBOX_VM_COMPONENT_NUMBER.img"
-        if ! dd if=/dev/zero of=$VBOX_DISK_FILE bs=1M seek=$VBOX_VM_DISK count=1; then
+		if ! dd if=/dev/zero of=$VBOX_DISK_FILE bs=1M seek=$VBOX_VM_DISK count=1; then
 			echo "ERROR: Could not create $VBOX_DISK_FILE for VBOX vm $VBOX_VM_NAME" | logger
 			vbox_lock release
 			exit 1
 		fi
-        # regenerate the config
-        generate_vbox_config $VBOX_VM_NAME
+		# regenerate the config
+		generate_vbox_config $VBOX_VM_NAME
 		# in case we have a username + password post the updated list to the openQRM-server
-        sleep $VBOX_DELAY
+		sleep $VBOX_DELAY
 		if [ "$VBOX_OPENQRM_USERNAME" != "" ] && [ "$VBOX_OPENQRM_PASSWORD" != "" ]; then
 			$0 post_vm_config -n $VBOX_VM_NAME -u $VBOX_OPENQRM_USERNAME -p $VBOX_OPENQRM_PASSWORD
 		fi
@@ -690,17 +690,17 @@ case "$VBOX_COMMAND" in
 		sed -i -e s"#VBOX_VM_DISK_$VBOX_VM_COMPONENT_NUMBER=.*#VBOX_VM_DISK_$VBOX_VM_COMPONENT_NUMBER=\"\"#g" $OPENQRM_VM_DIR/$VBOX_VM_NAME/disk""$VBOX_VM_COMPONENT_NUMBER
 		sed -i -e s"#VBOX_VM_DISK_SIZE_$VBOX_VM_COMPONENT_NUMBER=.*#VBOX_VM_DISK_SIZE_$VBOX_VM_COMPONENT_NUMBER=\"\"#g" $OPENQRM_VM_DIR/$VBOX_VM_NAME/disk""$VBOX_VM_COMPONENT_NUMBER
 		rm -f $OPENQRM_VM_DIR/$VBOX_VM_NAME/disk0$VBOX_VM_COMPONENT_NUMBER.img
-        # regenerate the config
-        generate_vbox_config $VBOX_VM_NAME
+		# regenerate the config
+		generate_vbox_config $VBOX_VM_NAME
 		# in case we have a username + password post the updated list to the openQRM-server
-        sleep $VBOX_DELAY
+		sleep $VBOX_DELAY
 		if [ "$VBOX_OPENQRM_USERNAME" != "" ] && [ "$VBOX_OPENQRM_PASSWORD" != "" ]; then
 			$0 post_vm_config -n $VBOX_VM_NAME -u $VBOX_OPENQRM_USERNAME -p $VBOX_OPENQRM_PASSWORD
 		fi
 		vbox_lock release
 		;;
 	setboot)
-        unset VBOX_VM_NAME
+		unset VBOX_VM_NAME
 		if [ "$VBOX_VM_MAC" == "" ]; then
 			vbox_usage
 		fi
@@ -709,31 +709,31 @@ case "$VBOX_COMMAND" in
 		fi
 		vbox_lock aquire
 		echo "Setting vm with mac $VBOX_VM_MAC to boot from $VBOX_VM_BOOT"
-        # this command is is running from the openQRM engine which does
-        # not know about the vbox-name
-        for VBOX_VM_NET_CONF in `find /var/lib/vbox/openqrm/ -name net1`; do
-            . $VBOX_VM_NET_CONF
-            if [ "$VBOX_VM_MAC_1" == "$VBOX_VM_MAC" ]; then
-                VBOX_VM_NAME=`dirname $VBOX_VM_NET_CONF`
-                VBOX_VM_NAME=`basename $VBOX_VM_NAME`
-                break
-            fi
-        done
-        if [ "$VBOX_VM_NAME" == "" ]; then
-    		echo "Cloud not find VBOX vm with mac $VBOX_VM_MAC on this host"
-            exit 1
-        fi
-        case "$VBOX_VM_BOOT" in
-            local)
-                echo "VBOX_VM_BOOT=\"-boot c\"" > $OPENQRM_VM_DIR/$VBOX_VM_NAME/boot
-                ;;
-            net)
-                echo "VBOX_VM_BOOT=\"-boot nc\"" > $OPENQRM_VM_DIR/$VBOX_VM_NAME/boot
-                ;;
-        esac
+		# this command is is running from the openQRM engine which does
+		# not know about the vbox-name
+		for VBOX_VM_NET_CONF in `find /var/lib/vbox/openqrm/ -name net1`; do
+			. $VBOX_VM_NET_CONF
+			if [ "$VBOX_VM_MAC_1" == "$VBOX_VM_MAC" ]; then
+				VBOX_VM_NAME=`dirname $VBOX_VM_NET_CONF`
+				VBOX_VM_NAME=`basename $VBOX_VM_NAME`
+				break
+			fi
+		done
+		if [ "$VBOX_VM_NAME" == "" ]; then
+			echo "Cloud not find VBOX vm with mac $VBOX_VM_MAC on this host"
+			exit 1
+		fi
+		case "$VBOX_VM_BOOT" in
+			local)
+				echo "VBOX_VM_BOOT=\"-boot c\"" > $OPENQRM_VM_DIR/$VBOX_VM_NAME/boot
+				;;
+			net)
+				echo "VBOX_VM_BOOT=\"-boot nc\"" > $OPENQRM_VM_DIR/$VBOX_VM_NAME/boot
+				;;
+		esac
 		# hard restart it to apply its configuration
-        # we do it here because the openQRM server engine does not
-        # know anything about the vm name to restart it later
+		# we do it here because the openQRM server engine does not
+		# know anything about the vm name to restart it later
 		. $OPENQRM_VM_DIR/$VBOX_VM_NAME/net1
 		VM_PID=`ps ax | grep $VBOX_VM_MAC_1 | grep vbox | grep -i screen | grep -v grep | awk {' print $1 '}`
 		if [ "$VM_PID" != "" ]; then
@@ -741,8 +741,8 @@ case "$VBOX_COMMAND" in
 			kill -9 $VM_PID 1>/dev/null 2>&1
 		fi
 		sleep 2
-        # regenerate the config
-        generate_vbox_config $VBOX_VM_NAME
+		# regenerate the config
+		generate_vbox_config $VBOX_VM_NAME
 		vbox_lock release
 		;;
 	*)

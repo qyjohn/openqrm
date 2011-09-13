@@ -9,148 +9,177 @@
 
 
 body {
-    background-color: rgb(211,211,211);
+	background-color: rgb(211,211,211);
 }
 
 .column {
-    width: 180px;
-    float: left;
-    padding: 5px;
+	width: 180px;
+	float: left;
+	padding: 5px;
 }
 .portlet {
-    margin: 0 0 0 0;
+	margin: 0 0 0 0;
 }
 .portlet-header {
-    margin: 0.3em;
-    padding-bottom: 1px;
-    padding-left: 0.2em;
+	margin: 0.3em;
+	padding-bottom: 1px;
+	padding-left: 0.2em;
 }
 .portlet-header .ui-icon {
-    float: right;
+	float: right;
 }
 .portlet-content {
-    padding-left: 0.2em;
+	padding-left: 0.2em;
 }
 .ui-sortable-placeholder {
-    border: 1px dotted black;
-    visibility: visible !important; height: 25px !important;
+	border: 1px dotted black;
+	visibility: visible !important; height: 25px !important;
 }
 .ui-sortable-placeholder * {
-    visibility: hidden;
+	visibility: hidden;
 }
 
 #titleheader {
-    position: absolute;
-    left: 10px;
-    top: 25px;
-    width: 220px;
-    height: 70px;
+	position: absolute;
+	left: 10px;
+	top: 25px;
+	width: 220px;
+	height: 70px;
 }
 
 #titleheader h1{
-	font-size:20px;	
+	font-size:20px;
 }
 
 #docu {
-    position: absolute;
-    left: 250px;
-    top: 35px;
-    width: 440px;
-    height: 70px;
+	position: absolute;
+	left: 250px;
+	top: 35px;
+	width: 440px;
+	height: 70px;
 }
 
 #logo {
-    position: absolute;
-    left: 730px;
-    top: 10px;
-    width: 150px;
-    height: 50px;
-    background-image: url(img/logo.gif);
-    background-repeat: no-repeat;
-
+	position: absolute;
+	left: 730px;
+	top: 10px;
+	width: 150px;
+	height: 50px;
 }
 
 #components {
-    position: absolute;
-    left: 10px;
-    top: 100px;
-    width: 200px;
-    height: 600px;
-    padding: 10px;
-    padding-top: 10px;
+	position: absolute;
+	left: 10px;
+	top: 100px;
+	width: 200px;
+	height: 600px;
+	padding: 10px;
+	padding-top: 10px;
 
-    border: solid 1px #808080;
+	border: solid 1px #808080;
 }
 
 #datacenter {
-    position: absolute;
-    left: 240px;
-    top: 100px;
-    width: 450px;
-    height: 600px;
-    padding: 10px;
-    border: solid 1px #808080;
+	position: absolute;
+	left: 240px;
+	top: 100px;
+	width: 450px;
+	height: 600px;
+	padding: 10px;
+	border: solid 1px #808080;
 }
 
 #cloudactions {
-    position: absolute;
-    left: 720px;
-    top: 100px;
-    width: 150px;
-    height: 240px;
-    padding: 10px;
-    border: solid 1px #808080;
+	position: absolute;
+	left: 720px;
+	top: 100px;
+	width: 150px;
+	height: 240px;
+	padding: 10px;
+	border: solid 1px #808080;
 }
 
+
+#submitrequest {
+	position: absolute;
+	left: 10px;
+	top: 50px;
+	width: 80px;
+	height: 60px;
+}
+#saveprofile {
+	position: absolute;
+	left: 80px;
+	top: 50px;
+	width: 80px;
+	height: 60px;
+}
+#checkcosts {
+	position: absolute;
+	left: 10px;
+	top: 150px;
+	width: 80px;
+	height: 60px;
+}
+#resetdesigner {
+	position: absolute;
+	left: 80px;
+	top: 150px;
+	width: 80px;
+	height: 60px;
+}
+
+
+
 #myaccount {
-    position: absolute;
-    left: 720px;
-    top: 370px;
-    width: 150px;
-    height: 60px;
-    padding: 10px;
-    border: solid 1px #808080;
+	position: absolute;
+	left: 720px;
+	top: 370px;
+	width: 150px;
+	height: 60px;
+	padding: 10px;
+	border: solid 1px #808080;
 }
 
 #globallimits {
-    position: absolute;
-    left: 720px;
-    top: 460px;
-    width: 150px;
-    height: 100px;
-    padding: 10px;
-    border: solid 1px #808080;
+	position: absolute;
+	left: 720px;
+	top: 460px;
+	width: 150px;
+	height: 100px;
+	padding: 10px;
+	border: solid 1px #808080;
 }
 
 #userlimits {
-    position: absolute;
-    left: 720px;
-    top: 590px;
-    width: 150px;
-    height: 110px;
-    padding: 10px;
-    border: solid 1px #808080;
+	position: absolute;
+	left: 720px;
+	top: 590px;
+	width: 150px;
+	height: 110px;
+	padding: 10px;
+	border: solid 1px #808080;
 }
 
 #server {
-    position: absolute;
-    left: 160px;
-    top: 100px;
-    width: 120px;
-    height: 430px;
-    padding: 10px;
-    background-image: url(../../img/cloudappliance.gif);
-    background-repeat: no-repeat;
+	position: absolute;
+	left: 160px;
+	top: 100px;
+	width: 120px;
+	height: 430px;
+	padding: 10px;
+	background-image: url(../../img/cloudappliance.gif);
+	background-repeat: no-repeat;
 }
 
 #builder {
-    position: absolute;
-    left: 8px;
-    top: 150px;
-    width: 100px;
-    height: 260px;
-    padding: 10px;
-    overflow:auto;
+	position: absolute;
+	left: 8px;
+	top: 150px;
+	width: 100px;
+	height: 260px;
+	padding: 10px;
+	overflow:auto;
 }
 
 
@@ -196,16 +225,16 @@ body {
 
 
 dl{
-	margin:0;	
+	margin:0;
 }
 
 dt{
-	font-weight:bold;	
+	font-weight:bold;
 	text-align:center;
 }
 
 dd{
-	margin:0;	
+	margin:0;
 }
 
 dd.small{
@@ -213,9 +242,9 @@ dd.small{
 	text-align:center;
 	border-bottom:1px solid #474747;
 	margin-bottom:4px;
-	padding-bottom:4px;	
+	padding-bottom:4px;
 }
 
 span.small{
-	font-size:9px;	
+	font-size:9px;
 }

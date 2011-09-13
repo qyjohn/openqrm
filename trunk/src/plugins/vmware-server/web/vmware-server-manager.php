@@ -2,21 +2,21 @@
 <html lang="en">
 <head>
 	<title>VMware Server Manager</title>
-    <link rel="stylesheet" type="text/css" href="../../css/htmlobject.css" />
-    <link rel="stylesheet" type="text/css" href="vmware-server.css" />
-    <link type="text/css" href="/openqrm/base/js/jquery/development-bundle/themes/smoothness/ui.all.css" rel="stylesheet" />
-    <script type="text/javascript" src="/openqrm/base/js/jquery/js/jquery-1.3.2.min.js"></script>
-    <script type="text/javascript" src="/openqrm/base/js/jquery/js/jquery-ui-1.7.1.custom.min.js"></script>
+	<link rel="stylesheet" type="text/css" href="../../css/htmlobject.css" />
+	<link rel="stylesheet" type="text/css" href="vmware-server.css" />
+	<link type="text/css" href="/openqrm/base/js/jquery/development-bundle/themes/smoothness/ui.all.css" rel="stylesheet" />
+	<script type="text/javascript" src="/openqrm/base/js/jquery/js/jquery-1.3.2.min.js"></script>
+	<script type="text/javascript" src="/openqrm/base/js/jquery/js/jquery-ui-1.7.1.custom.min.js"></script>
 <style type="text/css">
 .ui-progressbar-value {
-    background-image: url(/openqrm/base/img/progress.gif);
+	background-image: url(/openqrm/base/img/progress.gif);
 }
 #progressbar {
-    position: absolute;
-    left: 150px;
-    top: 250px;
-    width: 400px;
-    height: 20px;
+	position: absolute;
+	left: 150px;
+	top: 250px;
+	width: 400px;
+	height: 20px;
 }
 </style>
 </head>
@@ -28,19 +28,19 @@
 /*
   This file is part of openQRM.
 
-    openQRM is free software: you can redistribute it and/or modify
-    it under the terms of the GNU General Public License version 2
-    as published by the Free Software Foundation.
+	openQRM is free software: you can redistribute it and/or modify
+	it under the terms of the GNU General Public License version 2
+	as published by the Free Software Foundation.
 
-    openQRM is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    GNU General Public License for more details.
+	openQRM is distributed in the hope that it will be useful,
+	but WITHOUT ANY WARRANTY; without even the implied warranty of
+	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+	GNU General Public License for more details.
 
-    You should have received a copy of the GNU General Public License
-    along with openQRM.  If not, see <http://www.gnu.org/licenses/>.
+	You should have received a copy of the GNU General Public License
+	along with openQRM.  If not, see <http://www.gnu.org/licenses/>.
 
-    Copyright 2009, Matthias Rechenburg <matt@openqrm.com>
+	Copyright 2009, Matthias Rechenburg <matt@openqrm.com>
 */
 
 
@@ -79,230 +79,257 @@ global $OPENQRM_SERVER_BASE_DIR;
 
 function redirect($strMsg, $currenttab = 'tab0', $vmware_server_id) {
 	global $thisfile;
-    $url = $thisfile.'?strMsg='.urlencode($strMsg).'&currenttab='.$currenttab.'&vmware_server_id='.$vmware_server_id;
+	$url = $thisfile.'?strMsg='.urlencode($strMsg).'&currenttab='.$currenttab.'&vmware_server_id='.$vmware_server_id;
 	echo "<meta http-equiv=\"refresh\" content=\"0; URL=$url\">";
 	exit;
 }
 
 function wait_for_statfile($sfile) {
-    global $refresh_delay;
-    global $refresh_loop_max;
-    $refresh_loop=0;
-    while (!file_exists($sfile)) {
-        sleep($refresh_delay);
-        $refresh_loop++;
-        flush();
-        if ($refresh_loop > $refresh_loop_max)  {
-            return false;
-        }
-    }
-    return true;
+	global $refresh_delay;
+	global $refresh_loop_max;
+	$refresh_loop=0;
+	while (!file_exists($sfile)) {
+		sleep($refresh_delay);
+		$refresh_loop++;
+		flush();
+		if ($refresh_loop > $refresh_loop_max)  {
+			return false;
+		}
+	}
+	return true;
 }
 
 function show_progressbar() {
 ?>
-    <script type="text/javascript">
-        $("#progressbar").progressbar({
+	<script type="text/javascript">
+		$("#progressbar").progressbar({
 			value: 100
 		});
-        var options = {};
-        $("#progressbar").effect("shake",options,2000,null);
+		var options = {};
+		$("#progressbar").effect("shake",options,2000,null);
 	</script>
 <?php
-        flush();
+		flush();
 }
 
 
 // running the actions
+$strMsg = '';
 if(htmlobject_request('action') != '') {
-	switch (htmlobject_request('action')) {
-		case 'select':
-            if (isset($_REQUEST['identifier'])) {
-                foreach($_REQUEST['identifier'] as $id) {
-                    show_progressbar();
-                    $vmware_appliance = new appliance();
-                    $vmware_appliance->get_instance_by_id($id);
-                    $vmware_server = new resource();
-                    $vmware_server->get_instance_by_id($vmware_appliance->resources);
-                    $resource_command="$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/vmware-server/bin/openqrm-vmware-server post_vm_list -u $OPENQRM_USER->name -p $OPENQRM_USER->password";
-                    // remove current stat file
-                    $vmware_server_resource_id = $vmware_server->id;
-                    $statfile="vmware-server-stat/".$vmware_server_resource_id.".vm_list";
-                    if (file_exists($statfile)) {
-                        unlink($statfile);
-                    }
-                    // send command
-                    $vmware_server->send_command($vmware_server->ip, $resource_command);
-                    // and wait for the resulting statfile
-                    if (!wait_for_statfile($statfile)) {
-                        $strMsg .= "Error during refreshing vm list ! Please check the Event-Log<br>";
-                    } else {
-                        $strMsg .="Refreshing vm list<br>";
-                    }
-                    redirect($strMsg, "tab0", $id);
-                }
-            }
-			break;
+	if ($OPENQRM_USER->role == "administrator") {
 
-		case 'reload':
-            show_progressbar();
-            $vmware_appliance = new appliance();
-            $vmware_appliance->get_instance_by_id($vmware_server_id);
-            $vmware_server = new resource();
-            $vmware_server->get_instance_by_id($vmware_appliance->resources);
-            $resource_command="$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/vmware-server/bin/openqrm-vmware-server post_vm_list -u $OPENQRM_USER->name -p $OPENQRM_USER->password";
-            // remove current stat file
-            $vmware_server_resource_id = $vmware_server->id;
-            $statfile="vmware-server-stat/".$vmware_server_resource_id.".vm_list";
-            if (file_exists($statfile)) {
-                unlink($statfile);
-            }
-            // send command
-            $vmware_server->send_command($vmware_server->ip, $resource_command);
-            // and wait for the resulting statfile
-            if (!wait_for_statfile($statfile)) {
-                $strMsg .= "Error during refreshing vm list ! Please check the Event-Log<br>";
-            } else {
-                $strMsg .="Refreshing vm list<br>";
-            }
-            redirect($strMsg, "tab0", $vmware_server_id);
-			break;
+		switch (htmlobject_request('action')) {
+			case 'select':
+				if (isset($_REQUEST['identifier'])) {
+					foreach($_REQUEST['identifier'] as $id) {
+						show_progressbar();
+						$vmware_appliance = new appliance();
+						$vmware_appliance->get_instance_by_id($id);
+						$vmware_server = new resource();
+						$vmware_server->get_instance_by_id($vmware_appliance->resources);
+						$resource_command="$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/vmware-server/bin/openqrm-vmware-server post_vm_list -u $OPENQRM_ADMIN->name -p $OPENQRM_ADMIN->password";
+						// remove current stat file
+						$vmware_server_resource_id = $vmware_server->id;
+						$statfile="vmware-server-stat/".$vmware_server_resource_id.".vm_list";
+						if (file_exists($statfile)) {
+							unlink($statfile);
+						}
+						// send command
+						$vmware_server->send_command($vmware_server->ip, $resource_command);
+						// and wait for the resulting statfile
+						if (!wait_for_statfile($statfile)) {
+							$strMsg .= "Error during refreshing vm list ! Please check the Event-Log<br>";
+						} else {
+							$strMsg .="Refreshing vm list<br>";
+						}
+						redirect($strMsg, "tab0", $id);
+					}
+				}
+				break;
 
-    }
+			case 'reload':
+				show_progressbar();
+				$vmware_appliance = new appliance();
+				$vmware_appliance->get_instance_by_id($vmware_server_id);
+				$vmware_server = new resource();
+				$vmware_server->get_instance_by_id($vmware_appliance->resources);
+				$resource_command="$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/vmware-server/bin/openqrm-vmware-server post_vm_list -u $OPENQRM_ADMIN->name -p $OPENQRM_ADMIN->password";
+				// remove current stat file
+				$vmware_server_resource_id = $vmware_server->id;
+				$statfile="vmware-server-stat/".$vmware_server_resource_id.".vm_list";
+				if (file_exists($statfile)) {
+					unlink($statfile);
+				}
+				// send command
+				$vmware_server->send_command($vmware_server->ip, $resource_command);
+				// and wait for the resulting statfile
+				if (!wait_for_statfile($statfile)) {
+					$strMsg .= "Error during refreshing vm list ! Please check the Event-Log<br>";
+				} else {
+					$strMsg .="Refreshing vm list<br>";
+				}
+				redirect($strMsg, "tab0", $vmware_server_id);
+				break;
+
+		}
+	}
 }
 
 
 // vm-actions
 if(htmlobject_request('action_table1') != '') {
-	switch (htmlobject_request('action_table1')) {
+	if ($OPENQRM_USER->role == "administrator") {
 
-            case 'start':
-                if (strlen($vmware_server_id)) {
-                    if (isset($_REQUEST['identifier_table1'])) {
-                        show_progressbar();
-                        foreach($_REQUEST['identifier_table1'] as $vmw_vm) {
-                            $vmware_appliance = new appliance();
-                            $vmware_appliance->get_instance_by_id($vmware_server_id);
-                            $vmware_server = new resource();
-                            $vmware_server->get_instance_by_id($vmware_appliance->resources);
-                            $resource_command="$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/vmware-server/bin/openqrm-vmware-server start -n $vmw_vm -u $OPENQRM_USER->name -p $OPENQRM_USER->password";
-                            // remove current stat file
-                            $vmware_server_resource_id = $vmware_server->id;
-                            $statfile="vmware-server-stat/".$vmware_server_resource_id.".vm_list";
-                            if (file_exists($statfile)) {
-                                unlink($statfile);
-                            }
-                            // send command
-                            $vmware_server->send_command($vmware_server->ip, $resource_command);
-                            // and wait for the resulting statfile
-                            if (!wait_for_statfile($statfile)) {
-                                $strMsg .= "Error during starting vm $vmw_vm ! Please check the Event-Log<br>";
-                            } else {
-                                $strMsg .="Started vm $vmw_vm<br>";
-                            }
-                        }
-                        redirect($strMsg, "tab0", $vmware_server_id);
-                    }
-                }
-                break;
+		switch (htmlobject_request('action_table1')) {
 
-            case 'stop':
-                if (strlen($vmware_server_id)) {
-                    if (isset($_REQUEST['identifier_table1'])) {
-                        show_progressbar();
-                        foreach($_REQUEST['identifier_table1'] as $vmw_vm) {
-                            $vmware_appliance = new appliance();
-                            $vmware_appliance->get_instance_by_id($vmware_server_id);
-                            $vmware_server = new resource();
-                            $vmware_server->get_instance_by_id($vmware_appliance->resources);
-                            $resource_command="$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/vmware-server/bin/openqrm-vmware-server stop -n $vmw_vm -u $OPENQRM_USER->name -p $OPENQRM_USER->password";
-                            // remove current stat file
-                            $vmware_server_resource_id = $vmware_server->id;
-                            $statfile="vmware-server-stat/".$vmware_server_resource_id.".vm_list";
-                            if (file_exists($statfile)) {
-                                unlink($statfile);
-                            }
-                            // send command
-                            $vmware_server->send_command($vmware_server->ip, $resource_command);
-                            // and wait for the resulting statfile
-                            if (!wait_for_statfile($statfile)) {
-                                $strMsg .= "Error during stopping vm $vmw_vm ! Please check the Event-Log<br>";
-                            } else {
-                                $strMsg .="Stopped vm $vmw_vm<br>";
-                            }
-                        }
-                        redirect($strMsg, "tab0", $vmware_server_id);
-                    }
-                }
-                break;
+				case 'start':
+					if (strlen($vmware_server_id)) {
+						if (isset($_REQUEST['identifier_table1'])) {
+							show_progressbar();
+							foreach($_REQUEST['identifier_table1'] as $vmw_vm) {
+								$vmware_appliance = new appliance();
+								$vmware_appliance->get_instance_by_id($vmware_server_id);
+								$vmware_server = new resource();
+								$vmware_server->get_instance_by_id($vmware_appliance->resources);
+								$resource_command="$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/vmware-server/bin/openqrm-vmware-server start -n $vmw_vm -u $OPENQRM_ADMIN->name -p $OPENQRM_ADMIN->password";
+								// remove current stat file
+								$vmware_server_resource_id = $vmware_server->id;
+								$statfile="vmware-server-stat/".$vmware_server_resource_id.".vm_list";
+								if (file_exists($statfile)) {
+									unlink($statfile);
+								}
+								// send command
+								$vmware_server->send_command($vmware_server->ip, $resource_command);
+								// and wait for the resulting statfile
+								if (!wait_for_statfile($statfile)) {
+									$strMsg .= "Error during starting vm $vmw_vm ! Please check the Event-Log<br>";
+								} else {
+									$strMsg .="Started vm $vmw_vm<br>";
+								}
+							}
+							redirect($strMsg, "tab0", $vmware_server_id);
+						}
+					}
+					break;
 
-            case 'restart':
-                if (strlen($vmware_server_id)) {
-                    if (isset($_REQUEST['identifier_table1'])) {
-                        show_progressbar();
-                        foreach($_REQUEST['identifier_table1'] as $vmw_vm) {
-                            $vmware_appliance = new appliance();
-                            $vmware_appliance->get_instance_by_id($vmware_server_id);
-                            $vmware_server = new resource();
-                            $vmware_server->get_instance_by_id($vmware_appliance->resources);
-                            $resource_command="$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/vmware-server/bin/openqrm-vmware-server reboot -n $vmw_vm -u $OPENQRM_USER->name -p $OPENQRM_USER->password";
-                            // remove current stat file
-                            $vmware_server_resource_id = $vmware_server->id;
-                            $statfile="vmware-server-stat/".$vmware_server_resource_id.".vm_list";
-                            if (file_exists($statfile)) {
-                                unlink($statfile);
-                            }
-                            // send command
-                            $vmware_server->send_command($vmware_server->ip, $resource_command);
-                            // and wait for the resulting statfile
-                            if (!wait_for_statfile($statfile)) {
-                                $strMsg .= "Error during restarting vm $vmw_vm ! Please check the Event-Log<br>";
-                            } else {
-                                $strMsg .="restarted vm $vmw_vm<br>";
-                            }
-                        }
-                        redirect($strMsg, "tab0", $vmware_server_id);
-                    }
-                }
-                break;
+				case 'stop':
+					if (strlen($vmware_server_id)) {
+						if (isset($_REQUEST['identifier_table1'])) {
+							show_progressbar();
+							foreach($_REQUEST['identifier_table1'] as $vmw_vm) {
+								$vmware_appliance = new appliance();
+								$vmware_appliance->get_instance_by_id($vmware_server_id);
+								$vmware_server = new resource();
+								$vmware_server->get_instance_by_id($vmware_appliance->resources);
+								$resource_command="$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/vmware-server/bin/openqrm-vmware-server stop -n $vmw_vm -u $OPENQRM_ADMIN->name -p $OPENQRM_ADMIN->password";
+								// remove current stat file
+								$vmware_server_resource_id = $vmware_server->id;
+								$statfile="vmware-server-stat/".$vmware_server_resource_id.".vm_list";
+								if (file_exists($statfile)) {
+									unlink($statfile);
+								}
+								// send command
+								$vmware_server->send_command($vmware_server->ip, $resource_command);
+								// and wait for the resulting statfile
+								if (!wait_for_statfile($statfile)) {
+									$strMsg .= "Error during stopping vm $vmw_vm ! Please check the Event-Log<br>";
+								} else {
+									$strMsg .="Stopped vm $vmw_vm<br>";
+								}
+							}
+							redirect($strMsg, "tab0", $vmware_server_id);
+						}
+					}
+					break;
 
-            case 'delete':
-                if (strlen($vmware_server_id)) {
-                    if (isset($_REQUEST['identifier_table1'])) {
-                        show_progressbar();
-                        foreach($_REQUEST['identifier_table1'] as $vmw_vm) {
-                            $vmware_appliance = new appliance();
-                            $vmware_appliance->get_instance_by_id($vmware_server_id);
-                            $vmware_server = new resource();
-                            $vmware_server->get_instance_by_id($vmware_appliance->resources);
-                            $resource_command="$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/vmware-server/bin/openqrm-vmware-server delete -n $vmw_vm -u $OPENQRM_USER->name -p $OPENQRM_USER->password";
-                            $vmware_vm_mac = $vmware_vm_mac_ar[$vmw_vm];
-                            // remove current stat file
-                            $vmware_server_resource_id = $vmware_server->id;
-                            $statfile="vmware-server-stat/".$vmware_server_resource_id.".vm_list";
-                            if (file_exists($statfile)) {
-                                unlink($statfile);
-                            }
-                            // send command
-                            $vmware_server->send_command($vmware_server->ip, $resource_command);
-                            // we should remove the resource of the vm !
-                            $vmware_vm_resource = new resource();
-                            $vmware_vm_resource->get_instance_by_mac($vmware_vm_mac);
-                            $vmware_vm_id=$vmware_vm_resource->id;
-                            $vmware_vm_resource->remove($vmware_vm_id, $vmware_vm_mac);
-                            // and wait for the resulting statfile
-                            if (!wait_for_statfile($statfile)) {
-                                $strMsg .= "Error during deleting vm $vmw_vm ! Please check the Event-Log<br>";
-                            } else {
-                                $strMsg .="Deleted vm $vmw_vm<br>";
-                            }
-                        }
-                        redirect($strMsg, "tab0", $vmware_server_id);
-                    }
-                }
-                break;
+				case 'restart':
+					if (strlen($vmware_server_id)) {
+						if (isset($_REQUEST['identifier_table1'])) {
+							show_progressbar();
+							foreach($_REQUEST['identifier_table1'] as $vmw_vm) {
+								$vmware_appliance = new appliance();
+								$vmware_appliance->get_instance_by_id($vmware_server_id);
+								$vmware_server = new resource();
+								$vmware_server->get_instance_by_id($vmware_appliance->resources);
+								$resource_command="$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/vmware-server/bin/openqrm-vmware-server reboot -n $vmw_vm -u $OPENQRM_ADMIN->name -p $OPENQRM_ADMIN->password";
+								// remove current stat file
+								$vmware_server_resource_id = $vmware_server->id;
+								$statfile="vmware-server-stat/".$vmware_server_resource_id.".vm_list";
+								if (file_exists($statfile)) {
+									unlink($statfile);
+								}
+								// send command
+								$vmware_server->send_command($vmware_server->ip, $resource_command);
+								// and wait for the resulting statfile
+								if (!wait_for_statfile($statfile)) {
+									$strMsg .= "Error during restarting vm $vmw_vm ! Please check the Event-Log<br>";
+								} else {
+									$strMsg .="restarted vm $vmw_vm<br>";
+								}
+							}
+							redirect($strMsg, "tab0", $vmware_server_id);
+						}
+					}
+					break;
+
+				case 'delete':
+					if (strlen($vmware_server_id)) {
+						if (isset($_REQUEST['identifier_table1'])) {
+							show_progressbar();
+							foreach($_REQUEST['identifier_table1'] as $vmw_vm) {
+								// check if the resource still belongs to an appliance, if yes we do not remove it
+								$vmware_vm_resource = new resource();
+								$vmware_vm_resource->get_instance_by_mac($vmware_vm_mac);
+								$vmware_vm_id=$vmware_vm_resource->id;
+								$resource_is_used_by_appliance = "";
+								$remove_error = 0;
+								$appliance = new appliance();
+								$appliance_id_list = $appliance->get_all_ids();
+								foreach($appliance_id_list as $appliance_list) {
+									$appliance_id = $appliance_list['appliance_id'];
+									$app_resource_remove_check = new appliance();
+									$app_resource_remove_check->get_instance_by_id($appliance_id);
+									if ($app_resource_remove_check->resources == $vmware_vm_id) {
+										$resource_is_used_by_appliance .= $appliance_id." ";
+										$remove_error = 1;
+									}
+								}
+								if ($remove_error == 1) {
+									$strMsg .= "VM Resource id ".$vmware_vm_id." is used by appliance(s): ".$resource_is_used_by_appliance." <br>";
+									$strMsg .= "Not removing VM resource id ".$vmware_vm_id." !<br>";
+									continue;
+								}
+								// remove vm
+								$vmware_appliance = new appliance();
+								$vmware_appliance->get_instance_by_id($vmware_server_id);
+								$vmware_server = new resource();
+								$vmware_server->get_instance_by_id($vmware_appliance->resources);
+								$resource_command="$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/vmware-server/bin/openqrm-vmware-server delete -n $vmw_vm -u $OPENQRM_ADMIN->name -p $OPENQRM_ADMIN->password";
+								$vmware_vm_mac = $vmware_vm_mac_ar[$vmw_vm];
+								// remove current stat file
+								$vmware_server_resource_id = $vmware_server->id;
+								$statfile="vmware-server-stat/".$vmware_server_resource_id.".vm_list";
+								if (file_exists($statfile)) {
+									unlink($statfile);
+								}
+								// send command
+								$vmware_server->send_command($vmware_server->ip, $resource_command);
+								// we should remove the resource of the vm !
+								$vmware_vm_resource->remove($vmware_vm_id, $vmware_vm_mac);
+								// and wait for the resulting statfile
+								if (!wait_for_statfile($statfile)) {
+									$strMsg .= "Error during deleting vm $vmw_vm ! Please check the Event-Log<br>";
+								} else {
+									$strMsg .="Deleted vm $vmw_vm<br>";
+								}
+							}
+							redirect($strMsg, "tab0", $vmware_server_id);
+						}
+					}
+					break;
 
 
+		}
 	}
 }
 
@@ -313,7 +340,7 @@ function vmware_server_select() {
 
 	global $OPENQRM_USER;
 	global $thisfile;
-    $table = new htmlobject_table_builder('appliance_id', '', '', '', 'select');
+	$table = new htmlobject_table_builder('appliance_id', '', '', '', 'select');
 
 	$arHead = array();
 	$arHead['appliance_state'] = array();
@@ -343,41 +370,41 @@ function vmware_server_select() {
 
 	$vmware_server_count=0;
 	$arBody = array();
-    $virtualization = new virtualization();
-    $virtualization->get_instance_by_type("vmware-server");
+	$virtualization = new virtualization();
+	$virtualization->get_instance_by_type("vmware-server");
 	$vmware_server_tmp = new appliance();
 	$vmware_server_array = $vmware_server_tmp->display_overview_per_virtualization($virtualization->id, $table->offset, $table->limit, $table->sort, $table->order);
 	foreach ($vmware_server_array as $index => $vmware_server_db) {
-        $vmware_server_resource = new resource();
-        $vmware_server_resource->get_instance_by_id($vmware_server_db["appliance_resources"]);
-        $vmware_server_count++;
-        $resource_icon_default="/openqrm/base/img/resource.png";
-        $vmware_server_icon="/openqrm/base/plugins/vmware-server/img/plugin.png";
-        $state_icon="/openqrm/base/img/$vmware_server_resource->state.png";
-        if (!file_exists($_SERVER["DOCUMENT_ROOT"]."/".$state_icon)) {
-            $state_icon="/openqrm/base/img/unknown.png";
-        }
-        if (file_exists($_SERVER["DOCUMENT_ROOT"]."/".$vmware_server_icon)) {
-            $resource_icon_default=$vmware_server_icon;
-        }
-        $arBody[] = array(
-            'appliance_state' => "<img src=$state_icon>",
-            'appliance_icon' => "<img width=24 height=24 src=$resource_icon_default>",
-            'appliance_id' => $vmware_server_db["appliance_id"],
-            'appliance_name' => $vmware_server_db["appliance_name"],
-            'appliance_resource_id' => $vmware_server_resource->id,
-            'appliance_resource_ip' => $vmware_server_resource->ip,
-            'appliance_comment' => $vmware_server_db["appliance_comment"],
-        );
-    }
+		$vmware_server_resource = new resource();
+		$vmware_server_resource->get_instance_by_id($vmware_server_db["appliance_resources"]);
+		$vmware_server_count++;
+		$resource_icon_default="/openqrm/base/img/resource.png";
+		$vmware_server_icon="/openqrm/base/plugins/vmware-server/img/plugin.png";
+		$state_icon="/openqrm/base/img/$vmware_server_resource->state.png";
+		if (!file_exists($_SERVER["DOCUMENT_ROOT"]."/".$state_icon)) {
+			$state_icon="/openqrm/base/img/unknown.png";
+		}
+		if (file_exists($_SERVER["DOCUMENT_ROOT"]."/".$vmware_server_icon)) {
+			$resource_icon_default=$vmware_server_icon;
+		}
+		$arBody[] = array(
+			'appliance_state' => "<img src=$state_icon>",
+			'appliance_icon' => "<img width=24 height=24 src=$resource_icon_default>",
+			'appliance_id' => $vmware_server_db["appliance_id"],
+			'appliance_name' => $vmware_server_db["appliance_name"],
+			'appliance_resource_id' => $vmware_server_resource->id,
+			'appliance_resource_ip' => $vmware_server_resource->ip,
+			'appliance_comment' => $vmware_server_db["appliance_comment"],
+		);
+	}
 
-    $table->id = 'Tabelle';
+	$table->id = 'Tabelle';
 	$table->css = 'htmlobject_table';
 	$table->border = 1;
 	$table->cellspacing = 0;
 	$table->cellpadding = 3;
 	$table->form_action = $thisfile;
-    $table->identifier_type = "radio";
+	$table->identifier_type = "radio";
 	$table->head = $arHead;
 	$table->body = $arBody;
 	if ($OPENQRM_USER->role == "administrator") {
@@ -385,13 +412,28 @@ function vmware_server_select() {
 		$table->identifier = 'appliance_id';
 	}
 	$table->max = $vmware_server_tmp->get_count_per_virtualization($virtualization->id);
-    // set template
+
+	// are there any host appliances yet ?
+	if(count($arBody) > 0) {
+		$disp = $table->get_string();
+	} else {
+		$box = new htmlobject_box();
+		$box->id = 'htmlobject_box_add_host';
+		$box->css = 'htmlobject_box';
+		$box->label = '<br><nobr><b>No host appliances configured yet!</b></nobr>';
+		$box_content = '<br><br><br><br>Please create a '.$virtualization->name.' appliance first!<br>';
+		$box_content .= '<a href="/openqrm/base/server/appliance/appliance-new.php?currenttab=tab1"><b>New appliance</b></a><br>';
+		$box->content = $box_content;
+		$disp = $box->get_string();
+	}
+
+	// set template
 	$t = new Template_PHPLIB();
 	$t->debug = false;
 	$t->setFile('tplfile', './tpl/' . 'vmware-server-select.tpl.php');
 	$t->setVar(array(
 		'formaction' => $thisfile,
-        'vmware_server_table' => $table->get_string(),
+		'vmware_server_table' => $disp,
 	));
 	$disp =  $t->parse('out', 'tplfile');
 	return $disp;
@@ -434,7 +476,7 @@ function vmware_server_display($appliance_id) {
 	$vmware_server_tmp->get_instance_by_id($appliance_id);
 	$vmware_server_resource = new resource();
 	$vmware_server_resource->get_instance_by_id($vmware_server_tmp->resources);
-    $vmware_server_resource_id=$vmware_server_resource->id;
+	$vmware_server_resource_id=$vmware_server_resource->id;
 	$resource_icon_default="/openqrm/base/img/resource.png";
 	$vmware_server_icon="/openqrm/base/plugins/vmware-server/img/plugin.png";
 	$state_icon="/openqrm/base/img/$vmware_server_resource->state.png";
@@ -466,9 +508,9 @@ function vmware_server_display($appliance_id) {
 	$table->head = $arHead;
 	$table->body = $arBody;
 	$table->max = $vmware_server_count;
-    
-    // table 1
-    $table1 = new htmlobject_table_builder('vmware_vm_name', '', '', '', 'vms');
+
+	// table 1
+	$table1 = new htmlobject_table_builder('vmware_vm_name', '', '', '', 'vms');
 	$arHead1 = array();
 	$arHead1['vmware_vm_state'] = array();
 	$arHead1['vmware_vm_state']['title'] ='State';
@@ -477,93 +519,93 @@ function vmware_server_display($appliance_id) {
 	$arHead1['vmware_vm_res_id'] = array();
 	$arHead1['vmware_vm_res_id']['title'] ='Res.ID';
 
-    $arHead1['vmware_vm_name'] = array();
+	$arHead1['vmware_vm_name'] = array();
 	$arHead1['vmware_vm_name']['title'] ='Name';
 
 	$arHead1['vmware_vm_mac'] = array();
 	$arHead1['vmware_vm_mac']['title'] ='MAC';
 
-    $arHead1['vmware_vm_ip'] = array();
+	$arHead1['vmware_vm_ip'] = array();
 	$arHead1['vmware_vm_ip']['title'] ='IP';
 
-    $arHead1['vmware_vm_memory'] = array();
+	$arHead1['vmware_vm_memory'] = array();
 	$arHead1['vmware_vm_memory']['title'] ='Memory';
 
-    $arHead1['vmware_vm_actions'] = array();
+	$arHead1['vmware_vm_actions'] = array();
 	$arHead1['vmware_vm_actions']['title'] ='Actions';
 	$arHead1['vmware_vm_actions']['sortable'] = false;
 
-    $arBody1 = array();
-    $vmware_vm_count=0;
-    $vmware_vm_list_file="vmware-server-stat/".$vmware_server_resource_id.".vm_list";
-    if (file_exists($vmware_vm_list_file)) {
-        $vmware_vm_list_content=file($vmware_vm_list_file);
-        foreach ($vmware_vm_list_content as $index => $vmwarecmdoutput) {
-            $first_at_pos = strpos($vmwarecmdoutput, "@");
-            $first_at_pos++;
-            $vmware_vm_name_first_at_removed = substr($vmwarecmdoutput, $first_at_pos, strlen($vmwarecmdoutput)-$first_at_pos);
-            $second_at_pos = strpos($vmware_vm_name_first_at_removed, "@");
-            $second_at_pos++;
-            $vmware_vm_name_second_at_removed = substr($vmware_vm_name_first_at_removed, $second_at_pos, strlen($vmware_vm_name_first_at_removed)-$second_at_pos);
-            $third_at_pos = strpos($vmware_vm_name_second_at_removed, "@");
-            $third_at_pos++;
-            $vmware_vm_name_third_at_removed = substr($vmware_vm_name_second_at_removed, $third_at_pos, strlen($vmware_vm_name_second_at_removed)-$third_at_pos);
-            $fourth_at_pos = strpos($vmware_vm_name_third_at_removed, "@");
-            $fourth_at_pos++;
-            $vmware_vm_name_fourth_at_removed = substr($vmware_vm_name_third_at_removed, $fourth_at_pos, strlen($vmware_vm_name_third_at_removed)-$fourth_at_pos);
-            $fivth_at_pos = strpos($vmware_vm_name_fourth_at_removed, "@");
-            $fivth_at_pos++;
-            $vmware_vm_name_fivth_at_removed = substr($vmware_vm_name_fourth_at_removed, $fivth_at_pos, strlen($vmware_vm_name_fourth_at_removed)-$fivth_at_pos);
-            $sixth_at_pos = strpos($vmware_vm_name_fivth_at_removed, "@");
-            $sixth_at_pos++;
-            $vmware_vm_name_sixth_at_removed = substr($vmware_vm_name_fivth_at_removed, $sixth_at_pos, strlen($vmware_vm_name_fivth_at_removed)-$sixth_at_pos);
-            $seventh_at_pos = strpos($vmware_vm_name_sixth_at_removed, "@");
-            $seventh_at_pos++;
-            $vmware_vm_name_seventh_at_removed = substr($vmware_vm_name_sixth_at_removed, $seventh_at_pos, strlen($vmware_vm_name_fivth_at_removed)-$seventh_at_pos);
-            $eight_at_pos = strpos($vmware_vm_name_seventh_at_removed, "@");
-            $eight_at_pos++;
+	$arBody1 = array();
+	$vmware_vm_count=0;
+	$vmware_vm_list_file="vmware-server-stat/".$vmware_server_resource_id.".vm_list";
+	if (file_exists($vmware_vm_list_file)) {
+		$vmware_vm_list_content=file($vmware_vm_list_file);
+		foreach ($vmware_vm_list_content as $index => $vmwarecmdoutput) {
+			$first_at_pos = strpos($vmwarecmdoutput, "@");
+			$first_at_pos++;
+			$vmware_vm_name_first_at_removed = substr($vmwarecmdoutput, $first_at_pos, strlen($vmwarecmdoutput)-$first_at_pos);
+			$second_at_pos = strpos($vmware_vm_name_first_at_removed, "@");
+			$second_at_pos++;
+			$vmware_vm_name_second_at_removed = substr($vmware_vm_name_first_at_removed, $second_at_pos, strlen($vmware_vm_name_first_at_removed)-$second_at_pos);
+			$third_at_pos = strpos($vmware_vm_name_second_at_removed, "@");
+			$third_at_pos++;
+			$vmware_vm_name_third_at_removed = substr($vmware_vm_name_second_at_removed, $third_at_pos, strlen($vmware_vm_name_second_at_removed)-$third_at_pos);
+			$fourth_at_pos = strpos($vmware_vm_name_third_at_removed, "@");
+			$fourth_at_pos++;
+			$vmware_vm_name_fourth_at_removed = substr($vmware_vm_name_third_at_removed, $fourth_at_pos, strlen($vmware_vm_name_third_at_removed)-$fourth_at_pos);
+			$fivth_at_pos = strpos($vmware_vm_name_fourth_at_removed, "@");
+			$fivth_at_pos++;
+			$vmware_vm_name_fivth_at_removed = substr($vmware_vm_name_fourth_at_removed, $fivth_at_pos, strlen($vmware_vm_name_fourth_at_removed)-$fivth_at_pos);
+			$sixth_at_pos = strpos($vmware_vm_name_fivth_at_removed, "@");
+			$sixth_at_pos++;
+			$vmware_vm_name_sixth_at_removed = substr($vmware_vm_name_fivth_at_removed, $sixth_at_pos, strlen($vmware_vm_name_fivth_at_removed)-$sixth_at_pos);
+			$seventh_at_pos = strpos($vmware_vm_name_sixth_at_removed, "@");
+			$seventh_at_pos++;
+			$vmware_vm_name_seventh_at_removed = substr($vmware_vm_name_sixth_at_removed, $seventh_at_pos, strlen($vmware_vm_name_fivth_at_removed)-$seventh_at_pos);
+			$eight_at_pos = strpos($vmware_vm_name_seventh_at_removed, "@");
+			$eight_at_pos++;
 
-            $vmware_vm_name = trim(substr($vmwarecmdoutput, 0, $first_at_pos-1));
-            $vmware_vm_mac = trim(substr($vmware_vm_name_first_at_removed, 0, $second_at_pos-1));
-            $vmware_vm_state = trim(substr($vmware_vm_name_second_at_removed, 0, $third_at_pos-1));
-            $vmware_vm_memory = trim(substr($vmware_vm_name_third_at_removed, 0, $fourth_at_pos-1));
+			$vmware_vm_name = trim(substr($vmwarecmdoutput, 0, $first_at_pos-1));
+			$vmware_vm_mac = trim(substr($vmware_vm_name_first_at_removed, 0, $second_at_pos-1));
+			$vmware_vm_state = trim(substr($vmware_vm_name_second_at_removed, 0, $third_at_pos-1));
+			$vmware_vm_memory = trim(substr($vmware_vm_name_third_at_removed, 0, $fourth_at_pos-1));
 
-            $vmware_vm_resource = new resource();
-            $vmware_vm_resource->get_instance_by_mac($vmware_vm_mac);
-            $vmware_vm_res_id = $vmware_vm_resource->id;
-            $vmware_vm_ip = $vmware_vm_resource->ip;
+			$vmware_vm_resource = new resource();
+			$vmware_vm_resource->get_instance_by_mac($vmware_vm_mac);
+			$vmware_vm_res_id = $vmware_vm_resource->id;
+			$vmware_vm_ip = $vmware_vm_resource->ip;
 
 
-            // here we fill table 1
-            $vmware_vm_actions = "";
-            // online ? openqrm-vm ?
-            if (!strcmp($vmware_vm_state, "0")) {
-                $vmware_vm_state_icon = "/openqrm/base/img/off.png";
-                $vmware_vm_actions= $vmware_vm_actions."<a href=\"$thisfile?identifier_table1[]=$vmware_vm_name&action_table1=start&vmware_server_id=$appliance_id\"><img height=20 width=20 src=\"/openqrm/base/plugins/aa_plugins/img/start.png\" border=\"0\"></a>&nbsp;";
-                $vmware_vm_actions .= "<a href=\"vmware-vm-config.php?vmware_vm_name=$vmware_vm_name&vmware_server_id=$appliance_id&action=get_config\" style=\"text-decoration:none;\"><img height=20 width=20 src=\"/openqrm/base/plugins/aa_plugins/img/plugin.png\" border=\"0\"></a>&nbsp;";
-                $vmware_vm_actions = $vmware_vm_actions."<a href=\"$thisfile?identifier_table1[]=$vmware_vm_name&vmware_vm_mac_ar[$vmware_vm_name]=$vmware_vm_mac&action_table1=delete&vmware_server_id=$appliance_id\"><img height=16 width=16 src=\"/openqrm/base/img/off.png\" border=\"0\"></a>&nbsp;";
-            } else {
-                $vmware_vm_state_icon = "/openqrm/base/img/active.png";
-                // online actions
-                $vmware_vm_actions= $vmware_vm_actions."<a href=\"$thisfile?identifier_table1[]=$vmware_vm_name&action_table1=stop&vmware_server_id=$appliance_id\"><img height=20 width=20 src=\"/openqrm/base/plugins/aa_plugins/img/stop.png\" border=\"0\"></a>&nbsp;";
-                $vmware_vm_actions = $vmware_vm_actions."<a href=\"$thisfile?identifier_table1[]=$vmware_vm_name&action_table1=restart&vmware_server_id=$appliance_id\"><img height=16 width=16 src=\"/openqrm/base/img/active.png\" border=\"0\"></a>&nbsp;";
-            }
+			// here we fill table 1
+			$vmware_vm_actions = "";
+			// online ? openqrm-vm ?
+			if (!strcmp($vmware_vm_state, "0")) {
+				$vmware_vm_state_icon = "/openqrm/base/img/off.png";
+				$vmware_vm_actions= $vmware_vm_actions."<a href=\"$thisfile?identifier_table1[]=$vmware_vm_name&action_table1=start&vmware_server_id=$appliance_id\"><img height=20 width=20 src=\"/openqrm/base/plugins/aa_plugins/img/start.png\" border=\"0\"></a>&nbsp;";
+				$vmware_vm_actions .= "<a href=\"vmware-vm-config.php?vmware_vm_name=$vmware_vm_name&vmware_server_id=$appliance_id&action=get_config\" style=\"text-decoration:none;\"><img height=20 width=20 src=\"/openqrm/base/plugins/aa_plugins/img/plugin.png\" border=\"0\"></a>&nbsp;";
+				$vmware_vm_actions = $vmware_vm_actions."<a href=\"$thisfile?identifier_table1[]=$vmware_vm_name&vmware_vm_mac_ar[$vmware_vm_name]=$vmware_vm_mac&action_table1=delete&vmware_server_id=$appliance_id\"><img height=16 width=16 src=\"/openqrm/base/img/off.png\" border=\"0\"></a>&nbsp;";
+			} else {
+				$vmware_vm_state_icon = "/openqrm/base/img/active.png";
+				// online actions
+				$vmware_vm_actions= $vmware_vm_actions."<a href=\"$thisfile?identifier_table1[]=$vmware_vm_name&action_table1=stop&vmware_server_id=$appliance_id\"><img height=20 width=20 src=\"/openqrm/base/plugins/aa_plugins/img/stop.png\" border=\"0\"></a>&nbsp;";
+				$vmware_vm_actions = $vmware_vm_actions."<a href=\"$thisfile?identifier_table1[]=$vmware_vm_name&action_table1=restart&vmware_server_id=$appliance_id\"><img height=16 width=16 src=\"/openqrm/base/img/active.png\" border=\"0\"></a>&nbsp;";
+			}
 
-            // add to table1
-            $arBody1[] = array(
-                'vmware_vm_state' => "<img src=$vmware_vm_state_icon><input type='hidden' name='vmware_vm_mac_ar[$vmware_vm_name]' value=$vmware_vm_mac>",
-                'vmware_vm_res_id' => $vmware_vm_res_id,
-                'vmware_vm_name' => $vmware_vm_name,
-                'vmware_vm_mac' => $vmware_vm_mac,
-                'vmware_vm_ip' => $vmware_vm_ip,
-                'vmware_vm_memory' => $vmware_vm_memory." MB",
-                'vmware_vm_actions' => $vmware_vm_actions,
-            );
-            $vmware_vm_count++;
-        }
-    }
+			// add to table1
+			$arBody1[] = array(
+				'vmware_vm_state' => "<img src=$vmware_vm_state_icon><input type='hidden' name='vmware_vm_mac_ar[$vmware_vm_name]' value=$vmware_vm_mac>",
+				'vmware_vm_res_id' => $vmware_vm_res_id,
+				'vmware_vm_name' => $vmware_vm_name,
+				'vmware_vm_mac' => $vmware_vm_mac,
+				'vmware_vm_ip' => $vmware_vm_ip,
+				'vmware_vm_memory' => $vmware_vm_memory." MB",
+				'vmware_vm_actions' => $vmware_vm_actions,
+			);
+			$vmware_vm_count++;
+		}
+	}
 
-    $table1->add_headrow("<input type='hidden' name='vmware_server_id' value=$appliance_id>");
+	$table1->add_headrow("<input type='hidden' name='vmware_server_id' value=$appliance_id>");
 	$table1->id = 'Tabelle';
 	$table1->css = 'htmlobject_table';
 	$table1->border = 1;
@@ -572,8 +614,8 @@ function vmware_server_display($appliance_id) {
 	$table1->form_action = $thisfile;
 	$table1->autosort = true;
 	$table1->identifier_type = "checkbox";
-    $table1->bottom_buttons_name = "action_table1";
-    $table1->identifier_name = "identifier_table1";
+	$table1->bottom_buttons_name = "action_table1";
+	$table1->identifier_name = "identifier_table1";
 	$table1->head = $arHead1;
 	$table1->body = $arBody1;
 	if ($OPENQRM_USER->role == "administrator") {
@@ -582,16 +624,16 @@ function vmware_server_display($appliance_id) {
 	}
 	$table1->max = $vmware_vm_count;
 
-    // set template
+	// set template
 	$t = new Template_PHPLIB();
 	$t->debug = false;
 	$t->setFile('tplfile', './tpl/' . 'vmware-server-vms.tpl.php');
 	$t->setVar(array(
 		'formaction' => $thisfile,
-        'vmware_server_table' => $table->get_string(),
-        'vmware_server_id' => $vmware_server_resource->id,
-        'vmware_server_name' => $vmware_server_resource->hostname,
-        'vmware_vm_table' => $table1->get_string(),
+		'vmware_server_table' => $table->get_string(),
+		'vmware_server_id' => $vmware_server_resource->id,
+		'vmware_server_name' => $vmware_server_resource->hostname,
+		'vmware_vm_table' => $table1->get_string(),
 	));
 	$disp =  $t->parse('out', 'tplfile');
 	return $disp;
@@ -601,29 +643,36 @@ function vmware_server_display($appliance_id) {
 
 
 $output = array();
-$vmware_server_id = $_REQUEST["vmware_server_id"];
+$vmware_server_id = htmlobject_request('vmware_server_id');
 if(htmlobject_request('action') != '') {
-    if (isset($_REQUEST['identifier'])) {
-        switch (htmlobject_request('action')) {
-            case 'select':
-                foreach($_REQUEST['identifier'] as $id) {
-                    $output[] = array('label' => 'VMware Server VM Manager', 'value' => vmware_server_display($id));
-                }
-                break;
-            case 'reload':
-                foreach($_REQUEST['identifier'] as $id) {
-                    $output[] = array('label' => 'VMware Server VM Manager', 'value' => vmware_server_display($id));
-                }
-                break;
-        }
-    } else {
-    	$output[] = array('label' => 'VMware Server VM Manager', 'value' => vmware_server_select());
-    }
+	if (isset($_REQUEST['identifier'])) {
+		switch (htmlobject_request('action')) {
+			case 'select':
+				foreach($_REQUEST['identifier'] as $id) {
+					$output[] = array('label' => 'VMware Server VM Manager', 'value' => vmware_server_display($id));
+				}
+				break;
+			case 'reload':
+				foreach($_REQUEST['identifier'] as $id) {
+					$output[] = array('label' => 'VMware Server VM Manager', 'value' => vmware_server_display($id));
+				}
+				break;
+		}
+	} else {
+		$output[] = array('label' => 'VMware Server VM Manager', 'value' => vmware_server_select());
+	}
 } else if (strlen($vmware_server_id)) {
 	$output[] = array('label' => 'VMware Server VM Manager', 'value' => vmware_server_display($vmware_server_id));
 } else  {
 	$output[] = array('label' => 'VMware Server VM Manager', 'value' => vmware_server_select());
 }
+
+
+?>
+<script type="text/javascript">
+	$("#progressbar").remove();
+</script>
+<?php
 
 echo htmlobject_tabmenu($output);
 

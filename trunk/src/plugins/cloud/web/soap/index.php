@@ -20,27 +20,27 @@
 ?>
 <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
 <html>
-  <head>
-    <title>openQRM Cloud SOAP-WebService</title>
-    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
-  </head>
-  <body>
+<head>
+<title>openQRM Cloud SOAP-WebService</title>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+</head>
+<body>
 <link rel="stylesheet" type="text/css" href="../../../css/htmlobject.css" />
-<link rel="stylesheet" type="text/css" href="css/cloud.css" />
+<link rel="stylesheet" type="text/css" href="../cloud.css" />
 
 <table border="0" width="700" cellspacing="2" cellpadding="2">
-    <thead>
-        <tr>
-            <th></th>
-            <th><h2>openQRM Cloud SOAP-WebService</h2></th>
-            <th></th>
-        </tr>
-    </thead>
-    <tbody>
+<thead>
+<tr>
+<th></th>
+<th><h2>openQRM Cloud SOAP-WebService</h2></th>
+<th></th>
+</tr>
+</thead>
+<tbody>
 
-        <tr>
-            <td></td>
-            <td>
+<tr>
+<td></td>
+<td>
 
 <b>Basic Design</b>
 <br>
@@ -87,12 +87,12 @@ Since the openQRM WebService exposes administrative actions its (SOAP-) Clients 
 <br>
 <br>
 
-            </td>
-            <td></td>
-        </tr>
-        <tr>
-            <td></td>
-            <td>
+</td>
+<td></td>
+</tr>
+<tr>
+<td></td>
+<td>
 
 <b>Documentation</b>
 <br>
@@ -114,10 +114,10 @@ Since the openQRM WebService exposes administrative actions its (SOAP-) Clients 
 <br>
 <br>
 
-            </td>
-            <td></td>
+</td>
+<td></td>
 
-   </tbody>
+</tbody>
 </table>
 
   </body>

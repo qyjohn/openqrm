@@ -33,19 +33,22 @@ elif [ -f $OPENQRM_SERVER_BASE_DIR/openqrm/etc/openqrm-server.conf ]; then
 	OPENQRM_SERVER_IP=$OPENQRM_SERVER_IP_ADDRESS
 	resource_id=0
 	resource_openqrmserver=$OPENQRM_SERVER_IP_ADDRESS
-    openqrm_web_protocol=$OPENQRM_WEB_PROTOCOL
+	openqrm_web_protocol=$OPENQRM_WEB_PROTOCOL
 fi
 export LANG=C
 LINEBR='
 '
 # define wget to use with https
 if [ "$openqrm_web_protocol" == "https" ]; then
-    WGET_NO_CERT_CHECK="--no-check-certificate"
+	WGET_NO_CERT_CHECK="--no-check-certificate"
 fi
 
 # using the resource_id as the shelf-id
 AOE_SHELF=$resource_id
 export AOE_SHELF
+# how long to wait for the volume authentication, each loop is 5 secs
+MAX_VOLUME_AUTHENTICATION_LOOP=30
+export MAX_VOLUME_AUTHENTICATION_LOOP
 
 # let only root run this script
 WHOAMI=`whoami`
@@ -177,7 +180,7 @@ fi
 case "$SANBOOT_COMMAND" in 
 
 	add)
-	
+
 		if [ "$SANBOOT_IMAGE_SIZE" == "" ]; then
 			SANBOOT_IMAGE_SIZE=$DEFAULT_IMAGE_SIZE
 			echo "Using default size of $DEFAULT_IMAGE_SIZE MB!"
@@ -209,9 +212,12 @@ case "$SANBOOT_COMMAND" in
 		;;
 
 	remove)
-
+		# check that no snapshots existing with this volume as the origin
+		if lvs | awk '{ print $5 }' | grep -w $SANBOOT_IMAGE_NAME 1>/dev/null; then
+			openqrm_post_event 0 "remove" 3 "openqrm-sanboot-storage" "Snapshot exist from volume /dev/$SANBOOT_STORAGE_SERVER_VOLUME_GROUP/$SANBOOT_IMAGE_NAME. Not removing!"
+			exit 1
+		fi
 		echo -n "Removing logical volume $SANBOOT_IMAGE_NAME on volume group $SANBOOT_STORAGE_SERVER_VOLUME_GROUP"
-
 		if [ "$SANBOOT_IMAGE_TYPE" == "iscsi-san-deployment" ]; then
 			echo "Detected Iscsi-image. Removing from $IETDCONF"
 			check_iscsi_target
@@ -250,7 +256,7 @@ case "$SANBOOT_COMMAND" in
 			echo "Using default size of $DEFAULT_IMAGE_SIZE MB!"
 		fi
 		export SANBOOT_IMAGE_SIZE
-		
+
 		# check that source fs-images exist
 		if ! `lvdisplay /dev/$SANBOOT_STORAGE_SERVER_VOLUME_GROUP/$SANBOOT_IMAGE_NAME 1>/dev/null`; then
 			echo "ERROR: Could not find /dev/$SANBOOT_STORAGE_SERVER_VOLUME_GROUP/$SANBOOT_IMAGE_NAME on the storage-server"
@@ -282,16 +288,42 @@ case "$SANBOOT_COMMAND" in
 
 	auth)
 		echo "Authenticating $SANBOOT_IMAGE_TYPE image $SANBOOT_IMAGE_ROOTDEVICE to $SANBOOT_IMAGE_AUTH"
+		# this is just for starting auth, make sure the device is there, otherwise wait
+		SANBOOT_CHECK_VOLUME_GROUP=`echo $SANBOOT_IMAGE_ROOTDEVICE | cut -d':' -f1`
+		if [ "$SANBOOT_OPENQRM_USERNAME" != "" ] && [ "$SANBOOT_OPENQRM_PASSWORD" != "" ] && [ "$SANBOOT_IMAGE_NAME" != "" ]; then
+			MAX_AUTH_LOOP=0
+			while (true); do
+				if [ -e "/dev/$SANBOOT_CHECK_VOLUME_GROUP/$SANBOOT_IMAGE_NAME" ]; then
+					break
+				fi
+				sleep 5
+				if [ "$MAX_AUTH_LOOP" == "$MAX_VOLUME_AUTHENTICATION_LOOP" ]; then
+					sanboot_storage_log auth "ERROR: Volume $SANBOOT_IMAGE_TYPE image $SANBOOT_IMAGE_ROOTDEVICE / /dev/$SANBOOT_CHECK_VOLUME_GROUP/$SANBOOT_IMAGE_NAME does not exists, Cannot auth to $SANBOOT_IMAGE_AUTH"
+					exit 1
+				fi
+				MAX_AUTH_LOOP=$(( MAX_AUTH_LOOP + 1 ))
+			done
+		fi
+		export SANBOOT_IMAGE_ROOTDEVICE
 		if [ "$SANBOOT_IMAGE_TYPE" == "iscsi-san-deployment" ]; then
 			sanboot_storage_lock aquire
+			SANBOOT_IMAGE_ROOTDEVICE=`echo $SANBOOT_IMAGE_ROOTDEVICE | cut -d':' -f2`
 			manage_iscsi auth $SANBOOT_IMAGE_AUTH
 			sanboot_storage_lock release
 		elif [ "$SANBOOT_IMAGE_TYPE" == "aoe-san-deployment" ]; then
 			check_vblade
+			SANBOOT_IMAGE_ROOTDEVICE=`echo $SANBOOT_IMAGE_ROOTDEVICE | cut -d':' -f3`
 			sanboot_storage_lock aquire
 			manage_vblade auth $SANBOOT_IMAGE_AUTH
 			sanboot_storage_lock release
 		fi
+		# if we have an image name send back to openQRM that storage auth finished to remvoe the storage-auth-blocker
+		if [ "$SANBOOT_OPENQRM_USERNAME" != "" ] && [ "$SANBOOT_OPENQRM_PASSWORD" != "" ] && [ "$SANBOOT_IMAGE_NAME" != "" ]; then
+			if ! wget -q $WGET_NO_CERT_CHECK -O /dev/null --http-user=$SANBOOT_OPENQRM_USERNAME --http-password=$SANBOOT_OPENQRM_PASSWORD "$openqrm_web_protocol://$OPENQRM_SERVER_IP/openqrm/base/plugins/sanboot-storage/sanboot-storage-action.php?sanboot_storage_command=auth_finished&sanboot_image_name=$SANBOOT_IMAGE_NAME"; then
+				sanboot_storage_log auth "ERROR: Could not remove the storage-auth-blocker from the openQRM-server at $OPENQRM_SERVER_IP!"
+			fi
+		fi
+
 		;;
 
 	list)
@@ -301,7 +333,7 @@ case "$SANBOOT_COMMAND" in
 		echo "Posting current volume group status to the openQRM-server"
 		STORAGE_STATUS_TMP=$resource_id.vg.stat
 		vgs | grep -v VFree | sed -e "s/ \{1,\}//" > $STORAGE_STATUS_TMP
-        sed -i -e "s/ \{1,\}/@/g" $STORAGE_STATUS_TMP
+		sed -i -e "s/ \{1,\}/@/g" $STORAGE_STATUS_TMP
 		if ! wget -q $WGET_NO_CERT_CHECK -O /dev/null --http-user=$SANBOOT_OPENQRM_USERNAME --http-password=$SANBOOT_OPENQRM_PASSWORD  --post-file=`$OPENQRM_POSTENCODE $STORAGE_STATUS_TMP` $openqrm_web_protocol://$OPENQRM_SERVER_IP/openqrm/base/plugins/sanboot-storage/sanboot-storage-action.php?sanboot_storage_command=get_storage; then
 			echo "ERROR: Could not post the volume group status to the openQRM-server at $resource_openqrmserver!"
 			echo "ERROR: Could not post the volume group status to the openQRM-server at $resource_openqrmserver!" | logger
@@ -313,13 +345,13 @@ case "$SANBOOT_COMMAND" in
 		echo "Posting current $SANBOOT_IMAGE_TYPE logic volume status to the openQRM-server"
 		STORAGE_STATUS_TMP=$resource_id.$SANBOOT_STORAGE_SERVER_VOLUME_GROUP.lv.stat
 		> $STORAGE_STATUS_TMP
-        for LVOL in `lvs $SANBOOT_STORAGE_SERVER_VOLUME_GROUP | grep -v LSize | sed -e "s/ \{1,\}//" | awk {' print $1 '}`; do
+		for LVOL in `lvs $SANBOOT_STORAGE_SERVER_VOLUME_GROUP | grep -v LSize | sed -e "s/ \{1,\}//" | awk {' print $1 '}`; do
 			case $SANBOOT_IMAGE_TYPE in
 
 				iscsi-san-deployment)
 					if grep $LVOL $IETDCONF 1>/dev/null; then
 						lvs $SANBOOT_STORAGE_SERVER_VOLUME_GROUP/$LVOL | grep -v LSize | sed -e "s/ \{1,\}//" >> $STORAGE_STATUS_TMP
-					fi					
+					fi
 					;;
 
 				aoe-san-deployment)
@@ -329,7 +361,7 @@ case "$SANBOOT_COMMAND" in
 					;;
 			esac
 		done
-        sed -i -e "s/ \{1,\}/@/g" $STORAGE_STATUS_TMP
+		sed -i -e "s/ \{1,\}/@/g" $STORAGE_STATUS_TMP
 		if ! wget -q $WGET_NO_CERT_CHECK -O /dev/null --http-user=$SANBOOT_OPENQRM_USERNAME --http-password=$SANBOOT_OPENQRM_PASSWORD  --post-file=`$OPENQRM_POSTENCODE $STORAGE_STATUS_TMP` $openqrm_web_protocol://$OPENQRM_SERVER_IP/openqrm/base/plugins/sanboot-storage/sanboot-storage-action.php?sanboot_storage_command=get_storage; then
 			echo "ERROR: Could not post the logic volume status to the openQRM-server at $resource_openqrmserver!"
 			echo "ERROR: Could not post the logic volume status to the openQRM-server at $resource_openqrmserver!" | logger
@@ -354,7 +386,7 @@ case "$SANBOOT_COMMAND" in
 						VOLUME_GROUP=`echo $LVOL | cut -d'/' -f3`
 						echo "$IMAGE_NAME,$VOLUME_GROUP:/dev/$TARGET/$LUN"
 						echo "$IMAGE_NAME,$VOLUME_GROUP:/dev/$TARGET/$LUN" >> $STORAGE_STATUS_TMP
-					fi					
+					fi
 					;;
 
 				aoe-san-deployment)
@@ -370,7 +402,7 @@ case "$SANBOOT_COMMAND" in
 					fi
 					;;
 			esac
-		
+
 		done
 
 		if ! wget -q $WGET_NO_CERT_CHECK -O /dev/null --http-user=$SANBOOT_OPENQRM_USERNAME --http-password=$SANBOOT_OPENQRM_PASSWORD  --post-file=`$OPENQRM_POSTENCODE $STORAGE_STATUS_TMP` $openqrm_web_protocol://$OPENQRM_SERVER_IP/openqrm/base/plugins/sanboot-storage/sanboot-storage-action.php?sanboot_storage_command=get_ident; then
@@ -389,15 +421,15 @@ case "$SANBOOT_COMMAND" in
 		fi
 		export SANBOOT_IMAGE_SIZE
 		echo "Resizing logical volume $SANBOOT_IMAGE_NAME + size $SANBOOT_IMAGE_SIZE MB using volume group $SANBOOT_STORAGE_SERVER_VOLUME_GROUP"
-        lvresize -L +$SANBOOT_IMAGE_SIZE /dev/$SANBOOT_STORAGE_SERVER_VOLUME_GROUP/$SANBOOT_IMAGE_NAME 2>&1 | logger
+		lvresize -L +$SANBOOT_IMAGE_SIZE /dev/$SANBOOT_STORAGE_SERVER_VOLUME_GROUP/$SANBOOT_IMAGE_NAME 2>&1 | logger
 
 		if [ "$SANBOOT_IMAGE_TYPE" == "iscsi-san-deployment" ]; then
 			echo "Detected Iscsi-image. Running resize2fs on /dev/$SANBOOT_STORAGE_SERVER_VOLUME_GROUP/$SANBOOT_IMAGE_NAME"
 			check_iscsi_target
 			sanboot_storage_lock aquire
 			manage_iscsi remove
-            e2fsck -f -y /dev/$SANBOOT_STORAGE_SERVER_VOLUME_GROUP/$SANBOOT_IMAGE_NAME 2>&1 | logger
-            resize2fs -fp /dev/$SANBOOT_STORAGE_SERVER_VOLUME_GROUP/$SANBOOT_IMAGE_NAME 2>&1 | logger
+			e2fsck -f -y /dev/$SANBOOT_STORAGE_SERVER_VOLUME_GROUP/$SANBOOT_IMAGE_NAME 2>&1 | logger
+			resize2fs -fp /dev/$SANBOOT_STORAGE_SERVER_VOLUME_GROUP/$SANBOOT_IMAGE_NAME 2>&1 | logger
 			manage_iscsi add snap $SANBOOT_IMAGE_AUTH
 			sanboot_storage_lock release
 		elif [ "$SANBOOT_IMAGE_TYPE" == "aoe-san-deployment" ]; then
@@ -405,8 +437,8 @@ case "$SANBOOT_COMMAND" in
 			check_vblade
 			sanboot_storage_lock aquire
 			manage_vblade remove
-            e2fsck -f -y /dev/$SANBOOT_STORAGE_SERVER_VOLUME_GROUP/$SANBOOT_IMAGE_NAME 2>&1 | logger
-            resize2fs -fp /dev/$SANBOOT_STORAGE_SERVER_VOLUME_GROUP/$SANBOOT_IMAGE_NAME 2>&1 | logger
+			e2fsck -f -y /dev/$SANBOOT_STORAGE_SERVER_VOLUME_GROUP/$SANBOOT_IMAGE_NAME 2>&1 | logger
+			resize2fs -fp /dev/$SANBOOT_STORAGE_SERVER_VOLUME_GROUP/$SANBOOT_IMAGE_NAME 2>&1 | logger
 			manage_vblade add snap
 			sanboot_storage_lock release
 		fi
@@ -420,10 +452,10 @@ case "$SANBOOT_COMMAND" in
 
 
 	clone)
-        # cloning is similar to snapshots but since sanboot cannot (yet) create snapshots
-        # from snapshots we have to rsync the origin (which may be a snapshot) to a
-        # new lvol.
-        # .... good to have no partitions on the luns :) so we can mount them easily
+		# cloning is similar to snapshots but since sanboot cannot (yet) create snapshots
+		# from snapshots we have to rsync the origin (which may be a snapshot) to a
+		# new lvol.
+		# .... good to have no partitions on the luns :) so we can mount them easily
 		if [ "$SANBOOT_IMAGE_SNAPSHOT_NAME" == "" ]; then
 			echo "ERROR: Please give a name for the clone using the -s cmdline parmeter"
 			echo
@@ -436,41 +468,41 @@ case "$SANBOOT_COMMAND" in
 		export SANBOOT_IMAGE_SIZE
 		echo "Cloning logical volume $SANBOOT_IMAGE_NAME to $SANBOOT_IMAGE_SNAPSHOT_NAME size $SANBOOT_IMAGE_SIZE MB volume group $SANBOOT_STORAGE_SERVER_VOLUME_GROUP"
 
-        # re-run in background via screen
-        if [ "$RUN_IN_BACKGROUND" != "true" ]; then
-            if [ -x /usr/bin/screen.real ]; then
-                RUNSCREEN="/usr/bin/screen.real"
-            else
-                RUNSCREEN=`which screen`
-            fi
-            export RUN_IN_BACKGROUND=true
-            SCREEN_NAME=`date +%T%x | sed -e "s/://g" | sed -e "s#/##g"`
-            $RUNSCREEN -dmS $SCREEN_NAME $FULL_COMMANDLINE
-            exit
-        fi
+		# re-run in background via screen
+		if [ "$RUN_IN_BACKGROUND" != "true" ]; then
+			if [ -x /usr/bin/screen.real ]; then
+				RUNSCREEN="/usr/bin/screen.real"
+			else
+				RUNSCREEN=`which screen`
+			fi
+			export RUN_IN_BACKGROUND=true
+			SCREEN_NAME=`date +%T%x | sed -e "s/://g" | sed -e "s#/##g"`
+			$RUNSCREEN -dmS $SCREEN_NAME $FULL_COMMANDLINE
+			exit
+		fi
 
-        # create mountpoints for origin and clone
-        MOUNTPOINT_ORIGIN=`mktemp -d /tmp/$SANBOOT_IMAGE_NAME.origin.XXXXXXXXXX` || exit 1
-        MOUNTPOINT_CLONE=`mktemp -d /tmp/$SANBOOT_IMAGE_SNAPSHOT_NAME.clone.XXXXXXXXXX` || exit 1
+		# create mountpoints for origin and clone
+		MOUNTPOINT_ORIGIN=`mktemp -d /tmp/$SANBOOT_IMAGE_NAME.origin.XXXXXXXXXX` || exit 1
+		MOUNTPOINT_CLONE=`mktemp -d /tmp/$SANBOOT_IMAGE_SNAPSHOT_NAME.clone.XXXXXXXXXX` || exit 1
 
-        # create new volume
+		# create new volume
 		if ! lvcreate -L$SANBOOT_IMAGE_SIZE -n$SANBOOT_IMAGE_SNAPSHOT_NAME $SANBOOT_STORAGE_SERVER_VOLUME_GROUP; then
-            echo "ERROR: Could not create the new clone volume"
-            exit 1
-        fi
-        # create fs
-        if ! mkfs.ext3 -F /dev/mapper/$SANBOOT_STORAGE_SERVER_VOLUME_GROUP-$SANBOOT_IMAGE_SNAPSHOT_NAME; then
-            echo "ERROR: Could not create the filesystem on /dev/mapper/$SANBOOT_STORAGE_SERVER_VOLUME_GROUP-$SANBOOT_IMAGE_SNAPSHOT_NAME"
-            exit 1
-        fi
-        # mount clone
-        if ! mount /dev/mapper/$SANBOOT_STORAGE_SERVER_VOLUME_GROUP-$SANBOOT_IMAGE_SNAPSHOT_NAME $MOUNTPOINT_CLONE; then
-            echo "ERROR: Could not mount clone /dev/mapper/$SANBOOT_STORAGE_SERVER_VOLUME_GROUP-$SANBOOT_IMAGE_SNAPSHOT_NAME"
-            exit 1
-        fi
+			echo "ERROR: Could not create the new clone volume"
+			exit 1
+		fi
+		# create fs
+		if ! mkfs.ext3 -F /dev/mapper/$SANBOOT_STORAGE_SERVER_VOLUME_GROUP-$SANBOOT_IMAGE_SNAPSHOT_NAME; then
+			echo "ERROR: Could not create the filesystem on /dev/mapper/$SANBOOT_STORAGE_SERVER_VOLUME_GROUP-$SANBOOT_IMAGE_SNAPSHOT_NAME"
+			exit 1
+		fi
+		# mount clone
+		if ! mount /dev/mapper/$SANBOOT_STORAGE_SERVER_VOLUME_GROUP-$SANBOOT_IMAGE_SNAPSHOT_NAME $MOUNTPOINT_CLONE; then
+			echo "ERROR: Could not mount clone /dev/mapper/$SANBOOT_STORAGE_SERVER_VOLUME_GROUP-$SANBOOT_IMAGE_SNAPSHOT_NAME"
+			exit 1
+		fi
 
-        # remove origin from san/nas
-        export SANBOOT_IMAGE_NAME=$SANBOOT_IMAGE_NAME
+		# remove origin from san/nas
+		export SANBOOT_IMAGE_NAME=$SANBOOT_IMAGE_NAME
 		if [ "$SANBOOT_IMAGE_TYPE" == "iscsi-san-deployment" ]; then
 			check_iscsi_target
 			sanboot_storage_lock aquire
@@ -483,22 +515,22 @@ case "$SANBOOT_COMMAND" in
 			sanboot_storage_lock release
 		fi
 
-        # mount origin
-        if ! mount /dev/mapper/$SANBOOT_STORAGE_SERVER_VOLUME_GROUP-$SANBOOT_IMAGE_NAME $MOUNTPOINT_ORIGIN; then
-            echo "ERROR: Could not mount origin /dev/mapper/$SANBOOT_STORAGE_SERVER_VOLUME_GROUP-$SANBOOT_IMAGE_NAME"
-            exit 1
-        fi
+		# mount origin
+		if ! mount /dev/mapper/$SANBOOT_STORAGE_SERVER_VOLUME_GROUP-$SANBOOT_IMAGE_NAME $MOUNTPOINT_ORIGIN; then
+			echo "ERROR: Could not mount origin /dev/mapper/$SANBOOT_STORAGE_SERVER_VOLUME_GROUP-$SANBOOT_IMAGE_NAME"
+			exit 1
+		fi
 
-        # rsync origin to clone
-        rsync -avz $MOUNTPOINT_ORIGIN/* $MOUNTPOINT_CLONE/
+		# rsync origin to clone
+		rsync -avz $MOUNTPOINT_ORIGIN/* $MOUNTPOINT_CLONE/
 
-        # umount origin + clone
-        umount $MOUNTPOINT_ORIGIN
-        umount $MOUNTPOINT_CLONE
-        rmdir $MOUNTPOINT_ORIGIN $MOUNTPOINT_CLONE
+		# umount origin + clone
+		umount $MOUNTPOINT_ORIGIN
+		umount $MOUNTPOINT_CLONE
+		rmdir $MOUNTPOINT_ORIGIN $MOUNTPOINT_CLONE
 
-        # add origin to san/nas
-        export SANBOOT_IMAGE_NAME=$SANBOOT_IMAGE_NAME
+		# add origin to san/nas
+		export SANBOOT_IMAGE_NAME=$SANBOOT_IMAGE_NAME
 		if [ "$SANBOOT_IMAGE_TYPE" == "iscsi-san-deployment" ]; then
 			check_iscsi_target
 			sanboot_storage_lock aquire
@@ -511,8 +543,8 @@ case "$SANBOOT_COMMAND" in
 			sanboot_storage_lock release
 		fi
 
-        # add clone to san/nas
-        export SANBOOT_IMAGE_NAME=$SANBOOT_IMAGE_SNAPSHOT_NAME
+		# add clone to san/nas
+		export SANBOOT_IMAGE_NAME=$SANBOOT_IMAGE_SNAPSHOT_NAME
 		if [ "$SANBOOT_IMAGE_TYPE" == "iscsi-san-deployment" ]; then
 			check_iscsi_target
 			sanboot_storage_lock aquire
@@ -525,17 +557,17 @@ case "$SANBOOT_COMMAND" in
 			sanboot_storage_lock release
 		fi
 
-        # here we notify openQRM that cloning has finished
+		# here we notify openQRM that cloning has finished
 		# in case we have a username + password post the updated list to the openQRM-server
-        # and notify openQRM that cloning has finished
+		# and notify openQRM that cloning has finished
 		if [ "$SANBOOT_OPENQRM_USERNAME" != "" ] && [ "$SANBOOT_OPENQRM_PASSWORD" != "" ]; then
-            CLONE_FINISHED="$SANBOOT_IMAGE_SNAPSHOT_NAME.clone"
-            touch $CLONE_FINISHED
-            if ! wget -q $WGET_NO_CERT_CHECK -O /dev/null --http-user=$SANBOOT_OPENQRM_USERNAME --http-password=$SANBOOT_OPENQRM_PASSWORD  --post-file=`$OPENQRM_POSTENCODE $CLONE_FINISHED` $openqrm_web_protocol://$OPENQRM_SERVER_IP/openqrm/base/plugins/sanboot-storage/sanboot-storage-action.php?sanboot_storage_command=clone_finished; then
-                echo "ERROR: Could not post clone-finished status to the openQRM-server at $resource_openqrmserver!"
-                echo "ERROR: Could not post clone-finished status to the openQRM-server at $resource_openqrmserver!" | logger
-            fi
-            # post lv
+			CLONE_FINISHED="$SANBOOT_IMAGE_SNAPSHOT_NAME.clone"
+			touch $CLONE_FINISHED
+			if ! wget -q $WGET_NO_CERT_CHECK -O /dev/null --http-user=$SANBOOT_OPENQRM_USERNAME --http-password=$SANBOOT_OPENQRM_PASSWORD  --post-file=`$OPENQRM_POSTENCODE $CLONE_FINISHED` $openqrm_web_protocol://$OPENQRM_SERVER_IP/openqrm/base/plugins/sanboot-storage/sanboot-storage-action.php?sanboot_storage_command=clone_finished; then
+				echo "ERROR: Could not post clone-finished status to the openQRM-server at $resource_openqrmserver!"
+				echo "ERROR: Could not post clone-finished status to the openQRM-server at $resource_openqrmserver!" | logger
+			fi
+			# post lv
 			$0 post_lv -u $SANBOOT_OPENQRM_USERNAME -p $SANBOOT_OPENQRM_PASSWORD -v $SANBOOT_STORAGE_SERVER_VOLUME_GROUP -t $SANBOOT_IMAGE_TYPE
 		fi
 

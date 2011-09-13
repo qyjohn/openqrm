@@ -27,19 +27,19 @@
 <h1><img border=0 src="/openqrm/base/plugins/citrix/img/manager.png"> Authenticate Citrix XenServer {citrix_server_id}</h1>
 
 <div style="float:left;">
-{citrix_server_user}
-{citrix_server_password}
+	{citrix_server_user}
+	{citrix_server_password}
 </div>
 {hidden_citrix_server_id}
 {hidden_citrix_server_ip}
 {hidden_action}
 <div style="text-align:center;">
-    {submit}
-    <br>
-    <br>
-    <br>
-    <br>
-    <strong>{backlink}</strong>
+	{submit}
+	<br>
+	<br>
+	<br>
+	<br>
+	<strong>{backlink}</strong>
 </div>
 
 

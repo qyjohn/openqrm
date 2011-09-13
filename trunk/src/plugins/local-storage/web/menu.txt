@@ -21,6 +21,6 @@
 #	IMG
 #	Target
 ..|Local-Storage
-...|About|plugins/local-storage/local-storage-about.php|How to use|local-storage/plugin.png
-...|Grab Image|plugins/local-storage/local-storage-grab.php|Grab Server Image from existing System|local-storage/grab.png
-...|Volume Admin|plugins/local-storage/local-storage-manager.php|Local Storage Manager|local-storage/volumes.png
+...|插件介绍|plugins/local-storage/local-storage-about.php|How to use|local-storage/plugin.png
+...|映像拷贝|plugins/local-storage/local-storage-grab.php|Grab Server Image from existing System|local-storage/grab.png
+...|卷管理其|plugins/local-storage/local-storage-manager.php|Local Storage Manager|local-storage/volumes.png

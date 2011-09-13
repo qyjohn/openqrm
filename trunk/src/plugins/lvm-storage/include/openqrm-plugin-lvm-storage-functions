@@ -20,9 +20,12 @@
 
 
 # iscsi-target config file
-IETDCONF=/etc/ietd.conf
+IETDCONF=`find /etc/ -name ietd.conf -type f | head -n1`
 # vblade config file
 VBLADECONF=/etc/vblade.conf
+# nfs config files
+ETCFSTAB="/etc/fstab"
+NFSEXPORTS="/etc/exports"
 # some definitions
 DEFAULT_IMAGE_SIZE=5000
 LVM_MGMT_LOCK_FILE=/var/run/lvm-storage/lvm-storage-plugin.lock
@@ -36,9 +39,9 @@ AOE_AUTHENTICATED_MAC="00:00:00:00:00:00"
 IMAGE_LUN=1
 # which screen binary to use
 if [ -x /usr/bin/screen.real ]; then
-    RUNSCREEN="/usr/bin/screen.real"
+	RUNSCREEN="/usr/bin/screen.real"
 else
-    RUNSCREEN=`which screen`
+	RUNSCREEN=`which screen`
 fi
 
 ################ common lvm-storage functions
@@ -56,7 +59,7 @@ function lvm_storage_log() {
 function lvm_storage_lock() {
 	local COMMAND=$1
 	local RET=1
-	
+
 	if [ ! -d `dirname $LVM_MGMT_LOCK_FILE` ]; then
 		mkdir -p `dirname $LVM_MGMT_LOCK_FILE`
 	fi
@@ -76,7 +79,7 @@ function lvm_storage_lock() {
 		*)
 			lvm_storage_log lvm_storage_lock "No such command. Try 'aquire' or 'release'"
 			return 1
-			;;	
+			;;
 	esac
 }
 
@@ -86,14 +89,24 @@ function lvm_storage_lock() {
 
 ################ lvm-nfs ###################################
 
+function check_nfs_server() {
+	# nfs-server installed ?
+	if [ ! -f $NFSEXPORTS ]; then
+		openqrm_post_event 0 "check_nfs_server" 3 "openqrm-lvm-manager" "NFS-Server is not installed!"
+		lvm_storage_lock release
+		return 1
+	fi
+}
 
 function manage_fstab() {
 	case "$1" in
 		add)
-			echo "/dev/$LVM_STORAGE_SERVER_VOLUME_GROUP/$LVM_IMAGE_NAME    /$LVM_STORAGE_SERVER_VOLUME_GROUP/$LVM_IMAGE_NAME      ext3    defaults        1 1" >> /etc/fstab
+			echo "/dev/$LVM_STORAGE_SERVER_VOLUME_GROUP/$LVM_IMAGE_NAME    /$LVM_STORAGE_SERVER_VOLUME_GROUP/$LVM_IMAGE_NAME      ext3    defaults        1 1" >> $ETCFSTAB
 			;;
 		remove)
-			sed -i -e "s#^/dev/$LVM_STORAGE_SERVER_VOLUME_GROUP/$LVM_IMAGE_NAME.*##g" /etc/fstab
+			# tabs and spaces
+			sed -i -e "s#^/dev/$LVM_STORAGE_SERVER_VOLUME_GROUP/$LVM_IMAGE_NAME .*##g" $ETCFSTAB
+			sed -i -e "s#^/dev/$LVM_STORAGE_SERVER_VOLUME_GROUP/$LVM_IMAGE_NAME	.*##g" $ETCFSTAB
 			;;
 	esac
 }
@@ -106,7 +119,7 @@ function manage_nfs() {
 			if [ "$2" != "snap" ]; then
 				lvm_storage_log manage_nfs "NOTICE: creating ext3 filesytem on /dev/$LVM_STORAGE_SERVER_VOLUME_GROUP/$LVM_IMAGE_NAME"
 				if ! mkfs.ext3 -F /dev/$LVM_STORAGE_SERVER_VOLUME_GROUP/$LVM_IMAGE_NAME; then
-					lvm_storage_log lvm-storage-functions "ERROR: Could not create ext3 filesytem on /dev/$LVM_STORAGE_SERVER_VOLUME_GROUP/$LVM_IMAGE_NAME"
+					openqrm_post_event 0 "add" 3 "openqrm-lvm-manager" "Could not create filesytem on /dev/$LVM_STORAGE_SERVER_VOLUME_GROUP/$LVM_IMAGE_NAME"
 					manage_fstab remove
 					lvm_storage_lock release
 					return 1
@@ -114,39 +127,44 @@ function manage_nfs() {
 			fi
 			mkdir -p /$LVM_STORAGE_SERVER_VOLUME_GROUP/$LVM_IMAGE_NAME
 			if ! `mount /dev/$LVM_STORAGE_SERVER_VOLUME_GROUP/$LVM_IMAGE_NAME /$LVM_STORAGE_SERVER_VOLUME_GROUP/$LVM_IMAGE_NAME`; then
-				lvm_storage_log lvm-storage-functions "ERROR: Could not mount /dev/$LVM_STORAGE_SERVER_VOLUME_GROUP/$LVM_IMAGE_NAME at /$LVM_STORAGE_SERVER_VOLUME_GROUP/$LVM_IMAGE_NAME"
+				openqrm_post_event 0 "add" 3 "openqrm-lvm-manager" "Could not mount /dev/$LVM_STORAGE_SERVER_VOLUME_GROUP/$LVM_IMAGE_NAME"
 				manage_fstab remove
 				lvm_storage_lock release
 				return 1
 			fi
-			echo "/$LVM_STORAGE_SERVER_VOLUME_GROUP/$LVM_IMAGE_NAME	$OPENQRM_SERVER(rw,insecure,no_root_squash,async)" >> /etc/exports
+			echo "/$LVM_STORAGE_SERVER_VOLUME_GROUP/$LVM_IMAGE_NAME	$OPENQRM_SERVER(rw,insecure,no_root_squash,async)" >> $NFSEXPORTS
 			if [ -x /etc/init.d/nfs ]; then
 				/etc/init.d/nfs reload
 			elif [ -x /etc/init.d/nfs-kernel-server ]; then
 				/etc/init.d/nfs-kernel-server reload
+			elif [ -x /etc/init.d/nfsserver ]; then
+				/etc/init.d/nfsserver reload
 			else
-				lvm_storage_log lvm-storage-functions "WARNING: Could not find nfs-server init script !"
+				openqrm_post_event 0 "add" 3 "openqrm-lvm-manager" "Could not find nfs-server init script"
 				lvm_storage_lock release
 				return 1
 			fi
 			;;
 		remove)
-			sed -i -e "s#^/$LVM_STORAGE_SERVER_VOLUME_GROUP/$LVM_IMAGE_NAME.*##g" /etc/exports
+			# tabs and spaces
+			sed -i -e "s#^/$LVM_STORAGE_SERVER_VOLUME_GROUP/$LVM_IMAGE_NAME .*##g" $NFSEXPORTS
+			sed -i -e "s#^/$LVM_STORAGE_SERVER_VOLUME_GROUP/$LVM_IMAGE_NAME	.*##g" $NFSEXPORTS
+			sed -i '/^$/d' $NFSEXPORTS
 			if [ -x /etc/init.d/nfs ]; then
 				/etc/init.d/nfs reload
 			elif [ -x /etc/init.d/nfs-kernel-server ]; then
 				/etc/init.d/nfs-kernel-server reload
+			elif [ -x /etc/init.d/nfsserver ]; then
+				/etc/init.d/nfsserver reload
 			else
-				lvm_storage_log lvm-storage-functions "WARNING: Could not find nfs-server init script !"
+				openqrm_post_event 0 "remove" 3 "openqrm-lvm-manager" "Could not find nfs-server init script"
 				lvm_storage_lock release
 				return 1
 			fi
 			while ! `umount /$LVM_STORAGE_SERVER_VOLUME_GROUP/$LVM_IMAGE_NAME`; do
-				echo "ERROR: Could not umount /$LVM_STORAGE_SERVER_VOLUME_GROUP/$LVM_IMAGE_NAME, trying again ..."
-				lvm_storage_log lvm-storage-functions "ERROR: Could not umount /$LVM_STORAGE_SERVER_VOLUME_GROUP/$LVM_IMAGE_NAME, trying again ..."
+				openqrm_post_event 0 "remove" 3 "openqrm-lvm-manager" "Could not umount /$LVM_STORAGE_SERVER_VOLUME_GROUP/$LVM_IMAGE_NAME"
 				if [ "$UMOUNT_LOOP" = "$MAX_UMOUNT_LOOP" ]; then
-					echo "ERROR: Could not umount /$LVM_STORAGE_SERVER_VOLUME_GROUP/$LVM_IMAGE_NAME. Giving up !!!" 2>1
-					lvm_storage_log lvm-storage-functions "ERROR: Could not umount /$LVM_STORAGE_SERVER_VOLUME_GROUP/$LVM_IMAGE_NAME. Giving up !!!"
+					openqrm_post_event 0 "remove" 3 "openqrm-lvm-manager" "Could not umount /$LVM_STORAGE_SERVER_VOLUME_GROUP/$LVM_IMAGE_NAME"
 					manage_fstab remove
 					lvm_storage_lock release
 					return 20
@@ -158,14 +176,18 @@ function manage_nfs() {
 			;;
 		auth)
 			AUTH_IP=$2
-			sed -i -e "s#^$LVM_IMAGE_ROOTDEVICE.*#$LVM_IMAGE_ROOTDEVICE	$AUTH_IP(rw,insecure,no_root_squash,async)#g" /etc/exports
-			sed -i '/^$/d' /etc/exports
+			# tabs and spaces
+			sed -i -e "s#^$LVM_IMAGE_ROOTDEVICE .*#$LVM_IMAGE_ROOTDEVICE	$AUTH_IP(rw,insecure,no_root_squash,async)#g" $NFSEXPORTS
+			sed -i -e "s#^$LVM_IMAGE_ROOTDEVICE	.*#$LVM_IMAGE_ROOTDEVICE	$AUTH_IP(rw,insecure,no_root_squash,async)#g" $NFSEXPORTS
+			sed -i '/^$/d' $NFSEXPORTS
 			if [ -x /etc/init.d/nfs ]; then
 				/etc/init.d/nfs reload
 			elif [ -x /etc/init.d/nfs-kernel-server ]; then
 				/etc/init.d/nfs-kernel-server reload
+			elif [ -x /etc/init.d/nfsserver ]; then
+				/etc/init.d/nfsserver reload
 			else
-				lvm_storage_log lvm-storage-functions "WARNING: Could not find nfs-server init script !"
+				openqrm_post_event 0 "auth" 3 "openqrm-lvm-manager" "Could not find nfs-server init script"
 				lvm_storage_lock release
 				return 1
 			fi
@@ -180,22 +202,16 @@ function manage_nfs() {
 
 function check_iscsi_target() {
 	# iscsi-target installed ?
-	if ! ls $IETDCONF 1>/dev/null; then
-		echo "ERROR: Iscsi Enterprise Target not installed !"
-		echo "ERROR: For managing Iscsi filesystem-images please download and install from"
-		echo "       $ISCSI_TARGET_URL"
-		lvm_storage_log lvm-storage-functions "ERROR: Iscsi Enterprise Target not installed !"
+	if [ "$IETDCONF" == "" ]; then
+		openqrm_post_event 0 "check_iscsi_target" 3 "openqrm-lvm-manager" "iSCSI Enterprise Target not installed!"
 		lvm_storage_lock release
 		return 1
-	fi			
+	fi
 }
 
 
 function manage_iscsi() {
 
-	if ! check_iscsi_target; then
-		return
-	fi
 	case "$1" in
 		add)
 			IMAGE_PASS=$3
@@ -206,75 +222,73 @@ function manage_iscsi() {
 			echo "Target $LVM_IMAGE_NAME" >> $IETDCONF
 			echo "	IncomingUser $LVM_IMAGE_NAME $IMAGE_PASS" >> $IETDCONF
 			echo "	Lun $IMAGE_LUN Path=/dev/mapper/$LVM_STORAGE_SERVER_VOLUME_GROUP-$LVM_IMAGE_NAME,Type=fileio" >> $IETDCONF
+			echo "	MaxConnections 1    # $LVM_IMAGE_NAME" >> $IETDCONF
+			echo "	MaxSessions 1     # $LVM_IMAGE_NAME" >> $IETDCONF
 			LAST_TID=`grep tid: /proc/net/iet/volume | cut -d':' -f2 | awk {' print $1 '} | sort -g | tail -n1`
 			NEW_TID=$(( $LAST_TID + 1 ))
 			# dynamically add new target
 			if ! ietadm --op new --tid=$NEW_TID --params Name=$LVM_IMAGE_NAME; then
-				lvm_storage_log lvm-storage-functions "ERROR: lvm-iscsi could not create new target !"
+				openqrm_post_event 0 "add" 3 "openqrm-lvm-manager" "Could not create new iSCSI target"
 				lvm_storage_lock release
 				return 1
 			fi
 			# set path to lvm device in the new target
 			if ! ietadm --op new --tid=$NEW_TID --lun=$IMAGE_LUN --params Path=/dev/mapper/$LVM_STORAGE_SERVER_VOLUME_GROUP-$LVM_IMAGE_NAME; then
-				lvm_storage_log lvm-storage-functions "ERROR: lvm-iscsi could not set lvm-path in new target !"
+				openqrm_post_event 0 "add" 3 "openqrm-lvm-manager" "Could not set Lun-path in new iSCSI target"
 				lvm_storage_lock release
 				return 1
 			fi
 			# auth target
 			if ! ietadm --op new --tid=$NEW_TID --user --params IncomingUser=$LVM_IMAGE_NAME,Password=$IMAGE_PASS; then
-				lvm_storage_log lvm-storage-functions "ERROR: lvm-iscsi could not set username/password in new target !"
+				openqrm_post_event 0 "add" 3 "openqrm-lvm-manager" "Could not set username/password in new iSCSI target"
 				lvm_storage_lock release
 				return 1
-			else
-				lvm_storage_log lvm-storage-functions "lvm-iscsi created new target $LVM_IMAGE_NAME !"
 			fi
 			;;
 		remove)
-			sed -i -e "s#.*$LVM_IMAGE_NAME.*##g" $IETDCONF
+			# remove from config file
+			cat $IETDCONF | grep -v -w $LVM_IMAGE_NAME > $IETDCONF.tmp
+			mv -f $IETDCONF.tmp $IETDCONF
+			sed -i '/^$/d' $IETDCONF
+			# remove from target
 			TID_TO_REMOVE=`cat /proc/net/iet/volume | grep "name:$LVM_IMAGE_NAME$" | cut -d':' -f2 | awk {' print $1 '}`
 			OPEN_SESSION=`cat /proc/net/iet/session | grep -w ^tid:$TID_TO_REMOVE -A1 | grep sid: | cut -d':' -f2 | awk {' print $1 '}`
 			if [ "$OPEN_SESSION" != "" ]; then
 				# first remove active session (does not support multiple sessions yet)
 				if ! ietadm --op delete --tid=$TID_TO_REMOVE --sid=$OPEN_SESSION --cid=0; then
-					lvm_storage_log lvm-storage-functions "ERROR: lvm-iscsi could not remove session $OPEN_SESSION for tid $TID_TO_REMOVE !"
+					openqrm_post_event 0 "remove" 3 "openqrm-lvm-manager" "Could not remove session $OPEN_SESSION for tid $TID_TO_REMOVE"
 					lvm_storage_lock release
 					return 1
-				else
-					lvm_storage_log lvm-storage-functions "lvm-iscsi removed session $OPEN_SESSION for tid $TID_TO_REMOVE !"
 				fi
 			fi
 			# remove lun
 			if ! ietadm --op delete --tid=$TID_TO_REMOVE --lun=$IMAGE_LUN; then
-				lvm_storage_log lvm-storage-functions "ERROR: lvm-iscsi could not remove lun $IMAGE_LUN for tid $TID_TO_REMOVE !"
+				openqrm_post_event 0 "remove" 3 "openqrm-lvm-manager" "Could not remove lun $IMAGE_LUN for tid $TID_TO_REMOVE"
 				lvm_storage_lock release
 				return 1
 			fi
 			# remove target dynamically
 			if ! ietadm --op delete --tid=$TID_TO_REMOVE; then
-				lvm_storage_log lvm-storage-functions "ERROR: lvm-iscsi could not remove target tid $TID_TO_REMOVE !"
+				openqrm_post_event 0 "remove" 3 "openqrm-lvm-manager" "Could not remove target tid $TID_TO_REMOVE"
 				lvm_storage_lock release
 				return 1
-			else
-				lvm_storage_log lvm-storage-functions "lvm-iscsi removed target tid $TID_TO_REMOVE !"
 			fi
 			;;
 		auth)
 			IMAGE_PASS=$2
-			IMAGE_AUTHNAME=`echo $LVM_IMAGE_ROOTDEVICE | cut -d'/' -f3`
+			IMAGE_AUTHNAME=`basename $LVM_IMAGE_ROOTDEVICE`
 			sed -i -e "s#IncomingUser $IMAGE_AUTHNAME .*#IncomingUser $IMAGE_AUTHNAME $IMAGE_PASS#g" $IETDCONF
 			sed -i '/^$/d' $IETDCONF
 			TID_TO_AUTH=`cat /proc/net/iet/volume | grep "name:$IMAGE_AUTHNAME$" | cut -d':' -f2 | awk {' print $1 '}`
 			if [ "$TID_TO_AUTH" == "" ]; then
-				lvm_storage_log lvm-storage-functions "ERROR: lvm-iscsi could not find target $IMAGE_AUTHNAME to update the authentication !"
+				openqrm_post_event 0 "auth" 3 "openqrm-lvm-manager" "Could not find target $IMAGE_AUTHNAME to update the authentication"
 				lvm_storage_lock release
 				return 1
 			fi
 			if ! ietadm --op new --tid=$TID_TO_AUTH --user --params IncomingUser=$IMAGE_AUTHNAME,Password=$IMAGE_PASS; then
-				lvm_storage_log lvm-storage-functions "ERROR: lvm-iscsi could not find target $IMAGE_AUTHNAME to update the authentication !"
+				openqrm_post_event 0 "auth" 3 "openqrm-lvm-manager" "Could not find target $IMAGE_AUTHNAME to update the authentication"
 				lvm_storage_lock release
 				return 1
-			else
-				lvm_storage_log lvm-storage-functions "lvm-iscsi updated the authentication for target $IMAGE_AUTHNAME !"
 			fi
 			;;
 	esac
@@ -290,40 +304,50 @@ function manage_iscsi() {
 function check_vblade() {
 	# vblade installed ?
 	if ! which vbladed 1>/dev/null; then
-		echo "ERROR: Vblade is not installed !"
-		echo "ERROR: For managing Aoe filesystem-images please install 'vblade'"
-		lvm_storage_log lvm-storage-functions "ERROR: Vblade is not installed !"
+		openqrm_post_event 0 "check-vblade" 3 "openqrm-lvm-manager" "Vblade is not installed. Please install vblade!"
 		lvm_storage_lock release
 		return 1
-	fi			
+	fi
 }
 
 
 function manage_vblade() {
 
-	if ! check_vblade; then
-		return
-	fi
 	if [ ! -f $VBLADECONF ]; then
 		mkdir -p `dirname $VBLADECONF`
 		echo "# this is the vblade configuration file created by openQRM" > $VBLADECONF
 		echo "" >> $VBLADECONF
 	fi
-	
+
 	case "$1" in
 		add)
 			if [ "$2" != "snap" ]; then
 				# create fs, currently static all ext3
 				mkfs.ext3 -F /dev/mapper/$LVM_STORAGE_SERVER_VOLUME_GROUP-$LVM_IMAGE_NAME
 			fi
-			# slots are dynamic
-			AOE_SLOT=`cat $VBLADECONF | grep -v '^#' | awk {' print $3 '} | sort -n -r | head -n 1`
-			AOE_SLOT=$(( AOE_SLOT + 1 ))
+			# shelf + slots are dynamic
+			if [ ! -f $VBLADECONF ]; then
+				> $VBLADECONF
+			fi
+			FOUND=0
+			for (( AOE_SHELF=0; $AOE_SHELF<15; AOE_SHELF = $AOE_SHELF + 1)) ; do
+				for (( AOE_SLOT=1; $AOE_SLOT<=15; AOE_SLOT = $AOE_SLOT + 1)) ; do
+					TEST=`cat $VBLADECONF | grep -v '^#' | awk {' print $2" "$3 '} | grep $AOE_SHELF" "$AOE_SLOT`
+					STATUS=$?
+					if [ $STATUS -eq 1 ]; then
+						FOUND=1
+						break;
+					fi
+				done
+				if [ $STATUS -eq 1 ]; then
+					break;
+				fi
+			done
 			if [ -f $OPENQRM_SERVER_BASE_DIR/openqrm/etc/openqrm-server.conf ]; then
 				. $OPENQRM_SERVER_BASE_DIR/openqrm/etc/openqrm-server.conf
 				AOE_INTERFACE=$OPENQRM_SERVER_INTERFACE
 			else
-                . /var/openqrm/openqrm-resource.conf
+				. /var/openqrm/openqrm-resource.conf
 				AOE_INTERFACE=`ifconfig | grep -i $resource_mac | awk {' print $1 '} | tail -1`
 			fi
 			echo "$AOE_INTERFACE $AOE_SHELF $AOE_SLOT /dev/mapper/$LVM_STORAGE_SERVER_VOLUME_GROUP-$LVM_IMAGE_NAME $AOE_AUTHENTICATED_MAC" >> $VBLADECONF
@@ -344,7 +368,7 @@ function manage_vblade() {
 				for VBLADE_PID in `ps ax | grep vblade | grep -w $AOE_IMAGE_ROOTDEVICE_PATH | awk {' print $1 '}`; do
 					kill $VBLADE_PID
 				done
-				sync			
+				sync
 				# start vbladed
 				SCREEN_NAME=`date +%T%x | sed -e "s/://g" | sed -e "s#/##g"`
 				$RUNSCREEN -dmS $SCREEN_NAME vblade -m $AUTHENTICATED_MAC $AOE_SHELF $AOE_SLOT $AOE_INTERFACE $AOE_IMAGE_ROOTDEVICE_PATH
@@ -355,7 +379,8 @@ function manage_vblade() {
 				kill $VBLADE_PID
 			done
 			sync
-			sed -i -e "s#.*$LVM_STORAGE_SERVER_VOLUME_GROUP-$LVM_IMAGE_NAME.*##g" $VBLADECONF
+			grep -v "/dev/mapper/$LVM_STORAGE_SERVER_VOLUME_GROUP-$LVM_IMAGE_NAME " $VBLADECONF > $VBLADECONF.new
+			mv -f $VBLADECONF.new $VBLADECONF
 			sed -i '/^$/d' $VBLADECONF
 			;;
 	esac

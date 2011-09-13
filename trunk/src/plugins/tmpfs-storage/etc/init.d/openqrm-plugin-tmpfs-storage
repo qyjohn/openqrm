@@ -45,7 +45,7 @@ function openqrm_plugin_tmpfs_storage_uninstall() {
 	if [ "$USERNAME" == "" ] && [ "$PASSWORD" == "" ]; then
 		echo -n "tmpfs-storage: Please give a username to uninstall the plugin : "
 		read USERNAME
-		echo	
+		echo
 		echo -n "tmpfs-storage: Please give the password for user $USERNAME : "
 		read PASSWORD
 		echo
@@ -65,7 +65,7 @@ function openqrm_plugin_tmpfs_storage_init() {
 	if [ "$USERNAME" == "" ] && [ "$PASSWORD" == "" ]; then
 		echo -n "tmpfs-storage: Please give a username to init the plugin : "
 		read USERNAME
-		echo	
+		echo
 		echo -n "tmpfs-storage: Please give the password for user $USERNAME : "
 		read PASSWORD
 		echo
@@ -79,7 +79,7 @@ function openqrm_plugin_tmpfs_storage_init() {
 	ln -sf $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/tmpfs-storage/web/root-mount.tmpfs-deployment $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/boot-service/root-mount.tmpfs-deployment
 	# linking the default image-parameters
 	ln -sf $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/tmpfs-storage/web/image.tmpfs-deployment.php $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/boot-service/image.tmpfs-deployment.php
-	
+
 }
 
 USER=$2

@@ -12,19 +12,19 @@ $puppet_domain = $_REQUEST["puppet_domain"];
 /*
   This file is part of openQRM.
 
-    openQRM is free software: you can redistribute it and/or modify
-    it under the terms of the GNU General Public License version 2
-    as published by the Free Software Foundation.
+	openQRM is free software: you can redistribute it and/or modify
+	it under the terms of the GNU General Public License version 2
+	as published by the Free Software Foundation.
 
-    openQRM is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    GNU General Public License for more details.
+	openQRM is distributed in the hope that it will be useful,
+	but WITHOUT ANY WARRANTY; without even the implied warranty of
+	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+	GNU General Public License for more details.
 
-    You should have received a copy of the GNU General Public License
-    along with openQRM.  If not, see <http://www.gnu.org/licenses/>.
+	You should have received a copy of the GNU General Public License
+	along with openQRM.  If not, see <http://www.gnu.org/licenses/>.
 
-    Copyright 2009, Matthias Rechenburg <matt@openqrm.com>
+	Copyright 2009, Matthias Rechenburg <matt@openqrm.com>
 */
 
 
@@ -78,12 +78,12 @@ $event->log("$puppet_command", $_SERVER['REQUEST_TIME'], 5, "puppet-action", "Pr
 
 		case 'init':
 			// this command creates the following table
-			// 
+			//
 			// -> puppetconfig
 			// cc_id INT(5)
 			// cc_key VARCHAR(50)
 			// cc_value VARCHAR(50)
-			
+
 			$create_puppet_config = "create table puppet_config(cc_id INT(5), cc_key VARCHAR(50), cc_value VARCHAR(50))";
 			$db=openqrm_get_db_connection();
 			$recordSet = &$db->Execute($create_puppet_config);
@@ -92,14 +92,14 @@ $event->log("$puppet_command", $_SERVER['REQUEST_TIME'], 5, "puppet-action", "Pr
 			$create_default_puppet_config2 = "insert into puppet_config(cc_id, cc_key, cc_value) values (2, 'domain_name', \"$puppet_domain\")";
 			$recordSet = &$db->Execute($create_default_puppet_config1);
 			$recordSet = &$db->Execute($create_default_puppet_config2);
-		    $db->Close();
+			$db->Close();
 			break;
 
 		case 'uninstall':
 			$drop_puppet_config = "drop table puppet_config";
 			$db=openqrm_get_db_connection();
 			$recordSet = &$db->Execute($drop_puppet_config);
-		    $db->Close();
+			$db->Close();
 			break;
 
 

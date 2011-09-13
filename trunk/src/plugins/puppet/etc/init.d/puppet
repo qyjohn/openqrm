@@ -52,29 +52,29 @@ fi
 function puppet_start() {
 	echo "Starting the openQRM puppet-plugin"
 	puppet_stop 1>/dev/null 2>&1
-   	export FORCE_INSTALL=true
-   	openqrm_install_os_dependency puppet
+	export FORCE_INSTALL=true
+	openqrm_install_os_dependency puppet
 	# clean up eventual left-overs, be sure we get signed
 	rm -rf /etc/puppet/ssl/* /var/lib/puppet/ssl/* /var/lib/puppet/state/*
 	openqrm_chkconfig del puppet
 	puppet_stop 1>/dev/null 2>&1
-    if which puppetd 1>/dev/null 2>&1; then
-    	puppetd -v -d -D -l syslog
-    else
-        echo "ERROR: Cloud not find puppetd binary"
-    fi
+	if which puppetd 1>/dev/null 2>&1; then
+		puppetd -v -d -D -l syslog
+	else
+		echo "ERROR: Cloud not find puppetd binary"
+	fi
 }
 
 
 function puppet_stop() {
 	echo "Stopping the openQRM puppet-plugin"
-    if [ -x "/etc/init.d/puppet" ]; then
-        if [ -x "`which invoke-rc.d 2>/dev/null`" ]; then
-            invoke-rc.d puppet stop || exit $?
-        else
-            /etc/init.d/puppet stop || exit $?
-        fi
-    fi
+	if [ -x "/etc/init.d/puppet" ]; then
+		if [ -x "`which invoke-rc.d 2>/dev/null`" ]; then
+			invoke-rc.d puppet stop || exit $?
+		else
+			/etc/init.d/puppet stop || exit $?
+		fi
+	fi
 	kill -9 `ps ax | grep puppetd | grep -v grep | awk {' print $1 '}` 2>/dev/null
 }
 

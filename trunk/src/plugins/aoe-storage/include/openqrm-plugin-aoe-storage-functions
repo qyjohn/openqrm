@@ -28,9 +28,9 @@ AOE_MGMT_LOCK_TIMEOUT=500
 AOE_STORAGE_SERVER_IMAGE_DIRECTORY="/coraid"
 # which screen binary to use
 if [ -x /usr/bin/screen.real ]; then
-    RUNSCREEN="/usr/bin/screen.real"
+	RUNSCREEN="/usr/bin/screen.real"
 else
-    RUNSCREEN=`which screen`
+	RUNSCREEN=`which screen`
 fi
 
 ################ common aoe-storage functions
@@ -48,7 +48,7 @@ function aoe_storage_log() {
 function aoe_storage_lock() {
 	local COMMAND=$1
 	local RET=1
-	
+
 	if [ ! -d `dirname $AOE_MGMT_LOCK_FILE` ]; then
 		mkdir -p `dirname $AOE_MGMT_LOCK_FILE`
 	fi
@@ -68,7 +68,7 @@ function aoe_storage_lock() {
 		*)
 			aoe_storage_log aoe_storage_lock "No such command. Try 'aquire' or 'release'"
 			return 1
-			;;	
+			;;
 	esac
 }
 
@@ -81,12 +81,10 @@ function aoe_storage_lock() {
 function check_vblade() {
 	# vblade installed ?
 	if ! which vbladed 1>/dev/null; then
-		echo "ERROR: Vblade is not installed !"
-		echo "ERROR: For managing Aoe filesystem-images please install 'vblade'"
-		aoe_storage_log aoe-storage-functions "ERROR: Vblade is not installed !"
+		openqrm_post_event 0 "check_vblade" 3 "aoe-storage-functions" "Vblade is not installed. Please install vblade"
 		aoe_storage_lock release
 		return 1
-	fi			
+	fi
 }
 
 
@@ -100,23 +98,47 @@ function manage_aoe() {
 		echo "# this is the vblade configuration file created by openQRM" > $VBLADECONF
 		echo "" >> $VBLADECONF
 	fi
-	
+
 	case "$1" in
 		add)
 			AUTHENTICATED_MAC="00:00:00:00:00:00"
 			if [ "$2" != "snap" ]; then
-				dd if=/dev/zero of=$AOE_STORAGE_SERVER_IMAGE_DIRECTORY/$AOE_IMAGE_NAME bs=1M seek=$AOE_IMAGE_SIZE count=1
-				# create fs, currently static all ext3
-				mkfs.ext3 -F $AOE_STORAGE_SERVER_IMAGE_DIRECTORY/$AOE_IMAGE_NAME
+				if ! dd if=/dev/zero of=$AOE_STORAGE_SERVER_IMAGE_DIRECTORY/$AOE_IMAGE_NAME bs=1M seek=$AOE_IMAGE_SIZE count=1; then
+					openqrm_post_event 0 "add" 3 "Error creating AOE volume $AOE_STORAGE_SERVER_IMAGE_DIRECTORY/$AOE_IMAGE_NAME"
+					aoe_storage_lock release
+					return 1
+				else
+					# create fs, currently static all ext3
+					if ! mkfs.ext3 -F $AOE_STORAGE_SERVER_IMAGE_DIRECTORY/$AOE_IMAGE_NAME; then
+						openqrm_post_event 0 "add" 3 "Error creating filesystem on AOE volume $AOE_STORAGE_SERVER_IMAGE_DIRECTORY/$AOE_IMAGE_NAME"
+						aoe_storage_lock release
+						return 1
+					fi
+				fi
 			fi
-			# slots are dynamic
-			AOE_SLOT=`cat $VBLADECONF | grep -v '^#' | awk {' print $3 '} | sort -n -r | head -n 1`
-			AOE_SLOT=$(( AOE_SLOT + 1 ))
+			# shelf + slots are dynamic
+			if [ ! -f $VBLADECONF ]; then
+				> $VBLADECONF
+			fi
+			FOUND=0
+			for (( AOE_SHELF=0; $AOE_SHELF<15; AOE_SHELF = $AOE_SHELF + 1)) ; do
+				for (( AOE_SLOT=1; $AOE_SLOT<=15; AOE_SLOT = $AOE_SLOT + 1)) ; do
+					TEST=`cat $VBLADECONF | grep -v '^#' | awk {' print $2" "$3 '} | grep $AOE_SHELF" "$AOE_SLOT`
+					STATUS=$?
+					if [ $STATUS -eq 1 ]; then
+						FOUND=1
+						break;
+					fi
+				done
+				if [ $STATUS -eq 1 ]; then
+					break;
+				fi
+			done
 			if [ -f $OPENQRM_SERVER_BASE_DIR/openqrm/etc/openqrm-server.conf ]; then
 				. $OPENQRM_SERVER_BASE_DIR/openqrm/etc/openqrm-server.conf
 				AOE_INTERFACE=$OPENQRM_SERVER_INTERFACE
 			else
-                . /var/openqrm/openqrm-resource.conf
+				. /var/openqrm/openqrm-resource.conf
 				AOE_INTERFACE=`ifconfig | grep -i $resource_mac | awk {' print $1 '} | tail -1`
 			fi
 			echo "$AOE_INTERFACE $AOE_SHELF $AOE_SLOT $AOE_STORAGE_SERVER_IMAGE_DIRECTORY/$AOE_IMAGE_NAME $AUTHENTICATED_MAC # size=$AOE_IMAGE_SIZE" >> $VBLADECONF
@@ -138,7 +160,7 @@ function manage_aoe() {
 				for VBLADE_PID in `ps ax | grep vblade | grep -w $AOE_IMAGE_ROOTDEVICE_PATH | awk {' print $1 '}`; do
 					kill $VBLADE_PID
 				done
-				sync			
+				sync
 				# start vbladed
 				SCREEN_NAME=`date +%T%x | sed -e "s/://g" | sed -e "s#/##g"`
 				$RUNSCREEN -dmS $SCREEN_NAME vblade -m $AUTHENTICATED_MAC $AOE_SHELF $AOE_SLOT $AOE_INTERFACE $AOE_IMAGE_ROOTDEVICE_PATH
@@ -149,30 +171,12 @@ function manage_aoe() {
 			for VBLADE_PID in `ps ax | grep vblade | grep -w $AOE_IMAGE_NAME | awk {' print $1 '}`; do
 				kill $VBLADE_PID
 			done
-			sync			
-			sed -i -e "s#.*$AOE_IMAGE_NAME.*##g" $VBLADECONF
+			sync
+			grep -v "$AOE_STORAGE_SERVER_IMAGE_DIRECTORY/$AOE_IMAGE_NAME " $VBLADECONF > $VBLADECONF.new
+			mv -f $VBLADECONF.new $VBLADECONF
 			sed -i '/^$/d' $VBLADECONF
 			;;
 	esac
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 

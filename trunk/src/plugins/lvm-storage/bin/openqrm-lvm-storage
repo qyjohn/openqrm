@@ -33,19 +33,22 @@ elif [ -f $OPENQRM_SERVER_BASE_DIR/openqrm/etc/openqrm-server.conf ]; then
 	OPENQRM_SERVER_IP=$OPENQRM_SERVER_IP_ADDRESS
 	resource_id=0
 	resource_openqrmserver=$OPENQRM_SERVER_IP_ADDRESS
-    openqrm_web_protocol=$OPENQRM_WEB_PROTOCOL
+	openqrm_web_protocol=$OPENQRM_WEB_PROTOCOL
 fi
 export LANG=C
 LINEBR='
 '
 # define wget to use with https
 if [ "$openqrm_web_protocol" == "https" ]; then
-    WGET_NO_CERT_CHECK="--no-check-certificate"
+	WGET_NO_CERT_CHECK="--no-check-certificate"
 fi
 
 # using the resource_id as the shelf-id
 AOE_SHELF=$resource_id
 export AOE_SHELF
+# how long to wait for the volume authentication, each loop is 5 secs
+MAX_VOLUME_AUTHENTICATION_LOOP=30
+export MAX_VOLUME_AUTHENTICATION_LOOP
 
 # let only root run this script
 WHOAMI=`whoami`
@@ -119,8 +122,6 @@ while [ $# -ne 0 ]; do
 done
 
 
-
-
 # main
 if [ "$LVM_COMMAND" == "" ]; then
 	lvm_storage_usage
@@ -169,44 +170,60 @@ fi
 if [ "$LVM_COMMAND" != "list" ] && [ "$LVM_COMMAND" != "post_vg" ] && [ "$LVM_COMMAND" != "post_identifier" ] && [ "$LVM_COMMAND" != "auth" ]; then
 	# check if volume group exists
 	if ! `vgdisplay | grep $LVM_STORAGE_SERVER_VOLUME_GROUP 1>/dev/null`; then
-		echo "ERROR: Could not find volume-group $LVM_STORAGE_SERVER_VOLUME_GROUP on the storage-server"
+		openqrm_post_event 0 "check-vg" 3 "openqrm-lvm-manager" "Could not find volume-group $LVM_STORAGE_SERVER_VOLUME_GROUP on the storage-server"
 		exit 1
 	fi
 fi
 
+# check requirements
+if [ "$LVM_IMAGE_TYPE" == "lvm-iscsi-deployment" ]; then
+	if ! check_iscsi_target; then
+		exit 1
+	fi
+elif [ "$LVM_IMAGE_TYPE" == "lvm-nfs-deployment" ]; then
+	if ! check_nfs_server; then
+		exit 1
+	fi
+elif [ "$LVM_IMAGE_TYPE" == "lvm-aoe-deployment" ]; then
+	if ! check_vblade; then
+		exit 1
+	fi
+fi
+
+
 case "$LVM_COMMAND" in 
 
 	add)
-	
+
 		if [ "$LVM_IMAGE_SIZE" == "" ]; then
 			LVM_IMAGE_SIZE=$DEFAULT_IMAGE_SIZE
-			echo "Using default size of $DEFAULT_IMAGE_SIZE MB!"
 		fi
 		export LVM_IMAGE_SIZE
-		echo -n "Creating logical volume $LVM_IMAGE_NAME size $LVM_IMAGE_SIZE MB using volume group $LVM_STORAGE_SERVER_VOLUME_GROUP"
-
-		lvcreate -L$LVM_IMAGE_SIZE -n$LVM_IMAGE_NAME $LVM_STORAGE_SERVER_VOLUME_GROUP
-
+		# check if already exists
+		if [ -e /dev/$LVM_STORAGE_SERVER_VOLUME_GROUP/$LVM_IMAGE_NAME ]; then
+			openqrm_post_event 0 "add" 3 "openqrm-lvm-manager" "Volume $LVM_IMAGE_NAME already exists"
+			exit 1
+		fi
+		#echo -n "Creating logical volume $LVM_IMAGE_NAME size $LVM_IMAGE_SIZE MB using volume group $LVM_STORAGE_SERVER_VOLUME_GROUP"
+		lvm_storage_lock aquire
+		if ! lvcreate -L$LVM_IMAGE_SIZE -n$LVM_IMAGE_NAME $LVM_STORAGE_SERVER_VOLUME_GROUP; then
+			openqrm_post_event 0 "add" 3 "openqrm-lvm-manager" "Error while adding $LVM_IMAGE_NAME to $LVM_STORAGE_SERVER_VOLUME_GROUP"
+			lvm_storage_lock release
+			exit 1
+		fi
 		if [ "$LVM_IMAGE_TYPE" == "lvm-iscsi-deployment" ]; then
 			echo "Detected Iscsi-image. Adding to $IETDCONF"
-			check_iscsi_target
-			lvm_storage_lock aquire
 			manage_iscsi add regular $LVM_IMAGE_AUTH
-			lvm_storage_lock release
 		elif [ "$LVM_IMAGE_TYPE" == "lvm-nfs-deployment" ]; then
 			# we mount them and add to exports
 			echo "Detected NFS-image. Mounting and adding $LVM_IMAGE_NAME to /etc/fstab + /etc/exports"
-			lvm_storage_lock aquire
 			manage_fstab add
 			manage_nfs add regular $OPENQRM_SERVER_IP
-			lvm_storage_lock release
 		elif [ "$LVM_IMAGE_TYPE" == "lvm-aoe-deployment" ]; then
 			echo "Detected Aoe-image. Adding to $VBLADECONF"
-			check_vblade
-			lvm_storage_lock aquire
 			manage_vblade add
-			lvm_storage_lock release
 		fi
+		lvm_storage_lock release
 
 		# in case we have a username + password post the updated list to the openQRM-server
 		if [ "$LVM_OPENQRM_USERNAME" != "" ] && [ "$LVM_OPENQRM_PASSWORD" != "" ]; then
@@ -216,34 +233,38 @@ case "$LVM_COMMAND" in
 		;;
 
 	remove)
-
-		echo -n "Removing logical volume $LVM_IMAGE_NAME on volume group $LVM_STORAGE_SERVER_VOLUME_GROUP"
-
+		if [ ! -e /dev/$LVM_STORAGE_SERVER_VOLUME_GROUP/$LVM_IMAGE_NAME ]; then
+			openqrm_post_event 0 "remove" 3 "openqrm-lvm-manager" "Could not find source volume /dev/$LVM_STORAGE_SERVER_VOLUME_GROUP/$LVM_IMAGE_NAME!"
+			exit 1
+		fi
+		# check that no snapshots existing with this volume as the origin
+		if lvs | awk '{ print $5 }' | grep -w $LVM_IMAGE_NAME 1>/dev/null; then
+			openqrm_post_event 0 "remove" 3 "openqrm-lvm-manager" "Snapshot exist from volume /dev/$LVM_STORAGE_SERVER_VOLUME_GROUP/$LVM_IMAGE_NAME. Not removing!"
+			exit 1
+		fi
+		#echo -n "Removing logical volume $LVM_IMAGE_NAME on volume group $LVM_STORAGE_SERVER_VOLUME_GROUP"
 		if [ "$LVM_IMAGE_TYPE" == "lvm-iscsi-deployment" ]; then
 			echo "Detected Iscsi-image. Removing from $IETDCONF"
 			check_iscsi_target
 			lvm_storage_lock aquire
 			manage_iscsi remove
-			lvm_storage_lock release
 		elif [ "$LVM_IMAGE_TYPE" == "lvm-nfs-deployment" ]; then
 			echo "Detected NFS-image. Removing from /etc/exports"
 			lvm_storage_lock aquire
 			manage_nfs remove
 			manage_fstab remove
-			lvm_storage_lock release
 		elif [ "$LVM_IMAGE_TYPE" == "lvm-aoe-deployment" ]; then
 			echo "Detected Aoe-image. Removing from $VBLADECONF"
 			check_vblade
 			lvm_storage_lock aquire
 			manage_vblade remove
-			lvm_storage_lock release
 		fi
-
 		# give time to settle
 		sync
 		sleep 2
 		lvchange -a n /dev/$LVM_STORAGE_SERVER_VOLUME_GROUP/$LVM_IMAGE_NAME
 		lvremove -f /dev/$LVM_STORAGE_SERVER_VOLUME_GROUP/$LVM_IMAGE_NAME
+		lvm_storage_lock release
 
 		# in case we have a username + password post the updated list to the openQRM-server
 		if [ "$LVM_OPENQRM_USERNAME" != "" ] && [ "$LVM_OPENQRM_PASSWORD" != "" ]; then
@@ -254,44 +275,42 @@ case "$LVM_COMMAND" in
 
 	snap)
 		if [ "$LVM_IMAGE_SNAPSHOT_NAME" == "" ]; then
-			echo "ERROR: Please give a name for the snapshot using the -s cmdline parmeter"
-			echo
 			lvm_storage_usage
 		fi
 		if [ "$LVM_IMAGE_SIZE" == "" ]; then
 			LVM_IMAGE_SIZE=$DEFAULT_IMAGE_SIZE
-			echo "Using default size of $DEFAULT_IMAGE_SIZE MB!"
 		fi
 		export LVM_IMAGE_SIZE
-		
 		# check that source fs-images exist
-		if ! `lvdisplay /dev/$LVM_STORAGE_SERVER_VOLUME_GROUP/$LVM_IMAGE_NAME 1>/dev/null`; then
-			echo "ERROR: Could not find /dev/$LVM_STORAGE_SERVER_VOLUME_GROUP/$LVM_IMAGE_NAME on the storage-server"
+		if [ ! -e /dev/$LVM_STORAGE_SERVER_VOLUME_GROUP/$LVM_IMAGE_NAME ]; then
+			openqrm_post_event 0 "snap" 3 "openqrm-lvm-manager" "Source volume /dev/$LVM_STORAGE_SERVER_VOLUME_GROUP/$LVM_IMAGE_NAME does not exist."
 			exit 1
 		fi
-		echo -n "Creating snapshot size $LVM_IMAGE_SIZE from logical volume $LVM_IMAGE_NAME -> $LVM_IMAGE_SNAPSHOT_NAME"
-		lvcreate --size $LVM_IMAGE_SIZE""m --snapshot --name $LVM_IMAGE_SNAPSHOT_NAME /dev/$LVM_STORAGE_SERVER_VOLUME_GROUP/$LVM_IMAGE_NAME
+		if [ -e /dev/$LVM_STORAGE_SERVER_VOLUME_GROUP/$LVM_IMAGE_SNAPSHOT_NAME ]; then
+			openqrm_post_event 0 "snap" 3 "openqrm-lvm-manager" "Volume $LVM_IMAGE_SNAPSHOT_NAME already exists"
+			exit 1
+		fi
+		#echo -n "Creating snapshot size $LVM_IMAGE_SIZE from logical volume $LVM_IMAGE_NAME -> $LVM_IMAGE_SNAPSHOT_NAME"
+		lvm_storage_lock aquire
+		if ! lvcreate --size $LVM_IMAGE_SIZE""m --snapshot --name $LVM_IMAGE_SNAPSHOT_NAME /dev/$LVM_STORAGE_SERVER_VOLUME_GROUP/$LVM_IMAGE_NAME; then
+			openqrm_post_event 0 "snap" 3 "openqrm-lvm-manager" "Error while adding snapshot $LVM_IMAGE_SNAPSHOT_NAME to $LVM_STORAGE_SERVER_VOLUME_GROUP"
+			lvm_storage_lock release
+			exit 1
+		fi
 		export LVM_IMAGE_NAME=$LVM_IMAGE_SNAPSHOT_NAME
 
 		if [ "$LVM_IMAGE_TYPE" == "lvm-iscsi-deployment" ]; then
 			echo "Detected Iscsi-image. Adding to $IETDCONF"
-			check_iscsi_target
-			lvm_storage_lock aquire
 			manage_iscsi add snap $LVM_IMAGE_AUTH
-			lvm_storage_lock release
 		elif [ "$LVM_IMAGE_TYPE" == "lvm-nfs-deployment" ]; then
 			echo "Detected NFS-image. Mounting and adding $IMAGE_NAME to /etc/fstab + /etc/exports"
-			lvm_storage_lock aquire
 			manage_fstab add
 			manage_nfs add snap $OPENQRM_SERVER_IP
-			lvm_storage_lock release
 		elif [ "$LVM_IMAGE_TYPE" == "lvm-aoe-deployment" ]; then
 			echo "Detected Aoe-image. Adding to $VBLADECONF"
-			check_vblade
-			lvm_storage_lock aquire
 			manage_vblade add snap
-			lvm_storage_lock release
 		fi
+		lvm_storage_lock release
 
 		# in case we have a username + password post the updated list to the openQRM-server
 		if [ "$LVM_OPENQRM_USERNAME" != "" ] && [ "$LVM_OPENQRM_PASSWORD" != "" ]; then
@@ -301,56 +320,83 @@ case "$LVM_COMMAND" in
 
 	auth)
 		echo "Authenticating $LVM_IMAGE_TYPE image $LVM_IMAGE_ROOTDEVICE to $LVM_IMAGE_AUTH"
+		# this is just for starting auth, make sure the device is there, otherwise wait
 		if [ "$LVM_IMAGE_TYPE" == "lvm-iscsi-deployment" ]; then
-			lvm_storage_lock aquire
-			manage_iscsi auth $LVM_IMAGE_AUTH
-			lvm_storage_lock release
+			LVM_CHECK_ROOT_DEVICE="$LVM_IMAGE_ROOTDEVICE"
 		elif [ "$LVM_IMAGE_TYPE" == "lvm-nfs-deployment" ]; then
-			lvm_storage_lock aquire
-			manage_nfs auth $LVM_IMAGE_AUTH
-			lvm_storage_lock release
+			LVM_CHECK_ROOT_DEVICE="/dev$LVM_IMAGE_ROOTDEVICE"
 		elif [ "$LVM_IMAGE_TYPE" == "lvm-aoe-deployment" ]; then
-			check_vblade
-			lvm_storage_lock aquire
+			LVM_CHECK_VOLUME_GROUP=`echo $LVM_IMAGE_ROOTDEVICE | cut -d':' -f1`
+			LVM_CHECK_VOLUME_NAME=`echo $LVM_IMAGE_ROOTDEVICE | cut -d':' -f2`
+			LVM_CHECK_AOE_DEVICE_NAME=`echo $LVM_IMAGE_ROOTDEVICE | cut -d':' -f3`
+			LVM_CHECK_ROOT_DEVICE="/dev/$LVM_CHECK_VOLUME_GROUP/$LVM_CHECK_VOLUME_NAME"
+			export LVM_IMAGE_ROOTDEVICE=$LVM_CHECK_AOE_DEVICE_NAME
+		fi
+		if [ "$LVM_OPENQRM_USERNAME" != "" ] && [ "$LVM_OPENQRM_PASSWORD" != "" ] && [ "$LVM_IMAGE_NAME" != "" ]; then
+			MAX_AUTH_LOOP=0
+			while (true); do
+				if [ -e "$LVM_CHECK_ROOT_DEVICE" ]; then
+					break
+				fi
+				sleep 5
+				if [ "$MAX_AUTH_LOOP" == "$MAX_VOLUME_AUTHENTICATION_LOOP" ]; then
+					openqrm_post_event 0 "auth" 3 "openqrm-lvm-manager" "Volume $LVM_IMAGE_TYPE image $LVM_IMAGE_ROOTDEVICE does not exists. Cannot auth to $LVM_IMAGE_AUTH"
+					exit 1
+				fi
+				MAX_AUTH_LOOP=$(( MAX_AUTH_LOOP + 1 ))
+			done
+		fi
+
+		# run the auth command
+		lvm_storage_lock aquire
+		if [ "$LVM_IMAGE_TYPE" == "lvm-iscsi-deployment" ]; then
+			manage_iscsi auth $LVM_IMAGE_AUTH
+		elif [ "$LVM_IMAGE_TYPE" == "lvm-nfs-deployment" ]; then
+			manage_nfs auth $LVM_IMAGE_AUTH
+		elif [ "$LVM_IMAGE_TYPE" == "lvm-aoe-deployment" ]; then
 			manage_vblade auth $LVM_IMAGE_AUTH
-			lvm_storage_lock release
+		fi
+		lvm_storage_lock release
+		# if we have an image name send back to openQRM that storage auth finished to remvoe the storage-auth-blocker
+		if [ "$LVM_OPENQRM_USERNAME" != "" ] && [ "$LVM_OPENQRM_PASSWORD" != "" ] && [ "$LVM_IMAGE_NAME" != "" ]; then
+			if ! wget -q $WGET_NO_CERT_CHECK -O /dev/null --http-user=$LVM_OPENQRM_USERNAME --http-password=$LVM_OPENQRM_PASSWORD "$openqrm_web_protocol://$OPENQRM_SERVER_IP/openqrm/base/plugins/lvm-storage/lvm-storage-action.php?lvm_storage_command=auth_finished&lvm_image_name=$LVM_IMAGE_NAME"; then
+				openqrm_post_event 0 "auth" 3 "openqrm-lvm-manager" "Could not remove the storage-auth-blocker from the openQRM-server at $OPENQRM_SERVER_IP"
+			fi
 		fi
 		;;
 
 	list)
-		lvm lvs
+		lvs
 		;;
 	post_vg)
-		echo "Posting current volume group status to the openQRM-server"
+		#echo "Posting current volume group status to the openQRM-server"
 		STORAGE_STATUS_TMP=$resource_id.vg.stat
 		vgs | grep -v VFree | sed -e "s/ \{1,\}//" > $STORAGE_STATUS_TMP
-        sed -i -e "s/ \{1,\}/@/g" $STORAGE_STATUS_TMP
+		sed -i -e "s/ \{1,\}/@/g" $STORAGE_STATUS_TMP
 		if ! wget -q $WGET_NO_CERT_CHECK -O /dev/null --http-user=$LVM_OPENQRM_USERNAME --http-password=$LVM_OPENQRM_PASSWORD  --post-file=`$OPENQRM_POSTENCODE $STORAGE_STATUS_TMP` $openqrm_web_protocol://$OPENQRM_SERVER_IP/openqrm/base/plugins/lvm-storage/lvm-storage-action.php?lvm_storage_command=get_storage; then
-			echo "ERROR: Could not post the volume group status to the openQRM-server at $resource_openqrmserver!"
-			echo "ERROR: Could not post the volume group status to the openQRM-server at $resource_openqrmserver!" | logger
+			openqrm_post_event 0 "post_vg" 3 "openqrm-lvm-manager" "Could not post the volume group status to the openQRM-server at $OPENQRM_SERVER_IP"
 		fi
-		rm -f $STORAGE_STATUS_TMP
-		rm -f $STORAGE_STATUS_TMP.post
+		rm -f $STORAGE_STATUS_TMP $STORAGE_STATUS_TMP.post
 		;;
 	post_lv)
-		echo "Posting current $LVM_IMAGE_TYPE logic volume status to the openQRM-server"
+		#echo "Posting current $LVM_IMAGE_TYPE logic volume status to the openQRM-server"
 		STORAGE_STATUS_TMP=$resource_id.$LVM_STORAGE_SERVER_VOLUME_GROUP.lv.stat
 		> $STORAGE_STATUS_TMP
-        for LVOL in `lvs $LVM_STORAGE_SERVER_VOLUME_GROUP | grep -v LSize | sed -e "s/ \{1,\}//" | awk {' print $1 '}`; do
+		for LVOL in `lvs $LVM_STORAGE_SERVER_VOLUME_GROUP | grep -v LSize | sed -e "s/ \{1,\}//" | awk {' print $1 '}`; do
 			case $LVM_IMAGE_TYPE in
 				lvm-nfs-deployment)
-					if grep $LVOL /etc/exports 1>/dev/null; then
-                        # is this a local-storage location ?
-                        if [ ! -f /$LVM_STORAGE_SERVER_VOLUME_GROUP/$LVOL/local-storage ]; then
-                            lvs $LVM_STORAGE_SERVER_VOLUME_GROUP/$LVOL | grep -v LSize | sed -e "s/ \{1,\}//" >> $STORAGE_STATUS_TMP
-                        fi
+					if grep $LVOL $NFSEXPORTS 1>/dev/null; then
+						# is this a local-storage location ?
+						if [ ! -f /$LVM_STORAGE_SERVER_VOLUME_GROUP/$LVOL/local-storage ]; then
+							lvs $LVM_STORAGE_SERVER_VOLUME_GROUP/$LVOL | grep -v LSize | sed -e "s/ \{1,\}//" >> $STORAGE_STATUS_TMP
+						fi
 					fi
 					;;
 
 				lvm-iscsi-deployment)
 					if grep $LVOL $IETDCONF 1>/dev/null; then
 						lvs $LVM_STORAGE_SERVER_VOLUME_GROUP/$LVOL | grep -v LSize | sed -e "s/ \{1,\}//" >> $STORAGE_STATUS_TMP
-					fi					
+					fi
 					;;
 
 				lvm-aoe-deployment)
@@ -360,16 +406,14 @@ case "$LVM_COMMAND" in
 					;;
 			esac
 		done
-        sed -i -e "s/ \{1,\}/@/g" $STORAGE_STATUS_TMP
+		sed -i -e "s/ \{1,\}/@/g" $STORAGE_STATUS_TMP
 		if ! wget -q $WGET_NO_CERT_CHECK -O /dev/null --http-user=$LVM_OPENQRM_USERNAME --http-password=$LVM_OPENQRM_PASSWORD  --post-file=`$OPENQRM_POSTENCODE $STORAGE_STATUS_TMP` $openqrm_web_protocol://$OPENQRM_SERVER_IP/openqrm/base/plugins/lvm-storage/lvm-storage-action.php?lvm_storage_command=get_storage; then
-			echo "ERROR: Could not post the logic volume status to the openQRM-server at $resource_openqrmserver!"
-			echo "ERROR: Could not post the logic volume status to the openQRM-server at $resource_openqrmserver!" | logger
+			openqrm_post_event 0 "post_lv" 3 "openqrm-lvm-manager" "Could not post the logical volume list to the openQRM-server at $OPENQRM_SERVER_IP"
 		fi
-		rm -f $STORAGE_STATUS_TMP
-		rm -f $STORAGE_STATUS_TMP.post
+		rm -f $STORAGE_STATUS_TMP $STORAGE_STATUS_TMP.post
 		;;
 	post_identifier)
-		echo "Posting current $LVM_IMAGE_TYPE logical volume identifier to the openQRM-server"
+		#echo "Posting current $LVM_IMAGE_TYPE logical volume identifier to the openQRM-server"
 		STORAGE_STATUS_TMP=$resource_id.lv.$LVM_IMAGE_TYPE.ident
 		> $STORAGE_STATUS_TMP
 
@@ -380,11 +424,11 @@ case "$LVM_COMMAND" in
 					exportfs -v | awk {' print $1 '} | grep -v "<.*>" > /tmp/$STORAGE_STATUS_TMP
 					if grep $LVOL_SHORT /tmp/$STORAGE_STATUS_TMP 1>/dev/null; then
 						EXPORT_PATH=`echo $LVOL | sed -e "s#^/dev##g"`
-                        # is this a local-storage location ?
-                        if [ ! -f $EXPORT_PATH/local-storage ]; then
-                            echo "$LVOL,$EXPORT_PATH"
-                            echo "$LVOL,$EXPORT_PATH" >> $STORAGE_STATUS_TMP
-                        fi
+						# is this a local-storage location ?
+						if [ ! -f $EXPORT_PATH/local-storage ]; then
+							echo "$LVOL,$EXPORT_PATH"
+							echo "$LVOL,$EXPORT_PATH" >> $STORAGE_STATUS_TMP
+						fi
 					fi
 					rm -f /tmp/$STORAGE_STATUS_TMP
 					;;
@@ -397,7 +441,7 @@ case "$LVM_COMMAND" in
 						VOLUME_GROUP=`echo $LVOL | cut -d'/' -f3`
 						echo "$IMAGE_NAME,$VOLUME_GROUP:/dev/$TARGET/$LUN"
 						echo "$IMAGE_NAME,$VOLUME_GROUP:/dev/$TARGET/$LUN" >> $STORAGE_STATUS_TMP
-					fi					
+					fi
 					;;
 
 				lvm-aoe-deployment)
@@ -413,194 +457,164 @@ case "$LVM_COMMAND" in
 					fi
 					;;
 			esac
-		
+
 		done
 
 		if ! wget -q $WGET_NO_CERT_CHECK -O /dev/null --http-user=$LVM_OPENQRM_USERNAME --http-password=$LVM_OPENQRM_PASSWORD  --post-file=`$OPENQRM_POSTENCODE $STORAGE_STATUS_TMP` $openqrm_web_protocol://$OPENQRM_SERVER_IP/openqrm/base/plugins/lvm-storage/lvm-storage-action.php?lvm_storage_command=get_ident; then
-			echo "ERROR: Could not post the logic volume status to the openQRM-server at $resource_openqrmserver!"
-			echo "ERROR: Could not post the logic volume status to the openQRM-server at $resource_openqrmserver!" | logger
+			openqrm_post_event 0 "post_identifier" 3 "openqrm-lvm-manager" "Could not post the rootfs-identifier to the openQRM-server at $OPENQRM_SERVER_IP"
 		fi
-		rm -f $STORAGE_STATUS_TMP
-		rm -f $STORAGE_STATUS_TMP.post
+		rm -f $STORAGE_STATUS_TMP $STORAGE_STATUS_TMP.post
 		;;
 
 
 	resize)
 		if [ "$LVM_IMAGE_SIZE" == "" ]; then
 			LVM_IMAGE_SIZE=$DEFAULT_IMAGE_SIZE
-			echo "Using default size of $DEFAULT_IMAGE_SIZE MB!"
 		fi
 		export LVM_IMAGE_SIZE
-		echo "Resizing logical volume $LVM_IMAGE_NAME + size $LVM_IMAGE_SIZE MB using volume group $LVM_STORAGE_SERVER_VOLUME_GROUP"
-        lvresize -L +$LVM_IMAGE_SIZE /dev/$LVM_STORAGE_SERVER_VOLUME_GROUP/$LVM_IMAGE_NAME 2>&1 | logger
+		# echo "Resizing logical volume $LVM_IMAGE_NAME + size $LVM_IMAGE_SIZE MB using volume group $LVM_STORAGE_SERVER_VOLUME_GROUP"
+		lvm_storage_lock aquire
+		lvresize -L +$LVM_IMAGE_SIZE /dev/$LVM_STORAGE_SERVER_VOLUME_GROUP/$LVM_IMAGE_NAME 2>&1 | logger
 
 		if [ "$LVM_IMAGE_TYPE" == "lvm-iscsi-deployment" ]; then
-			echo "Detected Iscsi-image. Running resize2fs on /dev/$LVM_STORAGE_SERVER_VOLUME_GROUP/$LVM_IMAGE_NAME"
-			check_iscsi_target
-			lvm_storage_lock aquire
+			#echo "Detected Iscsi-image. Running resize2fs on /dev/$LVM_STORAGE_SERVER_VOLUME_GROUP/$LVM_IMAGE_NAME"
 			manage_iscsi remove
-            e2fsck -f -y /dev/$LVM_STORAGE_SERVER_VOLUME_GROUP/$LVM_IMAGE_NAME 2>&1 | logger
-            resize2fs -fp /dev/$LVM_STORAGE_SERVER_VOLUME_GROUP/$LVM_IMAGE_NAME 2>&1 | logger
+			e2fsck -f -y /dev/$LVM_STORAGE_SERVER_VOLUME_GROUP/$LVM_IMAGE_NAME 2>&1 | logger
+			resize2fs -fp /dev/$LVM_STORAGE_SERVER_VOLUME_GROUP/$LVM_IMAGE_NAME 2>&1 | logger
 			manage_iscsi add snap $LVM_IMAGE_AUTH
-			lvm_storage_lock release
 		elif [ "$LVM_IMAGE_TYPE" == "lvm-nfs-deployment" ]; then
 			# if it is lvm-nfs deployment we can resize the fs immediately
-			echo "Detected NFS-image. Running resize2fs on /dev/$LVM_STORAGE_SERVER_VOLUME_GROUP/$LVM_IMAGE_NAME"
-			lvm_storage_lock aquire
+			#echo "Detected NFS-image. Running resize2fs on /dev/$LVM_STORAGE_SERVER_VOLUME_GROUP/$LVM_IMAGE_NAME"
 			manage_nfs remove
-            e2fsck -f -y /dev/$LVM_STORAGE_SERVER_VOLUME_GROUP/$LVM_IMAGE_NAME 2>&1 | logger
-            resize2fs -fp /dev/$LVM_STORAGE_SERVER_VOLUME_GROUP/$LVM_IMAGE_NAME 2>&1 | logger
+			e2fsck -f -y /dev/$LVM_STORAGE_SERVER_VOLUME_GROUP/$LVM_IMAGE_NAME 2>&1 | logger
+			resize2fs -fp /dev/$LVM_STORAGE_SERVER_VOLUME_GROUP/$LVM_IMAGE_NAME 2>&1 | logger
 			manage_nfs add snap $OPENQRM_SERVER_IP
-			lvm_storage_lock release
 		elif [ "$LVM_IMAGE_TYPE" == "lvm-aoe-deployment" ]; then
-			echo "Detected Aoe-image. Running resize2fs on /dev/$LVM_STORAGE_SERVER_VOLUME_GROUP/$LVM_IMAGE_NAME"
-			check_vblade
-			lvm_storage_lock aquire
+			#echo "Detected Aoe-image. Running resize2fs on /dev/$LVM_STORAGE_SERVER_VOLUME_GROUP/$LVM_IMAGE_NAME"
 			manage_vblade remove
-            e2fsck -f -y /dev/$LVM_STORAGE_SERVER_VOLUME_GROUP/$LVM_IMAGE_NAME 2>&1 | logger
-            resize2fs -fp /dev/$LVM_STORAGE_SERVER_VOLUME_GROUP/$LVM_IMAGE_NAME 2>&1 | logger
+			e2fsck -f -y /dev/$LVM_STORAGE_SERVER_VOLUME_GROUP/$LVM_IMAGE_NAME 2>&1 | logger
+			resize2fs -fp /dev/$LVM_STORAGE_SERVER_VOLUME_GROUP/$LVM_IMAGE_NAME 2>&1 | logger
 			manage_vblade add snap
-			lvm_storage_lock release
 		fi
-
+		lvm_storage_lock release
 		# in case we have a username + password post the updated list to the openQRM-server
 		if [ "$LVM_OPENQRM_USERNAME" != "" ] && [ "$LVM_OPENQRM_PASSWORD" != "" ]; then
 			$0 post_lv -u $LVM_OPENQRM_USERNAME -p $LVM_OPENQRM_PASSWORD -v $LVM_STORAGE_SERVER_VOLUME_GROUP -t $LVM_IMAGE_TYPE
 		fi
-
 		;;
 
 
 	clone)
-        # cloning is similar to snapshots but since lvm cannot (yet) create snapshots
-        # from snapshots we have to rsync the origin (which may be a snapshot) to a
-        # new lvol.
-        # .... good to have no partitions on the luns :) so we can mount them easily
+		# cloning is similar to snapshots but since lvm cannot (yet) create snapshots
+		# from snapshots we have to rsync the origin (which may be a snapshot) to a
+		# new lvol.
+		# .... good to have no partitions on the luns :) so we can mount them easily
 		if [ "$LVM_IMAGE_SNAPSHOT_NAME" == "" ]; then
-			echo "ERROR: Please give a name for the clone using the -s cmdline parmeter"
-			echo
+			openqrm_post_event 0 "clone" 3 "openqrm-lvm-manager" "No volume name for the clone given"
 			lvm_storage_usage
 		fi
 		if [ "$LVM_IMAGE_SIZE" == "" ]; then
 			LVM_IMAGE_SIZE=$DEFAULT_IMAGE_SIZE
-			echo "Using default size of $DEFAULT_IMAGE_SIZE MB!"
 		fi
 		export LVM_IMAGE_SIZE
-		echo "Cloning logical volume $LVM_IMAGE_NAME to $LVM_IMAGE_SNAPSHOT_NAME size $LVM_IMAGE_SIZE MB volume group $LVM_STORAGE_SERVER_VOLUME_GROUP"
+		#echo "Cloning logical volume $LVM_IMAGE_NAME to $LVM_IMAGE_SNAPSHOT_NAME size $LVM_IMAGE_SIZE MB volume group $LVM_STORAGE_SERVER_VOLUME_GROUP"
 
-        # re-run in background via screen
-        if [ "$RUN_IN_BACKGROUND" != "true" ]; then
-            if [ -x /usr/bin/screen.real ]; then
-                RUNSCREEN="/usr/bin/screen.real"
-            else
-                RUNSCREEN=`which screen`
-            fi
-            export RUN_IN_BACKGROUND=true
-            SCREEN_NAME=`date +%T%x | sed -e "s/://g" | sed -e "s#/##g"`
-            $RUNSCREEN -dmS $SCREEN_NAME $FULL_COMMANDLINE
-            exit
-        fi
+		# re-run in background via screen
+		if [ "$RUN_IN_BACKGROUND" != "true" ]; then
+			if [ -x /usr/bin/screen.real ]; then
+				RUNSCREEN="/usr/bin/screen.real"
+			else
+				RUNSCREEN=`which screen`
+			fi
+			export RUN_IN_BACKGROUND=true
+			SCREEN_NAME=`date +%T%x | sed -e "s/://g" | sed -e "s#/##g"`
+			$RUNSCREEN -dmS $SCREEN_NAME $FULL_COMMANDLINE
+			exit
+		fi
 
-        # create mountpoints for origin and clone
-        MOUNTPOINT_ORIGIN=`mktemp -d /tmp/$LVM_IMAGE_NAME.origin.XXXXXXXXXX` || exit 1
-        MOUNTPOINT_CLONE=`mktemp -d /tmp/$LVM_IMAGE_SNAPSHOT_NAME.clone.XXXXXXXXXX` || exit 1
+		# create mountpoints for origin and clone
+		MOUNTPOINT_ORIGIN=`mktemp -d /tmp/$LVM_IMAGE_NAME.origin.XXXXXXXXXX` || exit 1
+		MOUNTPOINT_CLONE=`mktemp -d /tmp/$LVM_IMAGE_SNAPSHOT_NAME.clone.XXXXXXXXXX` || exit 1
 
-        # create new volume
+		# create new volume
+		lvm_storage_lock aquire
 		if ! lvcreate -L$LVM_IMAGE_SIZE -n$LVM_IMAGE_SNAPSHOT_NAME $LVM_STORAGE_SERVER_VOLUME_GROUP; then
-            echo "ERROR: Could not create the new clone volume"
-            exit 1
-        fi
-        # create fs
-        if ! mkfs.ext3 -F /dev/mapper/$LVM_STORAGE_SERVER_VOLUME_GROUP-$LVM_IMAGE_SNAPSHOT_NAME; then
-            echo "ERROR: Could not create the filesystem on /dev/mapper/$LVM_STORAGE_SERVER_VOLUME_GROUP-$LVM_IMAGE_SNAPSHOT_NAME"
-            exit 1
-        fi
-        # mount clone
-        if ! mount /dev/mapper/$LVM_STORAGE_SERVER_VOLUME_GROUP-$LVM_IMAGE_SNAPSHOT_NAME $MOUNTPOINT_CLONE; then
-            echo "ERROR: Could not mount clone /dev/mapper/$LVM_STORAGE_SERVER_VOLUME_GROUP-$LVM_IMAGE_SNAPSHOT_NAME"
-            exit 1
-        fi
+			openqrm_post_event 0 "clone" 3 "openqrm-lvm-manager" "Could not create the new clone volume"
+			lvm_storage_lock release
+			exit 1
+		fi
+		# create fs
+		if ! mkfs.ext3 -F /dev/mapper/$LVM_STORAGE_SERVER_VOLUME_GROUP-$LVM_IMAGE_SNAPSHOT_NAME; then
+			openqrm_post_event 0 "clone" 3 "openqrm-lvm-manager" "Could not create the filesystem on /dev/mapper/$LVM_STORAGE_SERVER_VOLUME_GROUP-$LVM_IMAGE_SNAPSHOT_NAME"
+			lvm_storage_lock release
+			exit 1
+		fi
+		# mount clone
+		if ! mount /dev/mapper/$LVM_STORAGE_SERVER_VOLUME_GROUP-$LVM_IMAGE_SNAPSHOT_NAME $MOUNTPOINT_CLONE; then
+			openqrm_post_event 0 "clone" 3 "openqrm-lvm-manager" "Could not mount clone /dev/mapper/$LVM_STORAGE_SERVER_VOLUME_GROUP-$LVM_IMAGE_SNAPSHOT_NAME"
+			lvm_storage_lock release
+			exit 1
+		fi
 
-        # remove origin from san/nas
-        export LVM_IMAGE_NAME=$LVM_IMAGE_NAME
+		# remove origin from san/nas
+		export LVM_IMAGE_NAME=$LVM_IMAGE_NAME
 		if [ "$LVM_IMAGE_TYPE" == "lvm-iscsi-deployment" ]; then
-			check_iscsi_target
-			lvm_storage_lock aquire
 			manage_iscsi remove
-			lvm_storage_lock release
 		elif [ "$LVM_IMAGE_TYPE" == "lvm-nfs-deployment" ]; then
-			lvm_storage_lock aquire
 			manage_nfs remove
-			lvm_storage_lock release
 		elif [ "$LVM_IMAGE_TYPE" == "lvm-aoe-deployment" ]; then
-			check_vblade
-			lvm_storage_lock aquire
 			manage_vblade remove
-			lvm_storage_lock release
 		fi
 
-        # mount origin
-        if ! mount /dev/mapper/$LVM_STORAGE_SERVER_VOLUME_GROUP-$LVM_IMAGE_NAME $MOUNTPOINT_ORIGIN; then
-            echo "ERROR: Could not mount origin /dev/mapper/$LVM_STORAGE_SERVER_VOLUME_GROUP-$LVM_IMAGE_NAME"
-            exit 1
-        fi
+		# mount origin
+		if ! mount /dev/mapper/$LVM_STORAGE_SERVER_VOLUME_GROUP-$LVM_IMAGE_NAME $MOUNTPOINT_ORIGIN; then
+			openqrm_post_event 0 "clone" 3 "openqrm-lvm-manager" "Could not mount origin /dev/mapper/$LVM_STORAGE_SERVER_VOLUME_GROUP-$LVM_IMAGE_NAME"
+			lvm_storage_lock release
+			exit 1
+		fi
+		# rsync origin to clone, let other lvm commands run in this time
+		lvm_storage_lock release
+		rsync -avz $MOUNTPOINT_ORIGIN/* $MOUNTPOINT_CLONE/
+		lvm_storage_lock aquire
 
-        # rsync origin to clone
-        rsync -avz $MOUNTPOINT_ORIGIN/* $MOUNTPOINT_CLONE/
+		# umount origin + clone
+		umount $MOUNTPOINT_ORIGIN
+		umount $MOUNTPOINT_CLONE
+		rmdir $MOUNTPOINT_ORIGIN $MOUNTPOINT_CLONE
 
-        # umount origin + clone
-        umount $MOUNTPOINT_ORIGIN
-        umount $MOUNTPOINT_CLONE
-        rmdir $MOUNTPOINT_ORIGIN $MOUNTPOINT_CLONE
-
-        # add origin to san/nas
-        export LVM_IMAGE_NAME=$LVM_IMAGE_NAME
+		# add origin to san/nas
+		export LVM_IMAGE_NAME=$LVM_IMAGE_NAME
 		if [ "$LVM_IMAGE_TYPE" == "lvm-iscsi-deployment" ]; then
-			check_iscsi_target
-			lvm_storage_lock aquire
 			manage_iscsi add snap $LVM_IMAGE_AUTH
-			lvm_storage_lock release
 		elif [ "$LVM_IMAGE_TYPE" == "lvm-nfs-deployment" ]; then
-			lvm_storage_lock aquire
 			manage_nfs add snap $OPENQRM_SERVER_IP
-			lvm_storage_lock release
 		elif [ "$LVM_IMAGE_TYPE" == "lvm-aoe-deployment" ]; then
-			check_vblade
-			lvm_storage_lock aquire
 			manage_vblade add snap
-			lvm_storage_lock release
 		fi
 
-        # add clone to san/nas
-        export LVM_IMAGE_NAME=$LVM_IMAGE_SNAPSHOT_NAME
+		# add clone to san/nas
+		export LVM_IMAGE_NAME=$LVM_IMAGE_SNAPSHOT_NAME
 		if [ "$LVM_IMAGE_TYPE" == "lvm-iscsi-deployment" ]; then
-			check_iscsi_target
-			lvm_storage_lock aquire
 			manage_iscsi add snap $LVM_IMAGE_AUTH
-			lvm_storage_lock release
 		elif [ "$LVM_IMAGE_TYPE" == "lvm-nfs-deployment" ]; then
-			lvm_storage_lock aquire
+			manage_fstab add
 			manage_nfs add snap $OPENQRM_SERVER_IP
-            manage_fstab add
-			lvm_storage_lock release
 		elif [ "$LVM_IMAGE_TYPE" == "lvm-aoe-deployment" ]; then
-			check_vblade
-			lvm_storage_lock aquire
 			manage_vblade add snap
-			lvm_storage_lock release
 		fi
+		lvm_storage_lock release
 
-        # here we notify openQRM that cloning has finished
+		# here we notify openQRM that cloning has finished
 		# in case we have a username + password post the updated list to the openQRM-server
-        # and notify openQRM that cloning has finished
+		# and notify openQRM that cloning has finished
 		if [ "$LVM_OPENQRM_USERNAME" != "" ] && [ "$LVM_OPENQRM_PASSWORD" != "" ]; then
-            CLONE_FINISHED="$LVM_IMAGE_SNAPSHOT_NAME.clone"
-            touch $CLONE_FINISHED
-            if ! wget -q $WGET_NO_CERT_CHECK -O /dev/null --http-user=$LVM_OPENQRM_USERNAME --http-password=$LVM_OPENQRM_PASSWORD  --post-file=`$OPENQRM_POSTENCODE $CLONE_FINISHED` $openqrm_web_protocol://$OPENQRM_SERVER_IP/openqrm/base/plugins/lvm-storage/lvm-storage-action.php?lvm_storage_command=clone_finished; then
-                echo "ERROR: Could not post clone-finished status to the openQRM-server at $resource_openqrmserver!"
-                echo "ERROR: Could not post clone-finished status to the openQRM-server at $resource_openqrmserver!" | logger
-            fi
-            # post lv
+			CLONE_FINISHED="$LVM_IMAGE_SNAPSHOT_NAME.clone"
+			touch $CLONE_FINISHED
+			if ! wget -q $WGET_NO_CERT_CHECK -O /dev/null --http-user=$LVM_OPENQRM_USERNAME --http-password=$LVM_OPENQRM_PASSWORD  --post-file=`$OPENQRM_POSTENCODE $CLONE_FINISHED` $openqrm_web_protocol://$OPENQRM_SERVER_IP/openqrm/base/plugins/lvm-storage/lvm-storage-action.php?lvm_storage_command=clone_finished; then
+
+				openqrm_post_event 0 "clone" 3 "openqrm-lvm-manager" "Could not post clone-finished status to the openQRM-server at $OPENQRM_SERVER_IP"
+			fi
+			# post lv
 			$0 post_lv -u $LVM_OPENQRM_USERNAME -p $LVM_OPENQRM_PASSWORD -v $LVM_STORAGE_SERVER_VOLUME_GROUP -t $LVM_IMAGE_TYPE
 		fi
 

@@ -34,7 +34,7 @@ function openqrm_plugin_dns_start() {
 			# backup
 			if [ ! -f /etc/resolv.conf.openqrm-dns-plugin.backup ]; then
 				cp -f /etc/resolv.conf /etc/resolv.conf.openqrm-dns-plugin.backup
-			fi		
+			fi
 			# create new resolv.conf
 			echo "domain $OPENQRM_SERVER_DOMAIN" > /etc/resolv.conf
 			echo "search $OPENQRM_SERVER_DOMAIN" >> /etc/resolv.conf
@@ -44,10 +44,10 @@ function openqrm_plugin_dns_start() {
 		dns_log dns-plugin "Failed to start the bind service ! Please check the configuration."
 		return 1
 	fi
-	
+
 	touch $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/base/plugins/dns/.running
 	return $RET
-	
+
 }
 
 
@@ -59,7 +59,7 @@ function openqrm_plugin_dns_stop() {
 			# restore
 			if [ -f /etc/resolv.conf.openqrm-dns-plugin.backup ]; then
 				cp -f /etc/resolv.conf.openqrm-dns-plugin.backup /etc/resolv.conf
-			fi		
+			fi
 	fi
 	rm -f $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/base/plugins/dns/.running
 	return 0
@@ -83,13 +83,13 @@ function openqrm_plugin_dns_init() {
 	# preparing bind config
 	mkdir -p /etc/bind/zones/
 	mkdir -p $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/dns/etc/bind/zones
-	
+
 	# named.conf local
 	cat $DNS_NAMED_LOCAL_TEMPLATE |	\
 		sed -e "s/@@OPENQRM_SERVER_IP_FIRSTS_BYTES_REV@@/$OPENQRM_SERVER_IP_FIRSTS_BYTES_REV/g" |	\
 			sed -e "s/@@OPENQRM_SERVER_DOMAIN@@/$OPENQRM_SERVER_DOMAIN/g" > $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/dns/etc/bind/named.conf.local
 	ln -sf $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/dns/etc/bind/named.conf.local /etc/bind/named.conf.local
-	
+
 	# in db
 	cat $DNS_INDB_TEMPLATE |	\
 		sed -e "s/@@OPENQRM_SERVER_DOMAIN@@/$OPENQRM_SERVER_DOMAIN/g" |	\
@@ -132,44 +132,44 @@ function openqrm_plugin_dns_init() {
 			echo "WARNING: Could not find out any dns-forwarders ! Please configure manually in /etc/bind/named.conf.options"
 		fi
 	fi
-    # link the named.conf file to /etc on redhat based systems
-    if [ -f /etc/redhat-release ]; then
-        if [ -f /etc/named.conf ]; then
-            mv -f /etc/named.conf /etc/named.conf.openqrm-backup
-        fi
-        ln -sf /etc/bind/named.conf.local /etc/named.conf
-    elif [ -f /etc/SuSE-release ]; then
-        # chroot is not supported yet
-        sed -i -e 's/NAMED_RUN_CHROOTED.*/NAMED_RUN_CHROOTED="no"/g' /etc/sysconfig/named
-        if [ -f /etc/named.conf.include ]; then
-            /bin/cp -f /etc/named.conf.include /etc/named.conf.include.openqrm-backup
-        fi
+	# link the named.conf file to /etc on redhat based systems
+	if [ -f /etc/redhat-release ]; then
+		if [ -f /etc/named.conf ]; then
+			mv -f /etc/named.conf /etc/named.conf.openqrm-backup
+		fi
+		ln -sf /etc/bind/named.conf.local /etc/named.conf
+	elif [ -f /etc/SuSE-release ]; then
+		# chroot is not supported yet
+		sed -i -e 's/NAMED_RUN_CHROOTED.*/NAMED_RUN_CHROOTED="no"/g' /etc/sysconfig/named
+		if [ -f /etc/named.conf.include ]; then
+			/bin/cp -f /etc/named.conf.include /etc/named.conf.include.openqrm-backup
+		fi
 cat >> /etc/named.conf.include << EOF
 include "/etc/bind/named.conf.local";
 EOF
-    fi
+	fi
 
 	# enable apparmor if needed
-    if [ -f /etc/apparmor.d/usr.sbin.named ]; then
-        if ! grep openQRM /etc/apparmor.d/usr.sbin.named 1>/dev/null; then
-            cat /etc/apparmor.d/usr.sbin.named |
-            sed -i -e "s#}##g" /etc/apparmor.d/usr.sbin.named
-            echo "  # openQRM" >> /etc/apparmor.d/usr.sbin.named
-            echo "  $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/dns/etc/** rw," >> /etc/apparmor.d/usr.sbin.named
-            if [ -d /etc/openqrm/plugins/dhcpd/ ]; then
-                echo "  /etc/openqrm/plugins/dns/** rw," >> /etc/apparmor.d/usr.sbin.named
-            fi
-            echo "}" >> /etc/apparmor.d/usr.sbin.named
-            echo >> /etc/apparmor.d/usr.sbin.named
-            if [ -x "/etc/init.d/apparmor" ]; then
-                if [ -x "`which invoke-rc.d 2>/dev/null`" ]; then
-                    invoke-rc.d apparmor reload || exit $?
-                else
-                    /etc/init.d/apparmor reload || exit $?
-                fi
-            fi
-        fi
-    fi
+	if [ -f /etc/apparmor.d/usr.sbin.named ]; then
+		if ! grep openQRM /etc/apparmor.d/usr.sbin.named 1>/dev/null; then
+			cat /etc/apparmor.d/usr.sbin.named |
+			sed -i -e "s#}##g" /etc/apparmor.d/usr.sbin.named
+			echo "  # openQRM" >> /etc/apparmor.d/usr.sbin.named
+			echo "  $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/dns/etc/** rw," >> /etc/apparmor.d/usr.sbin.named
+			if [ -d /etc/openqrm/plugins/dhcpd/ ]; then
+				echo "  /etc/openqrm/plugins/dns/** rw," >> /etc/apparmor.d/usr.sbin.named
+			fi
+			echo "}" >> /etc/apparmor.d/usr.sbin.named
+			echo >> /etc/apparmor.d/usr.sbin.named
+			if [ -x "/etc/init.d/apparmor" ]; then
+				if [ -x "`which invoke-rc.d 2>/dev/null`" ]; then
+					invoke-rc.d apparmor reload || exit $?
+				else
+					/etc/init.d/apparmor reload || exit $?
+				fi
+			fi
+		fi
+	fi
 
 	# linking the web dir
 	ln -sf $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/dns/web $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/base/plugins/dns
@@ -195,29 +195,29 @@ function openqrm_plugin_dns_uninstall() {
 		cp -f /etc/bind/named.conf.options.openqrm-dns-plugin.backup /etc/bind/named.conf.options
 	fi
 
-    # unlink the named.conf file to /etc on redhat based systems
-    if [ -f /etc/redhat-release ]; then
-        if [ -f /etc/named.conf.openqrm-backup ]; then
-            mv -f /etc/named.conf.openqrm-backup /etc/named.conf
-        fi
-    elif [ -f /etc/SuSE-release ]; then
-        if [ -f /etc/named.conf.include.openqrm-backup ]; then
-            /bin/cp -f /etc/named.conf.include.openqrm-backup /etc/named.conf.include
-        fi
-    fi
+	# unlink the named.conf file to /etc on redhat based systems
+	if [ -f /etc/redhat-release ]; then
+		if [ -f /etc/named.conf.openqrm-backup ]; then
+			mv -f /etc/named.conf.openqrm-backup /etc/named.conf
+		fi
+	elif [ -f /etc/SuSE-release ]; then
+		if [ -f /etc/named.conf.include.openqrm-backup ]; then
+			/bin/cp -f /etc/named.conf.include.openqrm-backup /etc/named.conf.include
+		fi
+	fi
 
-    # remove apparmor setup
-    if [ -f /etc/apparmor.d/usr.sbin.named ]; then
-        sed -i -e "s#.*openQRM.*##g" /etc/apparmor.d/usr.sbin.named
-        sed -i -e "s#.*openqrm.*##g" /etc/apparmor.d/usr.sbin.named
-        if [ -x "/etc/init.d/apparmor" ]; then
-            if [ -x "`which invoke-rc.d 2>/dev/null`" ]; then
-                invoke-rc.d apparmor reload || exit $?
-            else
-                /etc/init.d/apparmor reload || exit $?
-            fi
-        fi
-    fi
+	# remove apparmor setup
+	if [ -f /etc/apparmor.d/usr.sbin.named ]; then
+		sed -i -e "s#.*openQRM.*##g" /etc/apparmor.d/usr.sbin.named
+		sed -i -e "s#.*openqrm.*##g" /etc/apparmor.d/usr.sbin.named
+		if [ -x "/etc/init.d/apparmor" ]; then
+			if [ -x "`which invoke-rc.d 2>/dev/null`" ]; then
+				invoke-rc.d apparmor reload || exit $?
+			else
+				/etc/init.d/apparmor reload || exit $?
+			fi
+		fi
+	fi
 
 	# unlinking the web dir
 	rm -f $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/base/plugins/dns

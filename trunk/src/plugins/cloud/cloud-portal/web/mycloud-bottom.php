@@ -18,9 +18,9 @@
 */
 -->
 <br>
-&nbsp;&nbsp;&nbsp;<font size="2" face="Arial">This Cloud-Portal is brought to you by <a href="http://openqrm.sourceforge.net/" target="_BLANK">openQRM</a>, the open-source data-center management platform</font>
+&nbsp;&nbsp;&nbsp;<font size="2" face="Arial">CloudPro云计算服务使用 <a href="http://openqrm.sourceforge.net/" target="_BLANK">CloudPro 4.8</a> 作为虚拟化管理平台和云管理平台。</font>
 <br>
-&nbsp;&nbsp;&nbsp;<font size="1" face="Arial"><a href="/cloud-portal/web/conditions.php" target="_BLANK">General terms and conditions of this Cloud portal</a></font>
+&nbsp;&nbsp;&nbsp;<font size="1" face="Arial"><a href="/cloud-portal/web/conditions.php" target="_BLANK">CloudPro云计算服务条款</a></font>
 </body>
 </html>
  

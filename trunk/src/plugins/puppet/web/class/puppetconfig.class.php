@@ -2,19 +2,19 @@
 /*
   This file is part of openQRM.
 
-    openQRM is free software: you can redistribute it and/or modify
-    it under the terms of the GNU General Public License version 2
-    as published by the Free Software Foundation.
+	openQRM is free software: you can redistribute it and/or modify
+	it under the terms of the GNU General Public License version 2
+	as published by the Free Software Foundation.
 
-    openQRM is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    GNU General Public License for more details.
+	openQRM is distributed in the hope that it will be useful,
+	but WITHOUT ANY WARRANTY; without even the implied warranty of
+	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+	GNU General Public License for more details.
 
-    You should have received a copy of the GNU General Public License
-    along with openQRM.  If not, see <http://www.gnu.org/licenses/>.
+	You should have received a copy of the GNU General Public License
+	along with openQRM.  If not, see <http://www.gnu.org/licenses/>.
 
-    Copyright 2009, Matthias Rechenburg <matt@openqrm.com>
+	Copyright 2009, Matthias Rechenburg <matt@openqrm.com>
 */
 
 
@@ -160,7 +160,7 @@ function get_value($puppetconfig_id) {
 function set_value($puppetconfig_id, $puppetconfig_value) {
 	global $PUPPET_CONFIG_TABLE;
 	global $event;
-	
+
 	$db=openqrm_get_db_connection();
 	$puppetconfig_set = &$db->Execute("update $PUPPET_CONFIG_TABLE set cc_value=\"$puppetconfig_value\" where cc_id=$puppetconfig_id");
 	if (!$puppetconfig_set) {
@@ -232,7 +232,7 @@ function display_overview($offset, $limit, $sort, $order) {
 			$recordSet->MoveNext();
 		}
 		$recordSet->Close();
-	}		
+	}
 	return $puppetconfig_array;
 }
 

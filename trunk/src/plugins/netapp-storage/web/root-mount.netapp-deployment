@@ -79,9 +79,9 @@ NETAPP_ISCSI_CHAP_USER=`basename $image_rootdevice`
 
 # define wget to use with https
 if [ "$openqrm_web_protocol" == "https" ]; then
-    export WGET="wget --no-check-certificate -q"
+	export WGET="wget --no-check-certificate -q"
 else
-    export WGET="wget -q"
+	export WGET="wget -q"
 fi
 
 #######################################################################
@@ -90,24 +90,24 @@ fi
 
 function mount_rootfs() {
 
-    # check to find the right binaries fitting to kernel + rootfs
-    if [ "$kernel_name" == "default" ]; then
-        # we get the default binaries
-        # get iscsid via wget from the openQRM-servers boot-service dir
-        $WGET -O /sbin/iscsid $openqrm_web_protocol://$resource_openqrmserver/openqrm/boot-service/iscsid
-        $WGET -O /sbin/iscsiadm $openqrm_web_protocol://$resource_openqrmserver/openqrm/boot-service/iscsiadm
-    else
-        # we try to get the binaries fitting to the kernel name
-        # -> if a special version is not available we go with the default
-        if ! $WGET -O /sbin/iscsid $openqrm_web_protocol://$resource_openqrmserver/openqrm/boot-service/iscsid.$kernel_name; then
-            $WGET -O /sbin/iscsid $openqrm_web_protocol://$resource_openqrmserver/openqrm/boot-service/iscsid
-        fi
-        if ! $WGET -O /sbin/iscsiadm $openqrm_web_protocol://$resource_openqrmserver/openqrm/boot-service/iscsiadm.$kernel_name; then
-            $WGET -O /sbin/iscsiadm $openqrm_web_protocol://$resource_openqrmserver/openqrm/boot-service/iscsiadm
-        fi
+	# check to find the right binaries fitting to kernel + rootfs
+	if [ "$kernel_name" == "default" ]; then
+		# we get the default binaries
+		# get iscsid via wget from the openQRM-servers boot-service dir
+		$WGET -O /sbin/iscsid $openqrm_web_protocol://$resource_openqrmserver/openqrm/boot-service/iscsid
+		$WGET -O /sbin/iscsiadm $openqrm_web_protocol://$resource_openqrmserver/openqrm/boot-service/iscsiadm
+	else
+		# we try to get the binaries fitting to the kernel name
+		# -> if a special version is not available we go with the default
+		if ! $WGET -O /sbin/iscsid $openqrm_web_protocol://$resource_openqrmserver/openqrm/boot-service/iscsid.$kernel_name; then
+			$WGET -O /sbin/iscsid $openqrm_web_protocol://$resource_openqrmserver/openqrm/boot-service/iscsid
+		fi
+		if ! $WGET -O /sbin/iscsiadm $openqrm_web_protocol://$resource_openqrmserver/openqrm/boot-service/iscsiadm.$kernel_name; then
+			$WGET -O /sbin/iscsiadm $openqrm_web_protocol://$resource_openqrmserver/openqrm/boot-service/iscsiadm
+		fi
 
-    fi
-    chmod +x /sbin/iscsi*
+	fi
+	chmod +x /sbin/iscsi*
 	mkdir -p /tmp
 
 	# load iscsi related modules
@@ -121,7 +121,7 @@ function mount_rootfs() {
 
 	# create config /etc/iscsi/iscsid.conf
 	mkdir -p /etc/iscsi/
-    rm -f /etc/iscsi/iscsid.conf
+	rm -f /etc/iscsi/iscsid.conf
 	cat >> /etc/iscsi/iscsid.conf << EOF
 node.startup = manual
 node.session.timeo.replacement_timeout = 120
@@ -146,7 +146,7 @@ discovery.sendtargets.auth.password = $IMAGE_ISCSI_AUTH
 EOF
 
 	# create /etc/iscsi/initiatorname.iscsi
-    rm -f /etc/iscsi/initiatorname.iscsi
+	rm -f /etc/iscsi/initiatorname.iscsi
 	cat >> /etc/iscsi/initiatorname.iscsi << EOF
 InitiatorName=$NETAPP_ISCSI_BASE_IQN:$NETAPP_ISCSI_CHAP_USER
 EOF
@@ -163,7 +163,7 @@ EOF
 
 	# discover
 	echo "netapp-iscsi-storage: Discoverying Iscsi-target $image_storage_server_ip:3260"
-    iscsiadm -m discovery -t sendtargets -p $image_storage_server_ip:3260
+	iscsiadm -m discovery -t sendtargets -p $image_storage_server_ip:3260
 	IMAGE_TARGET=`iscsiadm -m discovery -t sendtargets -p $image_storage_server_ip:3260 | head -n 1 | awk {' print $2 '}`
 
 	# login
@@ -172,57 +172,57 @@ EOF
 	# let udev settle
 	sleep 4
 
-    # check that udev found the new device
-    FIND_ISCSI_BLOCK_DEVICE=`find /sys/class/iscsi_session/session*/device/target*/*/ -name block | head -n1`
-    if [ "$FIND_ISCSI_BLOCK_DEVICE" == "" ]; then
-        FIND_ISCSI_BLOCK_DEVICE=`find /sys/class/iscsi_session/session*/device/target*/*/ -name block:s* | head -n1`
-        if [ "$FIND_ISCSI_BLOCK_DEVICE" == "" ]; then
-            echo "ERROR: Udev did not detect the new device"
-            echo "ERROR: Could not look-up the Iscsi device in the sys-fs dir"
-            # give a shell for the admin
-            /bin/bash
-        fi
-    fi
-    # check for different sysfs styles
-    if [ -h $FIND_ISCSI_BLOCK_DEVICE ]; then
-        ISCSI_BLOCK_DEVICE_NAME=`readlink $FIND_ISCSI_BLOCK_DEVICE`
-        ISCSI_BLOCK_DEVICE_NAME=`basename $ISCSI_BLOCK_DEVICE_NAME`
-        echo "SUCCESS: Found $ISCSI_BLOCK_DEVICE_NAME in sys-fs (as symlink)"
-    elif [ -d $FIND_ISCSI_BLOCK_DEVICE ]; then
-        ISCSI_BLOCK_DEVICE_NAME=`ls $FIND_ISCSI_BLOCK_DEVICE`
-        echo "SUCCESS: Found $ISCSI_BLOCK_DEVICE_NAME in sys-fs (as dir)"
-    else
-        echo "ERROR: Udev did not detect the new device"
-        echo "ERROR: Could not look-up the Iscsi device in the sys-fs dir"
-        # give a shell for the admin
-        /bin/bash
-    fi
-    # export the blockdevice name for the further functions
-    export ISCSI_BLOCK_DEVICE="/dev/$ISCSI_BLOCK_DEVICE_NAME"
+	# check that udev found the new device
+	FIND_ISCSI_BLOCK_DEVICE=`find /sys/class/iscsi_session/session*/device/target*/*/ -name block | head -n1`
+	if [ "$FIND_ISCSI_BLOCK_DEVICE" == "" ]; then
+		FIND_ISCSI_BLOCK_DEVICE=`find /sys/class/iscsi_session/session*/device/target*/*/ -name block:s* | head -n1`
+		if [ "$FIND_ISCSI_BLOCK_DEVICE" == "" ]; then
+			echo "ERROR: Udev did not detect the new device"
+			echo "ERROR: Could not look-up the Iscsi device in the sys-fs dir"
+			# give a shell for the admin
+			/bin/bash
+		fi
+	fi
+	# check for different sysfs styles
+	if [ -h $FIND_ISCSI_BLOCK_DEVICE ]; then
+		ISCSI_BLOCK_DEVICE_NAME=`readlink $FIND_ISCSI_BLOCK_DEVICE`
+		ISCSI_BLOCK_DEVICE_NAME=`basename $ISCSI_BLOCK_DEVICE_NAME`
+		echo "SUCCESS: Found $ISCSI_BLOCK_DEVICE_NAME in sys-fs (as symlink)"
+	elif [ -d $FIND_ISCSI_BLOCK_DEVICE ]; then
+		ISCSI_BLOCK_DEVICE_NAME=`ls $FIND_ISCSI_BLOCK_DEVICE`
+		echo "SUCCESS: Found $ISCSI_BLOCK_DEVICE_NAME in sys-fs (as dir)"
+	else
+		echo "ERROR: Udev did not detect the new device"
+		echo "ERROR: Could not look-up the Iscsi device in the sys-fs dir"
+		# give a shell for the admin
+		/bin/bash
+	fi
+	# export the blockdevice name for the further functions
+	export ISCSI_BLOCK_DEVICE="/dev/$ISCSI_BLOCK_DEVICE_NAME"
 
 	# finallly mount
 	if ! mount -t $image_rootfstype $ISCSI_BLOCK_DEVICE /mnt; then
-        # in case we install from nfs we create a fs since this should be a new lun
-    	if  [ "$IMAGE_INSTALL_FROM_NFS" != "" ]; then
-            echo "NOTICE: Found install-from-nfs enabled but failed mounting the rootdevice"
-            echo "NOTICE: Assuming a new (unformatted) Lun -> creating $image_rootfstype filesystem on $ISCSI_BLOCK_DEVICE"
-            mke2fs -F -j $ISCSI_BLOCK_DEVICE
-            if ! mount -t $image_rootfstype $ISCSI_BLOCK_DEVICE /mnt; then
-                echo "ERROR: Could not mount $ISCSI_BLOCK_DEVICE via iscsi"
-                # give a shell for the admin
-                /bin/bash
-            else
-        		echo "netapp-iscsi-storage: Mounted $ISCSI_BLOCK_DEVICE rw"
-            fi
-        else
-            echo "ERROR: Could not mount $ISCSI_BLOCK_DEVICE via iscsi"
-            # give a shell for the admin
-            /bin/bash
-        fi
+		# in case we install from nfs we create a fs since this should be a new lun
+		if  [ "$IMAGE_INSTALL_FROM_NFS" != "" ]; then
+			echo "NOTICE: Found install-from-nfs enabled but failed mounting the rootdevice"
+			echo "NOTICE: Assuming a new (unformatted) Lun -> creating $image_rootfstype filesystem on $ISCSI_BLOCK_DEVICE"
+			mke2fs -F -j $ISCSI_BLOCK_DEVICE
+			if ! mount -t $image_rootfstype $ISCSI_BLOCK_DEVICE /mnt; then
+				echo "ERROR: Could not mount $ISCSI_BLOCK_DEVICE via iscsi"
+				# give a shell for the admin
+				/bin/bash
+			else
+				echo "netapp-iscsi-storage: Mounted $ISCSI_BLOCK_DEVICE rw"
+			fi
+		else
+			echo "ERROR: Could not mount $ISCSI_BLOCK_DEVICE via iscsi"
+			# give a shell for the admin
+			/bin/bash
+		fi
 	else
 		echo "netapp-iscsi-storage: Mounted $ISCSI_BLOCK_DEVICE rw"
 	fi
-	
+
 	if  [ "$IMAGE_INSTALL_FROM_NFS" != "" ]; then
 		install_rootfs_from_nfs
 	else
@@ -248,6 +248,18 @@ EOF
 
 function remount_rootfs() {
 
+	# fix for ubuntu lucid + maverick
+	if [ -f /mnt/etc/apt/sources.list ]; then
+		if grep lucid /mnt/etc/apt/sources.list >/remountlog; then
+			echo "netapp-iscsi-storage: Skipping Re-mount $ISCSI_BLOCK_DEVICE ro"
+			return
+		fi
+		if grep maverick /mnt/etc/apt/sources.list >/remountlog; then
+			echo "netapp-iscsi-storage: Skipping Re-mount $ISCSI_BLOCK_DEVICE ro"
+			return
+		fi
+		rm -f /remountlog
+	fi
 	REMOUNT_LOOP=0
 	# remont /mnt ro
 	while ! mount -t $image_rootfstype -o ro,remount $ISCSI_BLOCK_DEVICE /mnt; do
@@ -260,7 +272,7 @@ function remount_rootfs() {
 		fi
 	done
 	echo "netapp-iscsi-storage: Re-mounted $ISCSI_BLOCK_DEVICE ro"
-	
+
 }
 
 

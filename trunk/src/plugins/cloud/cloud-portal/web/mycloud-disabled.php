@@ -18,7 +18,7 @@
 */
 -->
 <br>
-&nbsp;&nbsp;&nbsp;<b>This Cloud-Portal is currently in maintenance mode. Please try again later.</b><br>
+&nbsp;&nbsp;&nbsp;<b>CloudPro云计算服务门户正在维护中。请稍后再来访问。</b><br>
 <br>
 
 </body>

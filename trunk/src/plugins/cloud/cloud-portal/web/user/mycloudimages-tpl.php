@@ -18,7 +18,7 @@
 */
 -->
 
-<h1>My Private Cloud Images</h1>
+<h1>我的映像</h1>
 <form action="{thisfile}">
 {currentab}
 {private_image_table}

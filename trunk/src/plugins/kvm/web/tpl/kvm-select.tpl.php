@@ -24,10 +24,10 @@
 </style>
 <form action="{formaction}" method="GET">
 
-<h1><img border=0 src="/openqrm/base/plugins/kvm/img/manager.png"> KVM VM Manager</h1>
+<h1><img border=0 src="/openqrm/base/plugins/kvm/img/manager.png">KVM VM管理器</h1>
 
 <div style="float:left;">
-<h4>Please select a KVM-Host from the list below</h4>
+<h4>请从下表选择一个KVM Host：</h4>
 {kvm_server_table}
 </div>
 

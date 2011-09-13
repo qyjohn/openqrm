@@ -2,19 +2,19 @@
 /*
   This file is part of openQRM.
 
-    openQRM is free software: you can redistribute it and/or modify
-    it under the terms of the GNU General Public License version 2
-    as published by the Free Software Foundation.
+	openQRM is free software: you can redistribute it and/or modify
+	it under the terms of the GNU General Public License version 2
+	as published by the Free Software Foundation.
 
-    openQRM is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    GNU General Public License for more details.
+	openQRM is distributed in the hope that it will be useful,
+	but WITHOUT ANY WARRANTY; without even the implied warranty of
+	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+	GNU General Public License for more details.
 
-    You should have received a copy of the GNU General Public License
-    along with openQRM.  If not, see <http://www.gnu.org/licenses/>.
+	You should have received a copy of the GNU General Public License
+	along with openQRM.  If not, see <http://www.gnu.org/licenses/>.
 
-    Copyright 2009, Matthias Rechenburg <matt@openqrm.com>
+	Copyright 2009, Matthias Rechenburg <matt@openqrm.com>
 */
 
 
@@ -63,7 +63,7 @@ function redirectit($strMsg, $currenttab = 'tab0', $url = '') {
 		$url = $thisfile.'?strMsg='.urlencode($strMsg).'&currenttab='.$currenttab;
 	} else {
 		$url = $url.'?strMsg='.urlencode($strMsg).'&currenttab='.$currenttab;
-    }
+	}
 	echo "<meta http-equiv=\"refresh\" content=\"0; URL=$url\">";
 	exit;
 }
@@ -86,21 +86,21 @@ function check_allowed($text) {
 
 function check_update_param($param, $value, $len) {
 	global $c_error;
-    if ($len <> 0) {
-        if (!strlen($value)) {
-            $strMsg = "$param is empty <br>";
-            $c_error = 1;
-            redirectit($strMsg, tab4, "mycloud.php");
-            exit(0);
-        }
-        $value_len = strlen($value);
-        if ($value_len <= $len) {
-            $strMsg = "$param is too short. Needs min. $len characters<br>";
-            $c_error = 1;
-            redirectit($strMsg, tab4, "mycloud.php");
-            exit(0);
-        }
-    }
+	if ($len <> 0) {
+		if (!strlen($value)) {
+			$strMsg = "$param is empty <br>";
+			$c_error = 1;
+			redirectit($strMsg, 'tab6', "mycloud.php");
+			exit(0);
+		}
+		$value_len = strlen($value);
+		if ($value_len <= $len) {
+			$strMsg = "$param is too short. Needs min. $len characters<br>";
+			$c_error = 1;
+			redirectit($strMsg, 'tab6', "mycloud.php");
+			exit(0);
+		}
+	}
 	// remove whitespaces
 	$value = trim($value);
 	// remove any non-violent characters
@@ -114,19 +114,20 @@ function check_update_param($param, $value, $len) {
 	if(!check_allowed($value)){
 		$strMsg = "$param contains special characters <br>";
 		$c_error = 1;
-		redirectit($strMsg, tab4, "mycloud.php");
+		redirectit($strMsg, 'tab6', "mycloud.php");
 		exit(0);
 	}
 }
 
 
 // check if we got some actions to do
+$strMsg = '';
 if (htmlobject_request('account_command') != '') {
 	switch (htmlobject_request('account_command')) {
 
 		case 'Update':
 			$c_error = 0;
-            $cu_id = $user_fields['cu_id'];
+			$cu_id = $user_fields['cu_id'];
 			// checks
 			check_update_param("Lastname", $user_fields['cu_lastname'], 1);
 			check_update_param("Forename", $user_fields['cu_forename'], 1);
@@ -135,66 +136,73 @@ if (htmlobject_request('account_command') != '') {
 			check_update_param("Country", $user_fields['cu_country'], 1);
 			check_update_param("Phone", $user_fields['cu_phone'], 1);
 
-            // right username ?
-            $cloud_user = new clouduser();
-            $cloud_user->get_instance_by_id($cu_id);
-            $db_user = $cloud_user->name;
-            $auth_user = $_SERVER['PHP_AUTH_USER'];
-            $post_user = $user_fields['cu_name'];
-            if (strcmp($auth_user, $post_user)) {
+			// right username ?
+			$cloud_user = new clouduser();
+			$cloud_user->get_instance_by_id($cu_id);
+			$db_user = $cloud_user->name;
+			$auth_user = $_SERVER['PHP_AUTH_USER'];
+			$post_user = $user_fields['cu_name'];
+			if (strcmp($auth_user, $post_user)) {
 				$strMsg = "Unauthorized access ! <br>";
 				$c_error = 1;
-				redirectit($strMsg, tab4, "mycloud.php");
+				redirectit($strMsg, 'tab6', "mycloud.php");
 				exit(0);
-            }
-            if (strcmp($auth_user, $db_user)) {
+			}
+			if (strcmp($auth_user, $db_user)) {
 				$strMsg = "Unauthorized access ! <br>";
 				$c_error = 1;
-				redirectit($strMsg, tab4, "mycloud.php");
+				redirectit($strMsg, 'tab6', "mycloud.php");
 				exit(0);
-            }
+			}
 
-            // email valid ?
+			// email valid ?
 			$cloud_email = new clouduser();
 			if (!$cloud_email->checkEmail($user_fields['cu_email'])) {
 				$strMsg = "Email address is invalid. <br>";
 				$c_error = 1;
-				redirectit($strMsg, tab4, "mycloud.php");
+				redirectit($strMsg, 'tab6', "mycloud.php");
 				exit(0);
 			}
 
-            // password changed ?
-            $update_htpasswd=false;
-            $u_pass = $user_fields['cu_password'];
-            if (strlen($u_pass)) {
-                check_update_param("Password", $user_fields['cu_password'], 6);
-                // password equal ?
-                if (strcmp($user_fields['cu_password'], $user_fields['cu_password_check'])) {
-                    $strMsg = "Passwords are not equal <br>";
-                    $c_error = 1;
-                    redirectit($strMsg, tab4, "mycloud.php");
-                    exit(0);
-                }
-                // update htpasswd
-                $update_htpasswd=true;
-            }
+			// password changed ?
+			$update_htpasswd=false;
+			$u_pass = htmlobject_request('cu_password');
+			if (strlen($u_pass)) {
+				check_update_param("Password", $user_fields['cu_password'], 6);
+				// password equal ?
+				if (strcmp($user_fields['cu_password'], $user_fields['cu_password_check'])) {
+					$strMsg = "Passwords are not equal <br>";
+					$c_error = 1;
+					redirectit($strMsg, 'tab6', "mycloud.php");
+					exit(0);
+				}
+				// update htpasswd
+				$update_htpasswd=true;
+			}
 
-            if ($c_error == 0) {
-                unset($user_fields['cu_id']);
-                unset($user_fields['cu_name']);
-                $cloud_user = new clouduser();
-                $cloud_user->update($cu_id, $user_fields);
-                $strMsg .= "Upated details of Cloud Account $cu_id<br>";
-                if ($update_htpasswd) {
-                    $strMsg .= "Upated login password<br>";
-                    // remove old user
-                    $openqrm_server_command="htpasswd -D $CloudDir/user/.htpasswd $post_user";
-                    $output = shell_exec($openqrm_server_command);
-                    // create new + new password
-                    $openqrm_server_command="htpasswd -b $CloudDir/user/.htpasswd $post_user $u_pass";
-                    $output = shell_exec($openqrm_server_command);
-                }
-                redirectit($strMsg, tab4, "mycloud.php");
+
+
+			if ($c_error == 0) {
+				unset($user_fields['cu_id']);
+				unset($user_fields['cu_name']);
+				// update password only if ldap is not enabled
+				if (file_exists("$RootDir/plugins/ldap/.running")) {
+					$update_htpasswd=false;
+					unset($user_fields['cu_password']);
+				}
+				$cloud_user = new clouduser();
+				$cloud_user->update($cu_id, $user_fields);
+				$strMsg .= "Upated details of Cloud Account $cu_id<br>";
+				if ($update_htpasswd) {
+					$strMsg .= "Upated login password<br>";
+					// remove old user
+					$openqrm_server_command="htpasswd -D $CloudDir/user/.htpasswd $post_user";
+					$output = shell_exec($openqrm_server_command);
+					// create new + new password
+					$openqrm_server_command="htpasswd -b $CloudDir/user/.htpasswd $post_user $u_pass";
+					$output = shell_exec($openqrm_server_command);
+				}
+				redirectit($strMsg, 'tab6', "mycloud.php");
 			}
 			break;
 
@@ -217,6 +225,7 @@ function mycloud_account() {
 	global $OPENQRM_SERVER_IP_ADDRESS;
 	global $thisfile;
 	global $auth_user;
+	global $RootDir;
 
 	// db select
 	$cl_user = new clouduser();
@@ -233,74 +242,80 @@ function mycloud_account() {
 		if (!strlen($ccunits)) {
 			$ccunits = 0;
 		}
-        $cu_id = $cu["cu_id"];
-        $cu_name = $cu["cu_name"];
-        $cu_forename = $cu["cu_forename"];
-        $cu_lastname = $cu["cu_lastname"];
-        $cu_email = $cu["cu_email"];
-        $cu_street = $cu["cu_street"];
-        $cu_city = $cu["cu_city"];
-        $cu_country = $cu["cu_country"];
-        $cu_phone = $cu["cu_phone"];
-        $cu_ccunits = "$ccunits";
-        $cu_status = $status_icon;
+		$cu_id = $cu["cu_id"];
+		$cu_name = $cu["cu_name"];
+		$cu_forename = $cu["cu_forename"];
+		$cu_lastname = $cu["cu_lastname"];
+		$cu_email = $cu["cu_email"];
+		$cu_street = $cu["cu_street"];
+		$cu_city = $cu["cu_city"];
+		$cu_country = $cu["cu_country"];
+		$cu_phone = $cu["cu_phone"];
+		$cu_ccunits = "$ccunits";
+		$cu_status = $status_icon;
 	}
 
-    $cu_name_input = "User name&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp<strong>$cu_name</strong><br><br><input type=hidden name=\"cu_name\" value=\"$cu_name\">";
-    $cu_password_input = htmlobject_input('cu_password', array("value" => '', "label" => 'Password'), 'password', 20);
-    $cu_password_check_input = htmlobject_input('cu_password_check', array("value" => '', "label" => '(retype)'), 'password', 20);
-    $cu_forename_input = htmlobject_input('cu_forename', array("value" => "$cu_forename", "label" => 'First name'), 'text', 50);
-    $cu_lastname_input = htmlobject_input('cu_lastname', array("value" =>  "$cu_lastname", "label" => 'Last name'), 'text', 50);
-    $cu_email_input = htmlobject_input('cu_email', array("value" => "$cu_email", "label" => 'Email'), 'text', 50);
-    $cu_street_input = htmlobject_input('cu_street', array("value" => "$cu_street", "label" => 'Street+number'), 'text', 100);
-    $cu_city_input = htmlobject_input('cu_city', array("value" => "$cu_city", "label" => 'City'), 'text', 100);
-    $cu_country_input = htmlobject_input('cu_country', array("value" => "$cu_country", "label" => 'Country'), 'text', 100);
-    $cu_phone_input = htmlobject_input('cu_phone', array("value" => "$cu_phone", "label" => 'Phone'), 'text', 100);
+	$cu_name_input = "用户帐号：&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp<strong>$cu_name</strong><br><br><input type=hidden name=\"cu_name\" value=\"$cu_name\">";
+	// allow updating the user password only if the ldap plugin is disabled
+	if (!file_exists("$RootDir/plugins/ldap/.running")) {
+		$cu_password_input = htmlobject_input('cu_password', array("value" => '', "label" => '设置密码：'), 'password', 20);
+		$cu_password_check_input = htmlobject_input('cu_password_check', array("value" => '', "label" => '重输密码：'), 'password', 20);
+	} else {
+		$cu_password_input = '';
+		$cu_password_check_input = '';
+	}
+	$cu_forename_input = htmlobject_input('cu_forename', array("value" => "$cu_forename", "label" => '名：'), 'text', 50);
+	$cu_lastname_input = htmlobject_input('cu_lastname', array("value" =>  "$cu_lastname", "label" => '姓：'), 'text', 50);
+	$cu_email_input = htmlobject_input('cu_email', array("value" => "$cu_email", "label" => '电子邮件：'), 'text', 50);
+	$cu_street_input = htmlobject_input('cu_street', array("value" => "$cu_street", "label" => '街道地址：'), 'text', 100);
+	$cu_city_input = htmlobject_input('cu_city', array("value" => "$cu_city", "label" => '所在城市：'), 'text', 100);
+	$cu_country_input = htmlobject_input('cu_country', array("value" => "$cu_country", "label" => '所在国家：'), 'text', 100);
+	$cu_phone_input = htmlobject_input('cu_phone', array("value" => "$cu_phone", "label" => '电话号码：'), 'text', 100);
 
-    // global limits
-    $cc_conf = new cloudconfig();
-    $max_resources_per_cr = $cc_conf->get_value(6);
-    $max_disk_size = $cc_conf->get_value(8);
-    $max_network_interfaces = $cc_conf->get_value(9);
-    $max_apps_per_user = $cc_conf->get_value(13);
-    $cloud_global_limits = "<ul type=\"disc\">";
-	$cloud_global_limits = $cloud_global_limits."<li>Max Resources per CR : $max_resources_per_cr</li>";
-	$cloud_global_limits = $cloud_global_limits."<li>Max Disk Size : $max_disk_size MB</li>";
-	$cloud_global_limits = $cloud_global_limits."<li>Max Network Interfaces : $max_network_interfaces</li>";
-	$cloud_global_limits = $cloud_global_limits."<li>Max Appliance per User : $max_apps_per_user</li>";
+	// global limits
+	$cc_conf = new cloudconfig();
+	$max_resources_per_cr = $cc_conf->get_value(6);
+	$max_disk_size = $cc_conf->get_value(8);
+	$max_network_interfaces = $cc_conf->get_value(9);
+	$max_apps_per_user = $cc_conf->get_value(13);
+	$cloud_global_limits = "<ul type=\"disc\">";
+	$cloud_global_limits = $cloud_global_limits."<li>资源请求限制：$max_resources_per_cr</li>";
+	$cloud_global_limits = $cloud_global_limits."<li>最大磁盘配额：$max_disk_size MB</li>";
+	$cloud_global_limits = $cloud_global_limits."<li>最大网卡数目：$max_network_interfaces</li>";
+	$cloud_global_limits = $cloud_global_limits."<li>器件数目限制：$max_apps_per_user</li>";
 	$cloud_global_limits = $cloud_global_limits."</ul>";
 
-    // user limits
-    $cloud_user = new clouduser();
-    $cloud_user->get_instance_by_name("$auth_user");
-    $cloud_userlimit = new clouduserlimits();
-    $cloud_userlimit->get_instance_by_cu_id($cloud_user->id);
-    $cloud_user_resource_limit = $cloud_userlimit->resource_limit;
-    $cloud_user_memory_limit = $cloud_userlimit->memory_limit;
-    $cloud_user_disk_limit = $cloud_userlimit->disk_limit;
-    $cloud_user_cpu_limit = $cloud_userlimit->cpu_limit;
-    $cloud_user_network_limit = $cloud_userlimit->network_limit;
-    $cloud_user_limits = "<ul type=\"disc\">";
-	$cloud_user_limits = $cloud_user_limits."<li>Max Resources : $cloud_user_resource_limit</li>";
-	$cloud_user_limits = $cloud_user_limits."<li>Max Disk Size : $cloud_user_disk_limit MB</li>";
-	$cloud_user_limits = $cloud_user_limits."<li>Max Network Interfaces : $cloud_user_network_limit</li>";
-	$cloud_user_limits = $cloud_user_limits."<li>Max Memory : $cloud_user_memory_limit</li>";
-	$cloud_user_limits = $cloud_user_limits."<li>Max CPU's : $cloud_user_cpu_limit</li>";
+	// user limits
+	$cloud_user = new clouduser();
+	$cloud_user->get_instance_by_name("$auth_user");
+	$cloud_userlimit = new clouduserlimits();
+	$cloud_userlimit->get_instance_by_cu_id($cloud_user->id);
+	$cloud_user_resource_limit = $cloud_userlimit->resource_limit;
+	$cloud_user_memory_limit = $cloud_userlimit->memory_limit;
+	$cloud_user_disk_limit = $cloud_userlimit->disk_limit;
+	$cloud_user_cpu_limit = $cloud_userlimit->cpu_limit;
+	$cloud_user_network_limit = $cloud_userlimit->network_limit;
+	$cloud_user_limits = "<ul type=\"disc\">";
+	$cloud_user_limits = $cloud_user_limits."<li>资源请求限制： $cloud_user_resource_limit</li>";
+	$cloud_user_limits = $cloud_user_limits."<li>最大磁盘配额：$cloud_user_disk_limit MB</li>";
+	$cloud_user_limits = $cloud_user_limits."<li>最大网卡数目：$cloud_user_network_limit</li>";
+	$cloud_user_limits = $cloud_user_limits."<li>最大内存配额：$cloud_user_memory_limit</li>";
+	$cloud_user_limits = $cloud_user_limits."<li>最大CPU 个数：$cloud_user_cpu_limit</li>";
 	$cloud_user_limits = $cloud_user_limits."</ul>";
 
-    // last transactions
-    $ct = new cloudtransaction();
-    $ct_arr = $ct->get_transactions_per_user($cu_id, 10);
-    $cloud_user_transactions = "<ul type=\"disc\">";
-    foreach ($ct_arr as $ct_id_ar) {
-        $ct_id = $ct_id_ar['ct_id'];
-        $d_ct = new cloudtransaction();
-        $d_ct->get_instance_by_id($ct_id);
-        $d_ct_time = date('y/m/d H:i:s', $d_ct->time);
-        $cloud_user_transactions .= "<li><small>$d_ct_time<br>-$d_ct->ccu_charge CCUs -- $d_ct->ccu_balance -- $d_ct->reason</small></li>";
-    }
-    $cloud_user_transactions .= "</ul>";
-    $cloud_user_transactions .= "<br><br>";
+	// last transactions
+	$ct = new cloudtransaction();
+	$ct_arr = $ct->get_transactions_per_user($cu_id, 10);
+	$cloud_user_transactions = "<ul type=\"disc\">";
+	foreach ($ct_arr as $ct_id_ar) {
+		$ct_id = $ct_id_ar['ct_id'];
+		$d_ct = new cloudtransaction();
+		$d_ct->get_instance_by_id($ct_id);
+		$d_ct_time = date('y/m/d H:i:s', $d_ct->time);
+		$cloud_user_transactions .= "<li><small>$d_ct_time<br>-$d_ct->ccu_charge CCUs -- $d_ct->ccu_balance -- $d_ct->reason</small></li>";
+	}
+	$cloud_user_transactions .= "</ul>";
+	$cloud_user_transactions .= "<br><br>";
 
 	//------------------------------------------------------------ set template
 	$t = new Template_PHPLIB();
@@ -309,22 +324,22 @@ function mycloud_account() {
 	$t->setVar(array(
 		'formaction' => "mycloudaccount.php",
 		'submit_save' => htmlobject_input('account_command', array("value" => 'Update', "label" => 'Update'), 'submit'),
-        'currenttab' => "<input type=hidden name=\"currenttab\" value=\"tab4\">",
-        'cu_id' => "<input type=hidden name=\"cu_id\" value=\"$cu_id\">",
-        'cu_name_input' => $cu_name_input,
-        'cu_password_input' => $cu_password_input,
-        'cu_password_check_input' => $cu_password_check_input,
-        'cu_forename_input' => $cu_forename_input,
-        'cu_lastname_input' => $cu_lastname_input,
-        'cu_email_input' => $cu_email_input,
-        'cu_street_input' => $cu_street_input,
-        'cu_city_input' => $cu_city_input,
-        'cu_country_input' => $cu_country_input,
-        'cu_phone_input' => $cu_phone_input,
+		'currenttab' => "<input type=hidden name=\"currenttab\" value=\"tab6\">",
+		'cu_id' => "<input type=hidden name=\"cu_id\" value=\"$cu_id\">",
+		'cu_name_input' => $cu_name_input,
+		'cu_password_input' => $cu_password_input,
+		'cu_password_check_input' => $cu_password_check_input,
+		'cu_forename_input' => $cu_forename_input,
+		'cu_lastname_input' => $cu_lastname_input,
+		'cu_email_input' => $cu_email_input,
+		'cu_street_input' => $cu_street_input,
+		'cu_city_input' => $cu_city_input,
+		'cu_country_input' => $cu_country_input,
+		'cu_phone_input' => $cu_phone_input,
 		'cloud_global_limits' => $cloud_global_limits,
 		'cloud_transactions' => $cloud_user_transactions,
 		'cloud_user_limits' => $cloud_user_limits,
-        'cu_ccunits' => $cu_ccunits,
+		'cu_ccunits' => $cu_ccunits,
 	));
 	$disp =  $t->parse('out', 'tplfile');
 	return $disp;

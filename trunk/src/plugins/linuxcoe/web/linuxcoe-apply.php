@@ -2,7 +2,7 @@
 <link rel="stylesheet" type="text/css" href="../../css/htmlobject.css" />
 <style>
 .htmlobject_tab_box {
-	width:700px;
+	width:900px;
 }
 </style>
 
@@ -11,19 +11,19 @@
 /*
   This file is part of openQRM.
 
-    openQRM is free software: you can redistribute it and/or modify
-    it under the terms of the GNU General Public License version 2
-    as published by the Free Software Foundation.
+	openQRM is free software: you can redistribute it and/or modify
+	it under the terms of the GNU General Public License version 2
+	as published by the Free Software Foundation.
 
-    openQRM is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    GNU General Public License for more details.
+	openQRM is distributed in the hope that it will be useful,
+	but WITHOUT ANY WARRANTY; without even the implied warranty of
+	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+	GNU General Public License for more details.
 
-    You should have received a copy of the GNU General Public License
-    along with openQRM.  If not, see <http://www.gnu.org/licenses/>.
+	You should have received a copy of the GNU General Public License
+	along with openQRM.  If not, see <http://www.gnu.org/licenses/>.
 
-    Copyright 2009, Matthias Rechenburg <matt@openqrm.com>
+	Copyright 2009, Matthias Rechenburg <matt@openqrm.com>
 */
 
 // error_reporting(E_ALL);
@@ -49,16 +49,16 @@ global $OPENQRM_SERVER_BASE_DIR;
 
 $step = htmlobject_request('step');
 if (!strlen($step)) {
-    $step = 1;
+	$step = 1;
 }
-
+$lcoe_profile_name = htmlobject_request('lcoe_profile_name');
 
 function redirect($strMsg, $currenttab = 'tab0', $url = '') {
 	global $thisfile;
 	if($url == '') {
 		$url = $thisfile.'?strMsg='.urlencode($strMsg).'&currenttab='.$currenttab;
 	}
-	// using meta refresh because of the java-script in the header	
+	// using meta refresh because of the java-script in the header
 	echo "<meta http-equiv=\"refresh\" content=\"0; URL=$url\">";
 	exit;
 }
@@ -71,67 +71,67 @@ if(htmlobject_request('action') != '') {
 	if (is_array($_REQUEST['identifier'])) {
 		switch (htmlobject_request('action')) {
 			case 'select':
-                foreach($_REQUEST['identifier'] as $profile_name) {
-                    $step=2;
-                    $lcoe_profile_name = $profile_name;
-                    break;
-                }
+				foreach($_REQUEST['identifier'] as $profile_name) {
+					$step=2;
+					$lcoe_profile_name = $profile_name;
+					break;
+				}
 				break;
-	
+
 			case 'apply':
-                foreach($_REQUEST['identifier'] as $id) {
-                    $step=3;
-                    $lcoe_profile_name = htmlobject_request('lcoe_profile_name');
-                    $lcoe_resource_id = $id;
+				foreach($_REQUEST['identifier'] as $id) {
+					$step=3;
+					$lcoe_profile_name = htmlobject_request('lcoe_profile_name');
+					$lcoe_resource_id = $id;
 
-                    $lcoe_resource = new resource();
-                    $lcoe_resource->get_instance_by_id($id);
-                    $lcoe_resource_id=$lcoe_resource->id;
-                    $lcoe_resource_mac=$lcoe_resource->mac;
-                    $lcoe_resource_ip=$lcoe_resource->ip;
-                    $lcoe_resource_cmd="$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/linuxcoe/bin/openqrm-linuxcoe-manager apply $lcoe_profile_name $lcoe_resource_id $lcoe_resource_ip $lcoe_resource_mac";
-                    $openqrm_server->send_command($lcoe_resource_cmd);
-                    sleep($refresh_delay);
+					$lcoe_resource = new resource();
+					$lcoe_resource->get_instance_by_id($id);
+					$lcoe_resource_id=$lcoe_resource->id;
+					$lcoe_resource_mac=$lcoe_resource->mac;
+					$lcoe_resource_ip=$lcoe_resource->ip;
+					$lcoe_resource_cmd="$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/linuxcoe/bin/openqrm-linuxcoe-manager apply $lcoe_profile_name $lcoe_resource_id $lcoe_resource_ip $lcoe_resource_mac";
+					$openqrm_server->send_command($lcoe_resource_cmd);
+					sleep($refresh_delay);
 
-                    $lcoe_resource->send_command($lcoe_resource_ip, "reboot");
-                    // set state to transition
-                    $resource_fields=array();
-                    $resource_fields["resource_state"]="transition";
-                    $lcoe_resource->update_info($lcoe_resource_id, $resource_fields);
+					$lcoe_resource->send_command($lcoe_resource_ip, "reboot");
+					// set state to transition
+					$resource_fields=array();
+					$resource_fields["resource_state"]="transition";
+					$lcoe_resource->update_info($lcoe_resource_id, $resource_fields);
 
-                    // create a linuxcoeresource object to monitor its state
-                    $lcoe_resource = new linuxcoeresource();
-                    $lcoe_resource_fields=array();
-                    $lcoe_resource_fields['linuxcoe_id'] = openqrm_db_get_free_id('linuxcoe_id', $lcoe_resource->_db_table);
-                    $lcoe_resource_fields['linuxcoe_resource_id'] = $lcoe_resource_id;
-                    $lcoe_resource_fields['linuxcoe_install_time'] = $_SERVER['REQUEST_TIME'];
-                    $lcoe_resource_fields['linuxcoe_profile_name'] = $lcoe_profile_name;
-                    $lcoe_resource->add($lcoe_resource_fields);
-                }
+					// create a linuxcoeresource object to monitor its state
+					$lcoe_resource = new linuxcoeresource();
+					$lcoe_resource_fields=array();
+					$lcoe_resource_fields['linuxcoe_id'] = openqrm_db_get_free_id('linuxcoe_id', $lcoe_resource->_db_table);
+					$lcoe_resource_fields['linuxcoe_resource_id'] = $lcoe_resource_id;
+					$lcoe_resource_fields['linuxcoe_install_time'] = $_SERVER['REQUEST_TIME'];
+					$lcoe_resource_fields['linuxcoe_profile_name'] = $lcoe_profile_name;
+					$lcoe_resource->add($lcoe_resource_fields);
+				}
 				break;
-	
+
 			case 'remove':
-                foreach($_REQUEST['identifier'] as $profile_name) {
-                    $lcoe_remove_profile_cmd = "$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/linuxcoe/bin/openqrm-linuxcoe-manager remove $profile_name";
-                    $openqrm_server->send_command($lcoe_remove_profile_cmd);
-                    sleep($refresh_delay);
-                }
+				foreach($_REQUEST['identifier'] as $profile_name) {
+					$lcoe_remove_profile_cmd = "$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/linuxcoe/bin/openqrm-linuxcoe-manager remove $profile_name";
+					$openqrm_server->send_command($lcoe_remove_profile_cmd);
+					sleep($refresh_delay);
+				}
 				break;
-	
+
 			case 'update':
-                foreach($_REQUEST['identifier'] as $profile_name) {
-                    $lcoe_profile_comment_param = htmlobject_request('lcoe_profile_comment');
-                    $lcoe_profile_comment = $lcoe_profile_comment_param[$profile_name];
-                    $filename = "$RootDir/plugins/linuxcoe/profiles/$profile_name/openqrm.info";
-                    if (!$handle = fopen($filename, 'w+')) {
-                        $event->log("update", $_SERVER['REQUEST_TIME'], 2, "linuxcoe-apply.php", "Cannot open file ($filename)", "", "", 0, 0, 0);
-                        exit;
-                    }
-                    fwrite($handle, "$lcoe_profile_comment\n");
-                    fclose($handle);
-                }
+				foreach($_REQUEST['identifier'] as $profile_name) {
+					$lcoe_profile_comment_param = htmlobject_request('lcoe_profile_comment');
+					$lcoe_profile_comment = $lcoe_profile_comment_param[$profile_name];
+					$filename = "$RootDir/plugins/linuxcoe/profiles/$profile_name/openqrm.info";
+					if (!$handle = fopen($filename, 'w+')) {
+						$event->log("update", $_SERVER['REQUEST_TIME'], 2, "linuxcoe-apply.php", "Cannot open file ($filename)", "", "", 0, 0, 0);
+						exit;
+					}
+					fwrite($handle, "$lcoe_profile_comment\n");
+					fclose($handle);
+				}
 				break;
-	
+
 		}
 	}
 }
@@ -149,7 +149,7 @@ function linuxcoe_profile_manager() {
 	global $thisfile;
 	global $RootDir;
 
-    $table = new htmlobject_table_builder('lcoe_profile_id', '', '', '', 'profiles');
+	$table = new htmlobject_table_builder('lcoe_profile_id', '', '', '', 'profiles');
 	$arHead = array();
 
 	$arHead['lcoe_profile_id'] = array();
@@ -171,13 +171,13 @@ function linuxcoe_profile_manager() {
 				array_push($lcoe_profile_array, $lcoe_profile);
 		}
 	}
-	
+
 	foreach ($lcoe_profile_array as $lcoe) {
 		// check if a comment exists
 		if (file_exists("$RootDir/plugins/linuxcoe/profiles/$lcoe/openqrm.info")) {
 			$lcoe_profile_comment_str = file_get_contents("$RootDir/plugins/linuxcoe/profiles/$lcoe/openqrm.info");
-		}	
-		$lcoe_profile_comment = htmlobject_input("lcoe_profile_comment[$lcoe]", array('value' => $lcoe_profile_comment_str), 'text');
+		}
+		$lcoe_profile_comment = htmlobject_input("lcoe_profile_comment[$lcoe]", array('value' => $lcoe_profile_comment_str, 'label' => ''), 'text');
 
 		$arBody[] = array(
 			'lcoe_profile_id' => $lcoe_profile_count,
@@ -187,7 +187,7 @@ function linuxcoe_profile_manager() {
 		$lcoe_profile_count++;
 	}
 
-    $table->add_headrow("<input type='hidden' name='step' value='1'>");
+	$table->add_headrow("<input type='hidden' name='step' value='1'>");
 	$table->id = 'Tabelle';
 	$table->css = 'htmlobject_table';
 	$table->border = 1;
@@ -224,7 +224,7 @@ function linuxcoe_select_resource($lcoe_profile_name) {
 	global $thisfile;
 	global $RootDir;
 
-    $table = new htmlobject_table_builder('resource_id', '', '', '', 'resources');
+	$table = new htmlobject_table_builder('resource_id', '', '', '', 'resources');
 
 	$arHead = array();
 	$arHead['resource_state'] = array();
@@ -249,7 +249,8 @@ function linuxcoe_select_resource($lcoe_profile_name) {
 
 	$arBody = array();
 	$resource_tmp = new resource();
-    $resource_array = $resource_tmp->display_idle_overview($table->offset, $table->limit, $table->sort, $table->order);
+	$resource_array = $resource_tmp->display_overview($table->offset, $table->limit, $table->sort, $table->order);
+	array_shift($resource_array);
 
 	foreach ($resource_array as $index => $resource_db) {
 		// prepare the values for the array
@@ -258,17 +259,17 @@ function linuxcoe_select_resource($lcoe_profile_name) {
 		$res_id = $resource->id;
 		$resource_icon_default="/openqrm/base/img/resource.png";
 		$state_icon="/openqrm/base/img/idle.png";
-        $arBody[] = array(
-            'resource_state' => "<img src=$state_icon>",
-            'resource_icon' => "<img width=24 height=24 src=$resource_icon_default>",
-            'resource_id' => $resource_db["resource_id"],
-            'resource_hostname' => $resource_db["resource_hostname"],
-            'resource_mac' => $resource_db["resource_mac"],
-            'resource_ip' => $resource_db["resource_ip"],
-        );
+		$arBody[] = array(
+			'resource_state' => "<img src=$state_icon>",
+			'resource_icon' => "<img width=24 height=24 src=$resource_icon_default>",
+			'resource_id' => $resource_db["resource_id"],
+			'resource_hostname' => $resource_db["resource_hostname"],
+			'resource_mac' => $resource_db["resource_mac"],
+			'resource_ip' => $resource_db["resource_ip"],
+		);
 	}
 
-    $table->add_headrow("<input type='hidden' name='lcoe_profile_name' value=\"$lcoe_profile_name\"><input type='hidden' name='step' value='2'>");
+	$table->add_headrow("<input type='hidden' name='lcoe_profile_name' value=\"$lcoe_profile_name\"><input type='hidden' name='step' value='2'>");
 	$table->id = 'Tabelle';
 	$table->css = 'htmlobject_table';
 	$table->border = 1;
@@ -291,7 +292,7 @@ function linuxcoe_select_resource($lcoe_profile_name) {
 	$t->setFile('tplfile', './tpl/' . 'linuxcoe-apply2.tpl.php');
 	$t->setVar(array(
 		'linuxcoe_idle_table' => $table->get_string(),
-        'lcoe_profile_name' => $lcoe_profile_name,
+		'lcoe_profile_name' => $lcoe_profile_name,
 	));
 
 	$disp =  $t->parse('out', 'tplfile');
@@ -315,7 +316,7 @@ function linuxcoe_profile_applied($lcoe_profile_name, $lcoe_resource_id) {
 	$t->setFile('tplfile', './tpl/' . 'linuxcoe-apply3.tpl.php');
 	$t->setVar(array(
 		'lcoe_resource_id' => $lcoe_resource_id,
-        'lcoe_profile_name' => $lcoe_profile_name,
+		'lcoe_profile_name' => $lcoe_profile_name,
 	));
 
 	$disp =  $t->parse('out', 'tplfile');

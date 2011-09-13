@@ -40,7 +40,7 @@ DHCPD_HOST_TEMPLATE="$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/dhcpd/etc/template
 
 # define wget to use with https
 if [ "$openqrm_web_protocol" == "https" ]; then
-    WGET_NO_CERT_CHECK="--no-check-certificate"
+	WGET_NO_CERT_CHECK="--no-check-certificate"
 fi
 
 # using the resource_id as the shelf-id
@@ -128,51 +128,51 @@ case "$SANBOOT_COMMAND" in
 			dhcpd_lock release
 			exit 0
 		fi
-        if grep -A 1 $SANBOOT_HOSTNAME $DHCPD_CONF | grep "# sanboot" 1>/dev/null; then
+		if grep -A 1 $SANBOOT_HOSTNAME $DHCPD_CONF | grep "# sanboot" 1>/dev/null; then
 			dhcpd_log openqrm-dhcpd-manager "Resource  $SANBOOT_HOSTNAME $SANBOOT_RESOURCE_ID $SANBOOT_RESOURCE_MAC $SANBOOT_RESOURCE_IP already assigned to sanboot."
 			dhcpd_lock release
 			exit 0
-        fi
+		fi
 
 		dhcpd_log openqrm-dhcpd-manager "removing $SANBOOT_HOSTNAME $SANBOOT_RESOURCE_ID $SANBOOT_RESOURCE_MAC $SANBOOT_RESOURCE_IP"
 		cp -f $DHCPD_CONF $DHCPD_CONF.openqrm-dhcpd-manager
-        # find the resource entry + remove it
+		# find the resource entry + remove it
 		# first - resource
 		grep -B 10000 -A 4 "^host $SANBOOT_HOSTNAME {" $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/dhcpd/etc/dhcpd.conf | sed -e :a -e '$d;N;2,5ba' -e 'P;D' > $DHCPD_CONF.first_part
 		# after resource
 		grep -A 10000 "^host $SANBOOT_HOSTNAME {" $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/dhcpd/etc/dhcpd.conf | sed '1,5d' > $DHCPD_CONF.last_part
 
-        case "$SANBOOT_IMAGE_TYPE" in
+		case "$SANBOOT_IMAGE_TYPE" in
 
-            iscsi-san-deployment)
-                echo "sanboot: $SANBOOT_IMAGE_NAME is from type iscsi-san-deployment" | logger
+			iscsi-san-deployment)
+				echo "sanboot: $SANBOOT_IMAGE_NAME is from type iscsi-san-deployment" | logger
 
 
-                # now add the resource entry again with the new sanboot config
-                cat $SANBOOT_DHCPD_HOST_ISCSI_BOOT_TEMPLATE | \
-                    sed -e "s/SANBOOT_RESOURCE_HOSTNAME/$SANBOOT_HOSTNAME/g" |	\
-                    sed -e "s/SANBOOT_RESOURCE_MAC/$SANBOOT_RESOURCE_MAC/g" |	\
-                    sed -e "s/SANBOOT_STORAGE_IP/$SANBOOT_STORAGE_IP/g" |	\
-                    sed -e "s/SANBOOT_IMAGE_NAME/$SANBOOT_IMAGE_NAME/g" |	\
-                    sed -e "s/SANBOOT_RESOURCE_IP/$SANBOOT_RESOURCE_IP/g" > $DHCPD_CONF.sanboot_part
-    		;;
+				# now add the resource entry again with the new sanboot config
+				cat $SANBOOT_DHCPD_HOST_ISCSI_BOOT_TEMPLATE | \
+					sed -e "s/SANBOOT_RESOURCE_HOSTNAME/$SANBOOT_HOSTNAME/g" |	\
+					sed -e "s/SANBOOT_RESOURCE_MAC/$SANBOOT_RESOURCE_MAC/g" |	\
+					sed -e "s/SANBOOT_STORAGE_IP/$SANBOOT_STORAGE_IP/g" |	\
+					sed -e "s/SANBOOT_IMAGE_NAME/$SANBOOT_IMAGE_NAME/g" |	\
+					sed -e "s/SANBOOT_RESOURCE_IP/$SANBOOT_RESOURCE_IP/g" > $DHCPD_CONF.sanboot_part
+			;;
 
-            aoe-san-deployment)
-                echo "sanboot: $SANBOOT_IMAGE_NAME is from type aoe-san-deployment ($SANBOOT_AOE_DEVICE_NAME)" | logger
-                SANBOOT_DEVICE=`echo $SANBOOT_AOE_DEVICE_NAME | cut -d'/' -f4`
-                # now add the resource entry again with the new sanboot config
-                cat $SANBOOT_DHCPD_HOST_AOE_BOOT_TEMPLATE | \
-                    sed -e "s/SANBOOT_RESOURCE_HOSTNAME/$SANBOOT_HOSTNAME/g" |	\
-                    sed -e "s/SANBOOT_RESOURCE_MAC/$SANBOOT_RESOURCE_MAC/g" |	\
-                    sed -e "s/SANBOOT_DEVICE/$SANBOOT_DEVICE/g" |	\
-                    sed -e "s/SANBOOT_RESOURCE_IP/$SANBOOT_RESOURCE_IP/g" > $DHCPD_CONF.sanboot_part
-    		;;
+			aoe-san-deployment)
+				echo "sanboot: $SANBOOT_IMAGE_NAME is from type aoe-san-deployment ($SANBOOT_AOE_DEVICE_NAME)" | logger
+				SANBOOT_DEVICE=`echo $SANBOOT_AOE_DEVICE_NAME | cut -d'/' -f4`
+				# now add the resource entry again with the new sanboot config
+				cat $SANBOOT_DHCPD_HOST_AOE_BOOT_TEMPLATE | \
+					sed -e "s/SANBOOT_RESOURCE_HOSTNAME/$SANBOOT_HOSTNAME/g" |	\
+					sed -e "s/SANBOOT_RESOURCE_MAC/$SANBOOT_RESOURCE_MAC/g" |	\
+					sed -e "s/SANBOOT_DEVICE/$SANBOOT_DEVICE/g" |	\
+					sed -e "s/SANBOOT_RESOURCE_IP/$SANBOOT_RESOURCE_IP/g" > $DHCPD_CONF.sanboot_part
+			;;
 
-        esac
+		esac
 
-        # create new config
-        cat $DHCPD_CONF.first_part $DHCPD_CONF.sanboot_part $DHCPD_CONF.last_part > $DHCPD_CONF
-        # restart dhcpd
+		# create new config
+		cat $DHCPD_CONF.first_part $DHCPD_CONF.sanboot_part $DHCPD_CONF.last_part > $DHCPD_CONF
+		# restart dhcpd
 		$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/dhcpd/etc/init.d/openqrm-plugin-dhcpd stop
 		if ! $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/dhcpd/etc/init.d/openqrm-plugin-dhcpd start; then
 			dhcpd_log openqrm-dhcpd-manager "Removing Resource  $SANBOOT_HOSTNAME $SANBOOT_RESOURCE_ID $SANBOOT_RESOURCE_MAC $SANBOOT_RESOURCE_IP failed. Reverting dhcpd-configuration."
@@ -194,27 +194,27 @@ case "$SANBOOT_COMMAND" in
 			dhcpd_lock release
 			exit 0
 		fi
-        if ! grep -A 1 $SANBOOT_HOSTNAME $DHCPD_CONF | grep "# sanboot" 1>/dev/null; then
+		if ! grep -A 1 $SANBOOT_HOSTNAME $DHCPD_CONF | grep "# sanboot" 1>/dev/null; then
 			dhcpd_log openqrm-dhcpd-manager "Resource  $SANBOOT_HOSTNAME $SANBOOT_RESOURCE_ID $SANBOOT_RESOURCE_MAC $SANBOOT_RESOURCE_IP already de-assigned from sanboot."
 			dhcpd_lock release
 			exit 0
-        fi
+		fi
 
 		dhcpd_log openqrm-dhcpd-manager "removing $SANBOOT_HOSTNAME $SANBOOT_RESOURCE_ID $SANBOOT_RESOURCE_MAC $SANBOOT_RESOURCE_IP"
 		cp -f $DHCPD_CONF $DHCPD_CONF.openqrm-dhcpd-manager
-        # find the resource entry + remove it
+		# find the resource entry + remove it
 		# first - resource
 		grep -B 10000 -A 10 "^host $SANBOOT_HOSTNAME {" $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/dhcpd/etc/dhcpd.conf | sed -e :a -e '$d;N;2,11ba' -e 'P;D' > $DHCPD_CONF.first_part
 		# after resource
 		grep -A 10000 "^host $SANBOOT_HOSTNAME {" $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/dhcpd/etc/dhcpd.conf | sed '1,11d' > $DHCPD_CONF.last_part
-        # create the new resouce config using the dhcpd-plugin template
+		# create the new resouce config using the dhcpd-plugin template
 		cat $DHCPD_HOST_TEMPLATE | \
 			sed -e "s/DHCPD_RESOURCE_HOSTNAME/$SANBOOT_HOSTNAME/g" |	\
 			sed -e "s/DHCPD_RESOURCE_MAC/$SANBOOT_RESOURCE_MAC/g" |	\
 			sed -e "s/DHCPD_RESOURCE_IP/$SANBOOT_RESOURCE_IP/g" > $DHCPD_CONF.host_part
-        # create new config
-        cat $DHCPD_CONF.first_part $DHCPD_CONF.host_part $DHCPD_CONF.last_part > $DHCPD_CONF
-        # restart dhcpd
+		# create new config
+		cat $DHCPD_CONF.first_part $DHCPD_CONF.host_part $DHCPD_CONF.last_part > $DHCPD_CONF
+		# restart dhcpd
 		$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/dhcpd/etc/init.d/openqrm-plugin-dhcpd stop
 		if ! $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/dhcpd/etc/init.d/openqrm-plugin-dhcpd start; then
 			dhcpd_log openqrm-dhcpd-manager "Removing Resource  $SANBOOT_HOSTNAME $SANBOOT_RESOURCE_ID $SANBOOT_RESOURCE_MAC $SANBOOT_RESOURCE_IP failed. Reverting dhcpd-configuration."

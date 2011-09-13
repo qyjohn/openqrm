@@ -2,19 +2,19 @@
 /*
   This file is part of openQRM.
 
-    openQRM is free software: you can redistribute it and/or modify
-    it under the terms of the GNU General Public License version 2
-    as published by the Free Software Foundation.
+	openQRM is free software: you can redistribute it and/or modify
+	it under the terms of the GNU General Public License version 2
+	as published by the Free Software Foundation.
 
-    openQRM is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    GNU General Public License for more details.
+	openQRM is distributed in the hope that it will be useful,
+	but WITHOUT ANY WARRANTY; without even the implied warranty of
+	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+	GNU General Public License for more details.
 
-    You should have received a copy of the GNU General Public License
-    along with openQRM.  If not, see <http://www.gnu.org/licenses/>.
+	You should have received a copy of the GNU General Public License
+	along with openQRM.  If not, see <http://www.gnu.org/licenses/>.
 
-    Copyright 2009, Matthias Rechenburg <matt@openqrm.com>
+	Copyright 2009, Matthias Rechenburg <matt@openqrm.com>
 */
 
 
@@ -47,7 +47,7 @@ function openqrm_collectd_appliance($cmd, $appliance_fields) {
 
 
 	$event->log("openqrm_new_appliance", $_SERVER['REQUEST_TIME'], 5, "openqrm-collectd-appliance-hook.php", "Handling $cmd event $appliance_id/$appliance_name/$appliance_ip", "", "", 0, 0, $appliance_id);
-    // we remove the stats on add and remove
+	// we remove the stats on add and remove
 	switch($cmd) {
 		case "add":
 			$openqrm_server = new openqrm_server();
@@ -57,7 +57,7 @@ function openqrm_collectd_appliance($cmd, $appliance_fields) {
 			$openqrm_server = new openqrm_server();
 			$openqrm_server->send_command("$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/collectd/bin/openqrm-collectd-manager remove $appliance_name now");
 			break;
-		
+
 	}
 }
 

@@ -28,7 +28,7 @@ openqrm_server_get_config
 export LANG=C
 # define wget to use with https
 if [ "$OPENQRM_WEB_PROTOCOL" == "https" ]; then
-    WGET_NO_CERT_CHECK="--no-check-certificate"
+	WGET_NO_CERT_CHECK="--no-check-certificate"
 fi
 
 
@@ -37,29 +37,29 @@ function openqrm_plugin_puppet_start() {
 	kill -9 `ps ax | grep puppetd | grep -v grep | awk {' print $1 '}` 2>/dev/null
 	openqrm_chkconfig del puppet
 	openqrm_chkconfig del puppetmaster
-    if which puppetmasterd 1>/dev/null 2>&1; then
-    	puppetmasterd -v -d -l syslog
-    else
-        echo "ERROR: Cloud not find puppetmasterd binary"
-    fi
-    if which puppetd 1>/dev/null 2>&1; then
-        puppetd -v -d -D -l syslog
-    else
-        echo "ERROR: Cloud not find puppetd binary"
-    fi
+	if which puppetmasterd 1>/dev/null 2>&1; then
+		puppetmasterd -v -d -l syslog
+	else
+		echo "ERROR: Cloud not find puppetmasterd binary"
+	fi
+	if which puppetd 1>/dev/null 2>&1; then
+		puppetd -v -d -D -l syslog
+	else
+		echo "ERROR: Cloud not find puppetd binary"
+	fi
 	touch $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/base/plugins/puppet/.running
 }
 
 
 function openqrm_plugin_puppet_stop() {
 	echo "Stopping the openQRM puppet-plugin"
-    if [ -x "/etc/init.d/puppetmaster" ]; then
-        if [ -x "`which invoke-rc.d 2>/dev/null`" ]; then
-            invoke-rc.d puppetmaster stop || exit $?
-        else
-            /etc/init.d/puppetmaster stop || exit $?
-        fi
-    fi
+	if [ -x "/etc/init.d/puppetmaster" ]; then
+		if [ -x "`which invoke-rc.d 2>/dev/null`" ]; then
+			invoke-rc.d puppetmaster stop || exit $?
+		else
+			/etc/init.d/puppetmaster stop || exit $?
+		fi
+	fi
 	# be sure it is stopped
 	kill -9 `ps ax | grep puppetmaster | grep -v grep | awk {' print $1 '}` 2>/dev/null
 	kill -9 `ps ax | grep puppetd | grep -v grep | awk {' print $1 '}` 2>/dev/null
@@ -72,7 +72,7 @@ function openqrm_plugin_puppet_uninstall() {
 	if [ "$USERNAME" == "" ] && [ "$PASSWORD" == "" ]; then
 		echo -n "puppet: Please give a username to uninstall the plugin : "
 		read USERNAME
-		echo	
+		echo
 		echo -n "puppet: Please give the password for user $USERNAME : "
 		read PASSWORD
 		echo
@@ -82,21 +82,21 @@ function openqrm_plugin_puppet_uninstall() {
 
 	# remove from cron
 	rm -f /etc/cron.d/openqrm-puppetm-config
-    if [ -x "/etc/init.d/cron" ]; then
-        if [ -x "`which invoke-rc.d 2>/dev/null`" ]; then
-            invoke-rc.d cron reload || exit $?
-        else
-            /etc/init.d/cron reload || exit $?
-        fi
-    elif [ -x /etc/init.d/crond ]; then
-        if [ -x "`which invoke-rc.d 2>/dev/null`" ]; then
-            invoke-rc.d crond reload || exit $?
-        else
-            /etc/init.d/crond reload || exit $?
-        fi
-    else
-    	echo "Could not find cron init script in /etc/init.d/. Please reload cron manually!"
-    fi
+	if [ -x "/etc/init.d/cron" ]; then
+		if [ -x "`which invoke-rc.d 2>/dev/null`" ]; then
+			invoke-rc.d cron reload || exit $?
+		else
+			/etc/init.d/cron reload || exit $?
+		fi
+	elif [ -x /etc/init.d/crond ]; then
+		if [ -x "`which invoke-rc.d 2>/dev/null`" ]; then
+			invoke-rc.d crond reload || exit $?
+		else
+			/etc/init.d/crond reload || exit $?
+		fi
+	else
+		echo "Could not find cron init script in /etc/init.d/. Please reload cron manually!"
+	fi
 
 	# removing the puppet tables
 	if ! wget -q $WGET_NO_CERT_CHECK -O /dev/null --http-user=$USERNAME --http-password=$PASSWORD "$OPENQRM_WEB_PROTOCOL://localhost/openqrm/base/plugins/puppet/puppet-action.php?puppet_command=uninstall"; then
@@ -119,7 +119,7 @@ function openqrm_plugin_puppet_init() {
 	if [ "$USERNAME" == "" ] && [ "$PASSWORD" == "" ]; then
 		echo -n "puppet: Please give a username to init the plugin : "
 		read USERNAME
-		echo	
+		echo
 		echo -n "puppet: Please give the password for user $USERNAME : "
 		read PASSWORD
 		echo
@@ -140,13 +140,13 @@ function openqrm_plugin_puppet_init() {
 	ln -sf $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/puppet/web $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/base/plugins/puppet
 	# link the boot-service
 	ln -sf $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/puppet/web/boot-service-puppet.tgz $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/boot-service/boot-service-puppet.tgz
-	
+
 	# creating the tables
 	if ! wget -q $WGET_NO_CERT_CHECK -O /dev/null --http-user=$USERNAME --http-password=$PASSWORD "$OPENQRM_WEB_PROTOCOL://localhost/openqrm/base/plugins/puppet/puppet-action.php?puppet_command=init&puppet_domain=$OPENQRM_SERVER_DOMAIN"; then
 		puppet_manager_log init "ERROR: Could not create the puppet-plugin tables in the database!"
 		exit 1
 	fi
-	
+
 	# creating the svn dir at /etc/puppet to store the puppet configuration
 	# backup orgigin puppet dir first
 	if [ ! -d /etc/puppet.openqrm-puppet-plugin.bak ]; then
@@ -154,7 +154,7 @@ function openqrm_plugin_puppet_init() {
 	fi
 	# create the svn dir
 	rm -rf $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/puppet/etc/puppet
-    mkdir -p $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/puppet/etc/default/files
+	mkdir -p $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/puppet/etc/default/files
 	svnadmin create $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/puppet/etc/puppet
 	svn import -q $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/puppet/etc/default/ file://$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/puppet/etc/puppet/ -m "initial import"
 	# and import to /etc/puppet
@@ -183,31 +183,31 @@ function openqrm_plugin_puppet_init() {
 	# create cron job which will update the svn repo with files which were added by the web gui
 	cat $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/puppet/etc/cron.d/openqrm-puppetm-config.cron | \
 		sed -e "s#@@OPENQRM_SERVER_BASE_DIR@@#$OPENQRM_SERVER_BASE_DIR#g" > /etc/cron.d/openqrm-puppetm-config
-    if [ -x "/etc/init.d/cron" ]; then
-        if [ -x "`which invoke-rc.d 2>/dev/null`" ]; then
-            invoke-rc.d cron reload || exit $?
-        else
-            /etc/init.d/cron reload || exit $?
-        fi
-    elif [ -x /etc/init.d/crond ]; then
-        if [ -x "`which invoke-rc.d 2>/dev/null`" ]; then
-            invoke-rc.d crond reload || exit $?
-        else
-            /etc/init.d/crond reload || exit $?
-        fi
-    else
-    	echo "Could not find cron init script in /etc/init.d/. Please reload cron manually!"
-    fi
+	if [ -x "/etc/init.d/cron" ]; then
+		if [ -x "`which invoke-rc.d 2>/dev/null`" ]; then
+			invoke-rc.d cron reload || exit $?
+		else
+			/etc/init.d/cron reload || exit $?
+		fi
+	elif [ -x /etc/init.d/crond ]; then
+		if [ -x "`which invoke-rc.d 2>/dev/null`" ]; then
+			invoke-rc.d crond reload || exit $?
+		else
+			/etc/init.d/crond reload || exit $?
+		fi
+	else
+		echo "Could not find cron init script in /etc/init.d/. Please reload cron manually!"
+	fi
 	# create svn post-commit hook to immediately update the puppet configuration
 	cat $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/puppet/etc/svn-hook/post-commit.tmpl | \
 		sed -e "s#@@OPENQRM_SERVER_BASE_DIR@@#$OPENQRM_SERVER_BASE_DIR#g" > $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/puppet/etc/puppet/hooks/post-commit
 	chmod 755 $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/puppet/etc/puppet/hooks/post-commit
-	
+
 	# eventually clean up old ssl dir before starting
 	rm -rf /var/lib/puppet/ssl/*
 	rm -rf /var/lib/puppet/yaml/node/*
 	rm -rf /var/lib/puppet/yaml/facts/*
-	
+
 }
 
 

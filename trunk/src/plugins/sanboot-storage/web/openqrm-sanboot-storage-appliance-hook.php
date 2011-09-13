@@ -2,19 +2,19 @@
 /*
   This file is part of openQRM.
 
-    openQRM is free software: you can redistribute it and/or modify
-    it under the terms of the GNU General Public License version 2
-    as published by the Free Software Foundation.
+	openQRM is free software: you can redistribute it and/or modify
+	it under the terms of the GNU General Public License version 2
+	as published by the Free Software Foundation.
 
-    openQRM is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    GNU General Public License for more details.
+	openQRM is distributed in the hope that it will be useful,
+	but WITHOUT ANY WARRANTY; without even the implied warranty of
+	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+	GNU General Public License for more details.
 
-    You should have received a copy of the GNU General Public License
-    along with openQRM.  If not, see <http://www.gnu.org/licenses/>.
+	You should have received a copy of the GNU General Public License
+	along with openQRM.  If not, see <http://www.gnu.org/licenses/>.
 
-    Copyright 2009, Matthias Rechenburg <matt@openqrm.com>
+	Copyright 2009, Matthias Rechenburg <matt@openqrm.com>
 */
 
 
@@ -42,30 +42,41 @@ function openqrm_sanboot_storage_appliance($cmd, $appliance_fields) {
 	global $OPENQRM_EXEC_PORT;
 	$appliance_id=$appliance_fields["appliance_id"];
 	$appliance_name=$appliance_fields["appliance_name"];
-    $appliance_image_id=$appliance_fields["appliance_imageid"];
+	$appliance_image_id=$appliance_fields["appliance_imageid"];
 	$resource = new resource();
 	$resource->get_instance_by_id($appliance_fields["appliance_resources"]);
 	$appliance_ip=$resource->ip;
-    $resource_mac=$resource->mac;
-    $resource_ip=$resource->ip;
-    $resource_id=$resource->id;
-    $image = new image();
-    $image->get_instance_by_id($appliance_image_id);
-    $image_deployment_type = $image->type;
+	$resource_mac=$resource->mac;
+	$resource_ip=$resource->ip;
+	$resource_id=$resource->id;
+	$image = new image();
+	$image->get_instance_by_id($appliance_image_id);
+	$image_deployment_type = $image->type;
+	$apply_hook = 0;
 
-	$event->log("openqrm_new_appliance", $_SERVER['REQUEST_TIME'], 5, "openqrm-sanboot-storage-appliance-hook.php", "Handling $cmd event $appliance_id/$appliance_name/$appliance_ip", "", "", 0, 0, $appliance_id);
+	// run only for our deployment types
+	if (!strcmp($image_deployment_type, "aoe-san-deployment")) {
+		$apply_hook=1;
+	}
+	if (!strcmp($image_deployment_type, "iscsi-san-deployment")) {
+		$apply_hook=1;
+	}
+	if ($apply_hook == 0) {
+		$event->log("openqrm_new_appliance", $_SERVER['REQUEST_TIME'], 5, "openqrm-sanboot-storage-appliance-hook.php", "Skipping $cmd event $appliance_id/$appliance_name/$appliance_ip", "", "", 0, 0, $appliance_id);
+	} else {
+		$event->log("openqrm_new_appliance", $_SERVER['REQUEST_TIME'], 5, "openqrm-sanboot-storage-appliance-hook.php", "Handling $cmd event $appliance_id/$appliance_name/$appliance_ip", "", "", 0, 0, $appliance_id);
+		// we remove the assignment to sanboot in the dhcpd.conf
+		switch($cmd) {
+			case "start":
+				// here we set the image deployment parameter IMAGE_VIRTUAL_RESOURCE_COMMAND
+				$image->set_deployment_parameters("IMAGE_VIRTUAL_RESOURCE_COMMAND", "true");
+				break;
 
-    // we remove the assignment to sanboot in the dhcpd.conf
-	switch($cmd) {
-		case "start":
-            // here we set the image deployment parameter IMAGE_VIRTUAL_RESOURCE_COMMAND
-            $image->set_deployment_parameters("IMAGE_VIRTUAL_RESOURCE_COMMAND", "true");
-			break;
-
-        case "stop":
-			$openqrm_server = new openqrm_server();
-			$openqrm_server->send_command("$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/sanboot-storage/bin/openqrm-sanboot-storage-assign deassign -t $image_deployment_type -m $resource_mac -r $resource_id -z $resource_ip");
-			break;
+			case "stop":
+				$openqrm_server = new openqrm_server();
+				$openqrm_server->send_command("$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/sanboot-storage/bin/openqrm-sanboot-storage-assign deassign -t $image_deployment_type -m $resource_mac -r $resource_id -z $resource_ip");
+				break;
+		}
 	}
 }
 

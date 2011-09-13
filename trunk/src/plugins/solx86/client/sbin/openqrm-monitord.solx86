@@ -29,9 +29,9 @@ export LANG=C
 export LC_ALL=C
 
 if [ ! -f $OPENQRM_RESOURCE_PARAMETER_FILE ]; then
-    echo "ERROR: Cloud not find the openQRM configuration file $OPENQRM_RESOURCE_PARAMETER_FILE"
-    echo "ERROR: Is this system already integrated with openQRM ?"
-    exit 1
+	echo "ERROR: Cloud not find the openQRM configuration file $OPENQRM_RESOURCE_PARAMETER_FILE"
+	echo "ERROR: Is this system already integrated with openQRM ?"
+	exit 1
 fi
 . $OPENQRM_RESOURCE_PARAMETER_FILE
 
@@ -39,7 +39,7 @@ fi
 current_uptime=0
 # define wget to use with https
 if [ "$openqrm_web_protocol" == "https" ]; then
-    WGET_NO_CERT_CHECK="--no-check-certificate"
+	WGET_NO_CERT_CHECK="--no-check-certificate"
 fi
 
 # local used functions
@@ -55,7 +55,7 @@ function send_info() {
 
 # converts bytes to mega-bytes
 function bytes_to_mega() {
-        echo $1 | awk '{printf("%.0f",  $1 /  1024/ 1024)}'
+		echo $1 | awk '{printf("%.0f",  $1 /  1024/ 1024)}'
 }
 
 
@@ -78,7 +78,7 @@ function find_cpu_number() {
 
 # cpu_speed
 function find_cpu_speed() {
-    current_cpu_speed=`psrinfo -pv | grep "clock.*MHz" | sed -e 's#^.*clock \([0-9]*\).*$#\1#g'`
+	current_cpu_speed=`psrinfo -pv | grep "clock.*MHz" | sed -e 's#^.*clock \([0-9]*\).*$#\1#g'`
 	if [ -z "$current_cpu_speed" ]; then
 		current_cpu_speed=1
 	fi
@@ -100,8 +100,8 @@ function find_mem_total() {
 
 # mem_used
 function find_mem_used() {
-    current_mem_free=$(( `vmstat | grep -v memory | grep -v free | awk '{print $5}'` / 1024 ))
-    current_mem_used=$(( $current_mem_total - $current_mem_free ))
+	current_mem_free=$(( `vmstat | grep -v memory | grep -v free | awk '{print $5}'` / 1024 ))
+	current_mem_used=$(( $current_mem_total - $current_mem_free ))
 	if [ -z "$current_mem_used" ]; then
 		current_mem_used=0
 	fi
@@ -110,18 +110,18 @@ function find_mem_used() {
 
 # swap_used
 function find_swap_used() {
-    current_swap_free=$(( `swap -s |sed -e 's#^.* \([0-9]\+\)k available.*$#\1#g'` / 1024 ))
-    current_swap_used=$(( `swap -s |sed -e 's#^.* \([0-9]\+\)k used.*$#\1#g'` / 1024 ))
-    if [ -z "$current_swap_used" ]; then
-        current_swap_used=0
-    fi
+	current_swap_free=$(( `swap -s |sed -e 's#^.* \([0-9]\+\)k available.*$#\1#g'` / 1024 ))
+	current_swap_used=$(( `swap -s |sed -e 's#^.* \([0-9]\+\)k used.*$#\1#g'` / 1024 ))
+	if [ -z "$current_swap_used" ]; then
+		current_swap_used=0
+	fi
 }
 
 # swap_total
 function find_swap_total() {
-    if [ -z "$current_swap_used" -o -z "$current_swap_free" ] ; then
-        find_swap_used
-    fi
+	if [ -z "$current_swap_used" -o -z "$current_swap_free" ] ; then
+		find_swap_used
+	fi
 	current_swap_total=$(( $current_swap_used + $current_swap_free ))
 	if [ -z "$current_swap_total" ]; then
 		current_swap_total=0
@@ -140,7 +140,7 @@ function find_hostname() {
 
 # cpu_load
 function find_cpu_load() {
-    current_cpu_load=`prstat 1 1 | tail -n1 | sed -e 's#^.*load averages: \([0-9.]\+\).*$#\1#g'`
+	current_cpu_load=`prstat 1 1 | tail -n1 | sed -e 's#^.*load averages: \([0-9.]\+\).*$#\1#g'`
 	if [ -z "$current_cpu_load" ]; then
 		current_cpu_load=0
 	fi

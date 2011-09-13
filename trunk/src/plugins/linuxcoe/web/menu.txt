@@ -21,7 +21,7 @@
 #	IMG
 #	Target
 ..|LinuxCOE
-...|About|plugins/linuxcoe/linuxcoe-manager.php?page=about|How to use|linuxcoe/plugin.png
+...|插件介绍|plugins/linuxcoe/linuxcoe-manager.php?page=about|How to use|linuxcoe/plugin.png
 ...|Create|plugins/linuxcoe/linuxcoe-manager.php?page=create|Create new LinuxCOE Automatic-Installation Profile|linuxcoe/add.png
 ...|Apply|plugins/linuxcoe/linuxcoe-manager.php?page=apply|Apply LinuxCOE Automatic-Installation Profile to a Resource|linuxcoe/apply.png
 ...|Main

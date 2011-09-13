@@ -27,12 +27,12 @@
 <h1><img border=0 src="/openqrm/base/plugins/citrix/img/manager.png"> Citrix XenServer VM Manager</h1>
 
 <div style="float:left;">
-{citrix_server_table}
+	{citrix_server_table}
 </div>
 
 <div style="float:left;">
-<h4>Citrix XenServer vms on resource {citrix_server_id}/{citrix_server_name}</h4>
-{citrix_vm_table}
+	<h4>Citrix XenServer vms on resource {citrix_server_id}/{citrix_server_name}</h4>
+	{citrix_vm_table}
 </div>
 
 </form>

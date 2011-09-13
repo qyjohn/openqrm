@@ -45,20 +45,20 @@ fi
 
 function vbox_start() {
 	echo "Starting the openQRM vbox-plugin"
-    if ! which VirtualBox 1>/dev/null; then
-        exit 0
-    fi
-   	export FORCE_INSTALL=true
-   	openqrm_install_os_dependency screen
-    # start the vm status autostart
-    if [ -d "$OPENQRM_VM_DIR" ]; then
-        for VM_CONFIG in `find $OPENQRM_VM_DIR/* -name autostart`; do
-            VM_NAME=`dirname $VM_CONFIG`
-            VM_NAME=`basename $VM_NAME`
-            echo "- auto-starting VM $VM_NAME"
-            $OPENQRM_VM_DIR/$VM_NAME/$VM_NAME.vbox
-        done
-    fi
+	if ! which VirtualBox 1>/dev/null; then
+		exit 0
+	fi
+	export FORCE_INSTALL=true
+	openqrm_install_os_dependency screen
+	# start the vm status autostart
+	if [ -d "$OPENQRM_VM_DIR" ]; then
+		for VM_CONFIG in `find $OPENQRM_VM_DIR/* -name autostart`; do
+			VM_NAME=`dirname $VM_CONFIG`
+			VM_NAME=`basename $VM_NAME`
+			echo "- auto-starting VM $VM_NAME"
+			$OPENQRM_VM_DIR/$VM_NAME/$VM_NAME.vbox
+		done
+	fi
 
 }
 

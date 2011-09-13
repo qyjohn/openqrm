@@ -8,19 +8,19 @@
 /*
   This file is part of openQRM.
 
-    openQRM is free software: you can redistribute it and/or modify
-    it under the terms of the GNU General Public License version 2
-    as published by the Free Software Foundation.
+	openQRM is free software: you can redistribute it and/or modify
+	it under the terms of the GNU General Public License version 2
+	as published by the Free Software Foundation.
 
-    openQRM is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    GNU General Public License for more details.
+	openQRM is distributed in the hope that it will be useful,
+	but WITHOUT ANY WARRANTY; without even the implied warranty of
+	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+	GNU General Public License for more details.
 
-    You should have received a copy of the GNU General Public License
-    along with openQRM.  If not, see <http://www.gnu.org/licenses/>.
+	You should have received a copy of the GNU General Public License
+	along with openQRM.  If not, see <http://www.gnu.org/licenses/>.
 
-    Copyright 2009, Matthias Rechenburg <matt@openqrm.com>
+	Copyright 2009, Matthias Rechenburg <matt@openqrm.com>
 */
 
 
@@ -66,7 +66,7 @@ global $OPENQRM_SERVER_IP_ADDRESS;
 	switch ($local_server_command) {
 
 		case 'integrate':
-		
+
 			// create storage server
 			$storage_fields["storage_name"] = "resource$local_server_id";
 			$storage_fields["storage_resource_id"] = "$local_server_id";
@@ -74,11 +74,11 @@ global $OPENQRM_SERVER_IP_ADDRESS;
 			$deployment->get_instance_by_type('local-server');
 			$storage_fields["storage_type"] = $deployment->id;
 			$storage_fields["storage_comment"] = "Local-server resource $local_server_id";
-			$storage_fields["storage_capabilities"] = 'local-server';
+			$storage_fields["storage_capabilities"] = 'TYPE=local-server';
 			$storage = new storage();
 			$storage_fields["storage_id"]=openqrm_db_get_free_id('storage_id', $STORAGE_INFO_TABLE);
 			$storage->add($storage_fields);
-			
+
 			// create image
 			$image_fields["image_id"]=openqrm_db_get_free_id('image_id', $IMAGE_INFO_TABLE);
 			$image_fields["image_name"] = "resource$local_server_id";
@@ -87,7 +87,7 @@ global $OPENQRM_SERVER_IP_ADDRESS;
 			$image_fields["image_rootfstype"] = $local_server_root_device_type;
 			$image_fields["image_storageid"] = $storage_fields["storage_id"];
 			$image_fields["image_comment"] = "Local-server image resource $local_server_id";
-			$image_fields["image_capabilities"] = 'local-server';
+			$image_fields["image_capabilities"] = 'TYPE=local-server';
 			$image = new image();
 			$image->add($image_fields);
 
@@ -95,10 +95,10 @@ global $OPENQRM_SERVER_IP_ADDRESS;
 			$kernel_fields["kernel_id"]=openqrm_db_get_free_id('kernel_id', $KERNEL_INFO_TABLE);
 			$kernel_fields["kernel_name"]="resource$local_server_id";
 			$kernel_fields["kernel_version"]="$local_server_kernel_version";
-			$kernel_fields["kernel_capabilities"]='local-server';
+			$kernel_fields["kernel_capabilities"]='TYPE=local-server';
 			$kernel = new kernel();
 			$kernel->add($kernel_fields);
-		
+
 			// create appliance
 			$next_appliance_id=openqrm_db_get_free_id('appliance_id', $APPLIANCE_INFO_TABLE);
 			$appliance_fields["appliance_id"]=$next_appliance_id;
@@ -106,7 +106,7 @@ global $OPENQRM_SERVER_IP_ADDRESS;
 			$appliance_fields["appliance_kernelid"]=$kernel_fields["kernel_id"];
 			$appliance_fields["appliance_imageid"]=$image_fields["image_id"];
 			$appliance_fields["appliance_resources"]="$local_server_id";
-			$appliance_fields["appliance_capabilities"]='local-server';
+			$appliance_fields["appliance_capabilities"]='TYPE=local-server';
 			$appliance_fields["appliance_comment"]="Local-server appliance resource $local_server_id";
 			$appliance = new appliance();
 			$appliance->add($appliance_fields);
@@ -133,20 +133,29 @@ global $OPENQRM_SERVER_IP_ADDRESS;
 			$resource_fields["resource_image"]=$image->name;
 			$resource_fields["resource_imageid"]=$image_fields["image_id"];
 			// set capabilites
-			$resource_fields["resource_capabilities"]="local-server";
+			$resource_fields["resource_capabilities"]='TYPE=local-server';
 			$resource->update_info($local_server_id, $resource_fields);
 
 			break;
 
 		case 'remove':
-			// remove appliance
+			// remove all appliance with resource set to localserver id
 			$appliance = new appliance();
-			$appliance->remove_by_name($local_server_name);
+			$appliance_id_list = $appliance->get_all_ids();
+			foreach($appliance_id_list as $appliance_list) {
+				$appliance_id = $appliance_list['appliance_id'];
+				$app_resource_remove_check = new appliance();
+				$app_resource_remove_check->get_instance_by_id($appliance_id);
+				if ($app_resource_remove_check->resources == $local_server_id) {
+					$appliance->remove($appliance_id);
+				}
+			}
+
 			// remove kernel
 			$kernel = new kernel();
 			$kernel->remove_by_name("resource$local_server_id");
 			// remove image
-			$image = new image();			
+			$image = new image();
 			$image->remove_by_name("resource$local_server_id");
 			// remove storage serveer
 			$storage = new storage();

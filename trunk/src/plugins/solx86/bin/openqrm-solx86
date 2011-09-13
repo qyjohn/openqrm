@@ -28,33 +28,33 @@ export LC_ALL=C
 
 # are we root ?
 if ! id | grep root 1>/dev/null; then
-    echo "ERROR: Please run this util as root"
-    exit 1
+	echo "ERROR: Please run this util as root"
+	exit 1
 fi
 
 
 
 function usage() {
-        echo "Usage : $0 integrate -u <user> -p <password> -q <ip-address-of-openQRM-server> [-i <network-interface>]  [-s <http/https>]"
-        echo "        $0 remove -u <user> -p <password> -q <ip-address-of-openQRM-server>"
+		echo "Usage : $0 integrate -u <user> -p <password> -q <ip-address-of-openQRM-server> [-i <network-interface>]  [-s <http/https>]"
+		echo "        $0 remove -u <user> -p <password> -q <ip-address-of-openQRM-server>"
 }
 
 
 # function to check if required packages are installed
 function check_dependencies() {
-    IFS=':'
-    for PACKAGE in $SOLARIS_DEPENDENCIES; do
-            PBIN=`echo $PACKAGE | cut -d',' -f1`
-            PPGK=`echo $PACKAGE | cut -d',' -f2`
-            PREP=`echo $PACKAGE | cut -d',' -f3`
-            if ! which $PBIN 1>/dev/null 2>&1; then
-                    echo "NOTICE: The openQRM integration depends on the $PBIN util which is not installed!"
-                    echo "        Please install package $PPGK from the $PREP repository and try again."
-                    return 1
-            fi
-    done
-    IFS=$OLDIFS
-    return 0
+	IFS=':'
+	for PACKAGE in $SOLARIS_DEPENDENCIES; do
+			PBIN=`echo $PACKAGE | cut -d',' -f1`
+			PPGK=`echo $PACKAGE | cut -d',' -f2`
+			PREP=`echo $PACKAGE | cut -d',' -f3`
+			if ! which $PBIN 1>/dev/null 2>&1; then
+					echo "NOTICE: The openQRM integration depends on the $PBIN util which is not installed!"
+					echo "        Please install package $PPGK from the $PREP repository and try again."
+					return 1
+			fi
+	done
+	IFS=$OLDIFS
+	return 0
 }
 
 
@@ -105,29 +105,29 @@ function openqrm_integrate_solx86() {
 	local PASSWORD=$2
 	local OPENQRM_SERVER=$3
 	local INTERFACE=$4
-    local PROTOCOL=$5
+	local PROTOCOL=$5
 
-    echo "... checking dependecies"
-    if ! check_dependencies; then
-        return 1
-    fi
-    # do we have dropbear now ?
-    if ! which dropbear 1>/dev/null 2>&1; then
-        echo "ERROR: Please install dropbear server before integrating with openQRM"
-        return 1
-    else
-        DBSERVER=`which dropbear`
-    fi
-    if ! which dropbearkey 1>/dev/null 2>&1; then
-        echo "ERROR: Please install dropbearkey before integrating with openQRM"
-        return 1
-    else
-        DBKEY=`which dropbearkey`
-    fi
+	echo "... checking dependecies"
+	if ! check_dependencies; then
+		return 1
+	fi
+	# do we have dropbear now ?
+	if ! which dropbear 1>/dev/null 2>&1; then
+		echo "ERROR: Please install dropbear server before integrating with openQRM"
+		return 1
+	else
+		DBSERVER=`which dropbear`
+	fi
+	if ! which dropbearkey 1>/dev/null 2>&1; then
+		echo "ERROR: Please install dropbearkey before integrating with openQRM"
+		return 1
+	else
+		DBKEY=`which dropbearkey`
+	fi
 
 	echo "Integrating system to openQRM-server at $OPENQRM_SERVER"
 	mkdir -p `dirname $OPENQRM_RESOURCE_PARAMETER_FILE`
-	
+
 	if [ "$INTERFACE" == "" ]; then
 		echo "Which network-interface to use for the integration ?"
 		ifconfig -a | grep -v lo0 | grep UP | cut -d':' -f1 | uniq
@@ -142,36 +142,36 @@ function openqrm_integrate_solx86() {
 	local resource_id=-1
 	local resource_ip=`ifconfig $INTERFACE | grep inet | grep -v inet6 | awk {' print $2 '}`
 	local resource_mac=`ifconfig $INTERFACE | grep ether | awk {' print $2 '}`
-    # define wget to use with https
-    if [ "$PROTOCOL" == "https" ]; then
-        WGET_NO_CERT_CHECK="--no-check-certificate"
-    fi
+	# define wget to use with https
+	if [ "$PROTOCOL" == "https" ]; then
+		WGET_NO_CERT_CHECK="--no-check-certificate"
+	fi
 
 	# remove whitespaces
 	resource_mac=`fix_mac $resource_mac`
 	echo "Using $INTERFACE $resource_ip/$resource_mac"
-	
+
 	wget -q $WGET_NO_CERT_CHECK -O $OPENQRM_RESOURCE_PARAMETER_FILE "$PROTOCOL://$OPENQRM_SERVER/openqrm/action/resource-monitor.php?resource_command=get_parameter&resource_id=$resource_id&resource_mac=$resource_mac&resource_ip=$resource_ip"
 	. $OPENQRM_RESOURCE_PARAMETER_FILE
-	
+
 	echo "Getting openqrm-client package"
-    mkdir -p $resource_basedir/openqrm/
+	mkdir -p $resource_basedir/openqrm/
 
 	cd $resource_basedir/openqrm/
 	wget -q $WGET_NO_CERT_CHECK "$PROTOCOL://$OPENQRM_SERVER/openqrm/boot-service/openqrm-client.solx86.tgz"
-    gunzip openqrm-client.solx86.tgz
+	gunzip openqrm-client.solx86.tgz
 	tar -xf openqrm-client.solx86.tar
 	rm -f openqrm-client.solx86.tar
 	export OPENQRM_SERVER_BASE_DIR=$resource_basedir
-    chmod +x $resource_basedir/openqrm/etc/init.d/openqrm-client.solx86
-    chmod +x $resource_basedir/openqrm/sbin/*
-    chmod +x $resource_basedir/openqrm/bin/*
+	chmod +x $resource_basedir/openqrm/etc/init.d/openqrm-client.solx86
+	chmod +x $resource_basedir/openqrm/sbin/*
+	chmod +x $resource_basedir/openqrm/bin/*
 
 	# gather some more details to create the appliance on the openQRM-server
 	solx86_root_device="local-disk"
 	solx86_root_device_type="zfs"
 	solx86_kernel_version="solaris-$resource_id"
-	
+
 	# now we send the local-integration signal to create
 	# the solx86 storage, image and appliance
 	if ! wget -O /dev/null -q $WGET_NO_CERT_CHECK --http-user=$USER --http-password=$PASSWORD "$PROTOCOL://$OPENQRM_SERVER/openqrm/base/plugins/solx86/solx86-action.php?solx86_command=integrate&solx86_id=$resource_id&solx86_root_device=$solx86_root_device&solx86_root_device_type=$solx86_root_device_type&solx86_kernel_version=$solx86_kernel_version"; then
@@ -182,40 +182,40 @@ function openqrm_integrate_solx86() {
 		return 1
 	fi
 
-    # here the system is integrated so far
-    # a resource, a kernel, an image, a (local) storage server and an appliance
-    # had been created. Now we need to start the remote-exec subsystem and the monitoring
-    ln -sf $DBSERVER $resource_basedir/openqrm/sbin/dropbear
-    ln -sf $DBKEY $resource_basedir/openqrm/bin/dropbearkey
-    # link the init script to rc.d 
+	# here the system is integrated so far
+	# a resource, a kernel, an image, a (local) storage server and an appliance
+	# had been created. Now we need to start the remote-exec subsystem and the monitoring
+	ln -sf $DBSERVER $resource_basedir/openqrm/sbin/dropbear
+	ln -sf $DBKEY $resource_basedir/openqrm/bin/dropbearkey
+	# link the init script to rc.d
 	ln -sf $resource_basedir/openqrm/etc/init.d/openqrm-client.solx86 /etc/init.d/openqrm-client.solx86
-    ln -sf $resource_basedir/openqrm/etc/init.d/openqrm-client.solx86 /etc/rc2.d/S99openqrm-client.solx86
-    ln -sf $resource_basedir/openqrm/etc/init.d/openqrm-client.solx86 /etc/rc3.d/S99openqrm-client.solx86
-    ln -sf $resource_basedir/openqrm/etc/init.d/openqrm-client.solx86 /etc/rcS.d/K99openqrm-client.solx86
+	ln -sf $resource_basedir/openqrm/etc/init.d/openqrm-client.solx86 /etc/rc2.d/S99openqrm-client.solx86
+	ln -sf $resource_basedir/openqrm/etc/init.d/openqrm-client.solx86 /etc/rc3.d/S99openqrm-client.solx86
+	ln -sf $resource_basedir/openqrm/etc/init.d/openqrm-client.solx86 /etc/rcS.d/K99openqrm-client.solx86
 
-    $resource_basedir/openqrm/etc/init.d/openqrm-client.solx86 start
+	$resource_basedir/openqrm/etc/init.d/openqrm-client.solx86 start
 
-	
-	
+
+
 }
 
 function openqrm_remove_solx86() {
 	local USER=$1
 	local PASSWORD=$2
 	local OPENQRM_SERVER=$3
-    if [ ! -f $OPENQRM_RESOURCE_PARAMETER_FILE ]; then
-    	echo "System already removed from openQRM-server at $OPENQRM_SERVER"
-        return 1
-    fi
+	if [ ! -f $OPENQRM_RESOURCE_PARAMETER_FILE ]; then
+		echo "System already removed from openQRM-server at $OPENQRM_SERVER"
+		return 1
+	fi
 	echo "Removing system from openQRM-server at $OPENQRM_SERVER"
 	. $OPENQRM_RESOURCE_PARAMETER_FILE
-    # define wget to use with https
-    if [ "$openqrm_web_protocol" == "https" ]; then
-        WGET_NO_CERT_CHECK="--no-check-certificate"
-    fi
+	# define wget to use with https
+	if [ "$openqrm_web_protocol" == "https" ]; then
+		WGET_NO_CERT_CHECK="--no-check-certificate"
+	fi
 
 
-    # stop the openqrm-client
+	# stop the openqrm-client
 	# try to remove components from the solx86 appliance
 	if ! wget -O /dev/null -q $WGET_NO_CERT_CHECK --http-user=$USER --http-password=$PASSWORD "$openqrm_web_protocol://$OPENQRM_SERVER/openqrm/base/plugins/solx86/solx86-action.php?solx86_command=remove&solx86_id=$resource_id"; then
 		echo "WARNING: Could not remove the appliance resource$resource_id from the openQRM-server!"
@@ -227,10 +227,10 @@ function openqrm_remove_solx86() {
 		return 1
 	fi
 
-    $resource_basedir/openqrm/etc/init.d/openqrm-client.solx86 stop
+	$resource_basedir/openqrm/etc/init.d/openqrm-client.solx86 stop
 	rm -f $OPENQRM_RESOURCE_PARAMETER_FILE
 	rm -rf $resource_basedir/openqrm
-    # remove init scripts
+	# remove init scripts
 	rm -f /etc/init.d/openqrm-client.solx86 /etc/rc2.d/S99openqrm-client.solx86 /etc/rcS.d/K99openqrm-client.solx86
 	echo "Successfully removed system from openQRM"
 }
@@ -250,13 +250,13 @@ case "$1" in
 					;;
 				-p)
 					PASSWORD=$2
-					;;			
+					;;
 				-q)
 					OPENQRM_SERVER=$2
-					;;			
+					;;
 				-i)
 					INTERFACE=$2
-					;;			
+					;;
 				-s)
 					OPENQRM_WEB_PROTOCOL=$2
 					;;
@@ -279,7 +279,7 @@ case "$1" in
 			exit 1
 		fi
 		if [ "$OPENQRM_WEB_PROTOCOL" == "" ]; then
-            OPENQRM_WEB_PROTOCOL=http
+			OPENQRM_WEB_PROTOCOL=http
 		fi
 
 		openqrm_integrate_solx86 $USER $PASSWORD $OPENQRM_SERVER $INTERFACE $OPENQRM_WEB_PROTOCOL
@@ -298,10 +298,10 @@ case "$1" in
 					;;
 				-p)
 					PASSWORD=$2
-					;;			
+					;;
 				-q)
 					OPENQRM_SERVER=$2
-					;;			
+					;;
 			esac
 			shift
 		done
@@ -330,4 +330,3 @@ case "$1" in
 		;;
 
 esac
-		

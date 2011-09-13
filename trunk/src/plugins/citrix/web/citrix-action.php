@@ -74,19 +74,19 @@ $citrix_server_ip = $citrix_server->ip;
 
 unset($citrix_fields["citrix_command"]);
 
-	$event->log("$citrix_command", $_SERVER['REQUEST_TIME'], 5, "citrix-action", "Processing citrix command $citrix_command", "", "", 0, 0, 0);
-	switch ($citrix_command) {
+$event->log("$citrix_command", $_SERVER['REQUEST_TIME'], 5, "citrix-action", "Processing citrix command $citrix_command", "", "", 0, 0, 0);
+switch ($citrix_command) {
 
 
-        // not used any more
+	// not used any more
 
 
-		default:
-			$event->log("$citrix_command", $_SERVER['REQUEST_TIME'], 3, "citrix-action", "No such event command ($citrix_command)", "", "", 0, 0, 0);
-			break;
+	default:
+		$event->log("$citrix_command", $_SERVER['REQUEST_TIME'], 3, "citrix-action", "No such event command ($citrix_command)", "", "", 0, 0, 0);
+		break;
 
 
-	}
+}
 ?>
 
 </body>

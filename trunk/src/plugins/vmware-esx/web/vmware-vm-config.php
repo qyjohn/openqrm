@@ -2,21 +2,21 @@
 <html lang="en">
 <head>
 	<title>VMWare ESX VM configuration</title>
-    <link rel="stylesheet" type="text/css" href="../../css/htmlobject.css" />
-    <link type="text/css" href="/openqrm/base/js/jquery/development-bundle/themes/smoothness/ui.all.css" rel="stylesheet" />
-    <script type="text/javascript" src="/openqrm/base/js/jquery/js/jquery-1.3.2.min.js"></script>
-    <script type="text/javascript" src="/openqrm/base/js/jquery/js/jquery-ui-1.7.1.custom.min.js"></script>
+	<link rel="stylesheet" type="text/css" href="../../css/htmlobject.css" />
+	<link type="text/css" href="/openqrm/base/js/jquery/development-bundle/themes/smoothness/ui.all.css" rel="stylesheet" />
+	<script type="text/javascript" src="/openqrm/base/js/jquery/js/jquery-1.3.2.min.js"></script>
+	<script type="text/javascript" src="/openqrm/base/js/jquery/js/jquery-ui-1.7.1.custom.min.js"></script>
 
 <style type="text/css">
 .ui-progressbar-value {
-    background-image: url(/openqrm/base/img/progress.gif);
+	background-image: url(/openqrm/base/img/progress.gif);
 }
 #progressbar {
-    position: absolute;
-    left: 150px;
-    top: 250px;
-    width: 400px;
-    height: 20px;
+	position: absolute;
+	left: 150px;
+	top: 250px;
+	width: 400px;
+	height: 20px;
 }
 </style>
 </head>
@@ -28,19 +28,19 @@
 /*
   This file is part of openQRM.
 
-    openQRM is free software: you can redistribute it and/or modify
-    it under the terms of the GNU General Public License version 2
-    as published by the Free Software Foundation.
+	openQRM is free software: you can redistribute it and/or modify
+	it under the terms of the GNU General Public License version 2
+	as published by the Free Software Foundation.
 
-    openQRM is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    GNU General Public License for more details.
+	openQRM is distributed in the hope that it will be useful,
+	but WITHOUT ANY WARRANTY; without even the implied warranty of
+	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+	GNU General Public License for more details.
 
-    You should have received a copy of the GNU General Public License
-    along with openQRM.  If not, see <http://www.gnu.org/licenses/>.
+	You should have received a copy of the GNU General Public License
+	along with openQRM.  If not, see <http://www.gnu.org/licenses/>.
 
-    Copyright 2009, Matthias Rechenburg <matt@openqrm.com>
+	Copyright 2009, Matthias Rechenburg <matt@openqrm.com>
 */
 
 
@@ -81,240 +81,244 @@ global $vmware_component;
 
 
 function redirect_config($strMsg, $vmware_server_id, $vmware_vm_name) {
-    global $thisfile;
-    global $action;
-    $url = $thisfile.'?strMsg='.urlencode($strMsg).'&currenttab=tab0&vmware_server_id='.$vmware_server_id.'&vmware_vm_name='.$vmware_vm_name;
-    echo "<meta http-equiv=\"refresh\" content=\"0; URL=$url\">";
-    exit;
+	global $thisfile;
+	global $action;
+	$url = $thisfile.'?strMsg='.urlencode($strMsg).'&currenttab=tab0&vmware_server_id='.$vmware_server_id.'&vmware_vm_name='.$vmware_vm_name;
+	echo "<meta http-equiv=\"refresh\" content=\"0; URL=$url\">";
+	exit;
 }
 
 function wait_for_statfile($sfile) {
-    global $refresh_delay;
-    global $refresh_loop_max;
-    $refresh_loop=0;
-    while (!file_exists($sfile)) {
-        sleep($refresh_delay);
-        $refresh_loop++;
-        flush();
-        if ($refresh_loop > $refresh_loop_max)  {
-            return false;
-        }
-    }
-    return true;
+	global $refresh_delay;
+	global $refresh_loop_max;
+	$refresh_loop=0;
+	while (!file_exists($sfile)) {
+		sleep($refresh_delay);
+		$refresh_loop++;
+		flush();
+		if ($refresh_loop > $refresh_loop_max)  {
+			return false;
+		}
+	}
+	return true;
 }
 
 function show_progressbar() {
 ?>
-    <script type="text/javascript">
-        $("#progressbar").progressbar({
+	<script type="text/javascript">
+		$("#progressbar").progressbar({
 			value: 100
 		});
-        var options = {};
-        $("#progressbar").effect("shake",options,2000,null);
+		var options = {};
+		$("#progressbar").effect("shake",options,2000,null);
 	</script>
 <?php
-        flush();
+		flush();
 }
 
 
 
 // run the actions
+$strMsg = '';
 if(htmlobject_request('action') != '') {
-    switch (htmlobject_request('action')) {
-        case 'update_cpus':
-                show_progressbar();
-                $vmware_update_cpus = htmlobject_request('vmware_update_cpus');
-                $vmware_server_appliance = new appliance();
-                $vmware_server_appliance->get_instance_by_id($vmware_server_id);
-                $vmware_server = new resource();
-                $vmware_server->get_instance_by_id($vmware_server_appliance->resources);
-                $vmware_server_resource_id = $vmware_server->id;
-                $vmware_server_resource_ip = $vmware_server->ip;
-                $resource_command="$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/vmware-esx/bin/openqrm-vmware-esx update_vm_cpus -i $vmware_server_resource_ip -n $vmware_vm_name -c $vmware_update_cpus";
-                // remove current stat file
-                $statfile="vmware-esx-stat/".$vmware_server_resource_ip.".".$vmware_vm_name.".vm_config";
-                if (file_exists($statfile)) {
-                    unlink($statfile);
-                }
-                // send command
-                $openqrm_server->send_command($resource_command);
-                // and wait for the resulting statfile
-                if (!wait_for_statfile($statfile)) {
-                    $strMsg .= "Error during update_cpus of VMWare ESX vm $vmware_vm_name ! Please check the Event-Log<br>";
-                } else {
-                    $strMsg .="Updated cpus on VMWare ESX vm $vmware_vm_name<br>";
-                }
-                redirect_config($strMsg, $vmware_server_id, $vmware_vm_name);
-            break;
+	if ($OPENQRM_USER->role == "administrator") {
 
-        case 'update_ram':
-                show_progressbar();
-                $vmware_update_ram = htmlobject_request('vmware_update_ram');
-                $vmware_server_appliance = new appliance();
-                $vmware_server_appliance->get_instance_by_id($vmware_server_id);
-                $vmware_server = new resource();
-                $vmware_server->get_instance_by_id($vmware_server_appliance->resources);
-                $vmware_server_resource_id = $vmware_server->id;
-                $vmware_server_resource_ip = $vmware_server->ip;
-                $resource_command="$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/vmware-esx/bin/openqrm-vmware-esx update_vm_ram -i $vmware_server_resource_ip -n $vmware_vm_name -r $vmware_update_ram";
-                // remove current stat file
-                $statfile="vmware-esx-stat/".$vmware_server_resource_ip.".".$vmware_vm_name.".vm_config";
-                if (file_exists($statfile)) {
-                    unlink($statfile);
-                }
-                // send command
-                $openqrm_server->send_command($resource_command);
-                // and wait for the resulting statfile
-                if (!wait_for_statfile($statfile)) {
-                    $strMsg .= "Error during update_ram of VMWare ESX vm $vmware_vm_name ! Please check the Event-Log<br>";
-                } else {
-                    $strMsg .="Updated ram on VMWare ESX vm $vmware_vm_name<br>";
-                }
-                redirect_config($strMsg, $vmware_server_id, $vmware_vm_name);
-            break;
+		switch (htmlobject_request('action')) {
+			case 'update_cpus':
+					show_progressbar();
+					$vmware_update_cpus = htmlobject_request('vmware_update_cpus');
+					$vmware_server_appliance = new appliance();
+					$vmware_server_appliance->get_instance_by_id($vmware_server_id);
+					$vmware_server = new resource();
+					$vmware_server->get_instance_by_id($vmware_server_appliance->resources);
+					$vmware_server_resource_id = $vmware_server->id;
+					$vmware_server_resource_ip = $vmware_server->ip;
+					$resource_command="$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/vmware-esx/bin/openqrm-vmware-esx update_vm_cpus -i $vmware_server_resource_ip -n $vmware_vm_name -c $vmware_update_cpus";
+					// remove current stat file
+					$statfile="vmware-esx-stat/".$vmware_server_resource_ip.".".$vmware_vm_name.".vm_config";
+					if (file_exists($statfile)) {
+						unlink($statfile);
+					}
+					// send command
+					$openqrm_server->send_command($resource_command);
+					// and wait for the resulting statfile
+					if (!wait_for_statfile($statfile)) {
+						$strMsg .= "Error during update_cpus of VMWare ESX vm $vmware_vm_name ! Please check the Event-Log<br>";
+					} else {
+						$strMsg .="Updated cpus on VMWare ESX vm $vmware_vm_name<br>";
+					}
+					redirect_config($strMsg, $vmware_server_id, $vmware_vm_name);
+				break;
 
-        case 'add_vm_net':
-                show_progressbar();
-                $vmware_new_nic = htmlobject_request('vmware_new_nic');
-                $vmware_nic_nr = htmlobject_request('vmware_nic_nr');
-                $vmware_server_appliance = new appliance();
-                $vmware_server_appliance->get_instance_by_id($vmware_server_id);
-                $vmware_server = new resource();
-                $vmware_server->get_instance_by_id($vmware_server_appliance->resources);
-                $vmware_server_resource_id = $vmware_server->id;
-                $vmware_server_resource_ip = $vmware_server->ip;
-                $resource_command = $OPENQRM_SERVER_BASE_DIR."/openqrm/plugins/vmware-esx/bin/openqrm-vmware-esx add_vm_nic -i ".$vmware_server_resource_ip." -n ".$vmware_vm_name." -x ".$vmware_nic_nr." -m ".$vmware_new_nic;
-                // remove current stat file
-                $statfile="vmware-esx-stat/".$vmware_server_resource_ip.".".$vmware_vm_name.".vm_config";
-                if (file_exists($statfile)) {
-                    unlink($statfile);
-                }
-                // send command
-                $openqrm_server->send_command($resource_command);
-                // and wait for the resulting statfile
-                if (!wait_for_statfile($statfile)) {
-                    $strMsg .= "Error during adding nic to VMWare ESX vm $vmware_vm_name ! Please check the Event-Log<br>";
-                } else {
-                    $strMsg .="Added network card to VMWare ESX vm $vmware_vm_name<br>";
-                }
-                redirect_config($strMsg, $vmware_server_id, $vmware_vm_name);
-            break;
+			case 'update_ram':
+					show_progressbar();
+					$vmware_update_ram = htmlobject_request('vmware_update_ram');
+					$vmware_server_appliance = new appliance();
+					$vmware_server_appliance->get_instance_by_id($vmware_server_id);
+					$vmware_server = new resource();
+					$vmware_server->get_instance_by_id($vmware_server_appliance->resources);
+					$vmware_server_resource_id = $vmware_server->id;
+					$vmware_server_resource_ip = $vmware_server->ip;
+					$resource_command="$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/vmware-esx/bin/openqrm-vmware-esx update_vm_ram -i $vmware_server_resource_ip -n $vmware_vm_name -r $vmware_update_ram";
+					// remove current stat file
+					$statfile="vmware-esx-stat/".$vmware_server_resource_ip.".".$vmware_vm_name.".vm_config";
+					if (file_exists($statfile)) {
+						unlink($statfile);
+					}
+					// send command
+					$openqrm_server->send_command($resource_command);
+					// and wait for the resulting statfile
+					if (!wait_for_statfile($statfile)) {
+						$strMsg .= "Error during update_ram of VMWare ESX vm $vmware_vm_name ! Please check the Event-Log<br>";
+					} else {
+						$strMsg .="Updated ram on VMWare ESX vm $vmware_vm_name<br>";
+					}
+					redirect_config($strMsg, $vmware_server_id, $vmware_vm_name);
+				break;
 
-        case 'remove_vm_net':
-                show_progressbar();
-                $vmware_nic_nr = htmlobject_request('vmware_nic_nr');
-                $vmware_server_appliance = new appliance();
-                $vmware_server_appliance->get_instance_by_id($vmware_server_id);
-                $vmware_server = new resource();
-                $vmware_server->get_instance_by_id($vmware_server_appliance->resources);
-                $vmware_server_resource_id = $vmware_server->id;
-                $vmware_server_resource_ip = $vmware_server->ip;
-                $resource_command = $OPENQRM_SERVER_BASE_DIR."/openqrm/plugins/vmware-esx/bin/openqrm-vmware-esx remove_vm_nic -i ".$vmware_server_resource_ip." -n ".$vmware_vm_name." -x ".$vmware_nic_nr;
-                // remove current stat file
-                $statfile="vmware-esx-stat/".$vmware_server_resource_ip.".".$vmware_vm_name.".vm_config";
-                if (file_exists($statfile)) {
-                    unlink($statfile);
-                }
-                // send command
-                $openqrm_server->send_command($resource_command);
-                // and wait for the resulting statfile
-                if (!wait_for_statfile($statfile)) {
-                    $strMsg .= "Error during removing nic of VMWare ESX vm $vmware_vm_name ! Please check the Event-Log<br>";
-                } else {
-                    $strMsg .="Removed network card from VMWare ESX vm $vmware_vm_name<br>";
-                }
-                redirect_config($strMsg, $vmware_server_id, $vmware_vm_name);
-            break;
+			case 'add_vm_net':
+					show_progressbar();
+					$vmware_new_nic = htmlobject_request('vmware_new_nic');
+					$vmware_nic_nr = htmlobject_request('vmware_nic_nr');
+					$vmware_server_appliance = new appliance();
+					$vmware_server_appliance->get_instance_by_id($vmware_server_id);
+					$vmware_server = new resource();
+					$vmware_server->get_instance_by_id($vmware_server_appliance->resources);
+					$vmware_server_resource_id = $vmware_server->id;
+					$vmware_server_resource_ip = $vmware_server->ip;
+					$resource_command = $OPENQRM_SERVER_BASE_DIR."/openqrm/plugins/vmware-esx/bin/openqrm-vmware-esx add_vm_nic -i ".$vmware_server_resource_ip." -n ".$vmware_vm_name." -x ".$vmware_nic_nr." -m ".$vmware_new_nic;
+					// remove current stat file
+					$statfile="vmware-esx-stat/".$vmware_server_resource_ip.".".$vmware_vm_name.".vm_config";
+					if (file_exists($statfile)) {
+						unlink($statfile);
+					}
+					// send command
+					$openqrm_server->send_command($resource_command);
+					// and wait for the resulting statfile
+					if (!wait_for_statfile($statfile)) {
+						$strMsg .= "Error during adding nic to VMWare ESX vm $vmware_vm_name ! Please check the Event-Log<br>";
+					} else {
+						$strMsg .="Added network card to VMWare ESX vm $vmware_vm_name<br>";
+					}
+					redirect_config($strMsg, $vmware_server_id, $vmware_vm_name);
+				break;
 
-        case 'update_vnc':
-                show_progressbar();
-                $vmware_update_auth = htmlobject_request('vmware_update_vnc_auth');
-                $vmware_update_port = htmlobject_request('vmware_update_vnc_port');
-                if (!strlen($vmware_update_auth)) {
-                    $strMsg .="Got emtpy VNC password. Skipping update of VMWare ESX vm $vmware_vm_name<br>";
-                    redirect_config($strMsg, $vmware_server_id, $vmware_vm_name);
-                }
-                if (!strlen($vmware_update_port)) {
-                    $strMsg .="Got emtpy VNC port. Skipping update of VMWare ESX vm $vmware_vm_name<br>";
-                    redirect_config($strMsg, $vmware_server_id, $vmware_vm_name);
-                }
+			case 'remove_vm_net':
+					show_progressbar();
+					$vmware_nic_nr = htmlobject_request('vmware_nic_nr');
+					$vmware_server_appliance = new appliance();
+					$vmware_server_appliance->get_instance_by_id($vmware_server_id);
+					$vmware_server = new resource();
+					$vmware_server->get_instance_by_id($vmware_server_appliance->resources);
+					$vmware_server_resource_id = $vmware_server->id;
+					$vmware_server_resource_ip = $vmware_server->ip;
+					$resource_command = $OPENQRM_SERVER_BASE_DIR."/openqrm/plugins/vmware-esx/bin/openqrm-vmware-esx remove_vm_nic -i ".$vmware_server_resource_ip." -n ".$vmware_vm_name." -x ".$vmware_nic_nr;
+					// remove current stat file
+					$statfile="vmware-esx-stat/".$vmware_server_resource_ip.".".$vmware_vm_name.".vm_config";
+					if (file_exists($statfile)) {
+						unlink($statfile);
+					}
+					// send command
+					$openqrm_server->send_command($resource_command);
+					// and wait for the resulting statfile
+					if (!wait_for_statfile($statfile)) {
+						$strMsg .= "Error during removing nic of VMWare ESX vm $vmware_vm_name ! Please check the Event-Log<br>";
+					} else {
+						$strMsg .="Removed network card from VMWare ESX vm $vmware_vm_name<br>";
+					}
+					redirect_config($strMsg, $vmware_server_id, $vmware_vm_name);
+				break;
 
-                $vmware_server_appliance = new appliance();
-                $vmware_server_appliance->get_instance_by_id($vmware_server_id);
-                $vmware_server = new resource();
-                $vmware_server->get_instance_by_id($vmware_server_appliance->resources);
-                $vmware_server_resource_id = $vmware_server->id;
-                $vmware_server_resource_ip = $vmware_server->ip;
-                $resource_command="$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/vmware-esx/bin/openqrm-vmware-esx update_vm_vnc -i $vmware_server_resource_ip -n $vmware_vm_name -va $vmware_update_auth -vp $vmware_update_port";
-                // remove current stat file
-                $statfile="vmware-esx-stat/".$vmware_server_resource_ip.".".$vmware_vm_name.".vm_config";
-                if (file_exists($statfile)) {
-                    unlink($statfile);
-                }
-                // send command
-                $openqrm_server->send_command($resource_command);
-                // and wait for the resulting statfile
-                if (!wait_for_statfile($statfile)) {
-                    $strMsg .= "Error during update_vnc of VMWare ESX vm $vmware_vm_name ! Please check the Event-Log<br>";
-                } else {
-                    $strMsg .="Updated VNC config on VMWare ESX vm $vmware_vm_name<br>";
-                }
-                redirect_config($strMsg, $vmware_server_id, $vmware_vm_name);
-            break;
+			case 'update_vnc':
+					show_progressbar();
+					$vmware_update_auth = htmlobject_request('vmware_update_vnc_auth');
+					$vmware_update_port = htmlobject_request('vmware_update_vnc_port');
+					if (!strlen($vmware_update_auth)) {
+						$strMsg .="Got emtpy VNC password. Skipping update of VMWare ESX vm $vmware_vm_name<br>";
+						redirect_config($strMsg, $vmware_server_id, $vmware_vm_name);
+					}
+					if (!strlen($vmware_update_port)) {
+						$strMsg .="Got emtpy VNC port. Skipping update of VMWare ESX vm $vmware_vm_name<br>";
+						redirect_config($strMsg, $vmware_server_id, $vmware_vm_name);
+					}
 
-        case 'remove_vnc':
-                show_progressbar();
-                $vmware_server_appliance = new appliance();
-                $vmware_server_appliance->get_instance_by_id($vmware_server_id);
-                $vmware_server = new resource();
-                $vmware_server->get_instance_by_id($vmware_server_appliance->resources);
-                $vmware_server_resource_id = $vmware_server->id;
-                $vmware_server_resource_ip = $vmware_server->ip;
-                $resource_command="$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/vmware-esx/bin/openqrm-vmware-esx remove_vm_vnc -i $vmware_server_resource_ip -n $vmware_vm_name";
-                // remove current stat file
-                $statfile="vmware-esx-stat/".$vmware_server_resource_ip.".".$vmware_vm_name.".vm_config";
-                if (file_exists($statfile)) {
-                    unlink($statfile);
-                }
-                // send command
-                $openqrm_server->send_command($resource_command);
-                // and wait for the resulting statfile
-                if (!wait_for_statfile($statfile)) {
-                    $strMsg .= "Error during removing VNC config on VMWare ESX vm $vmware_vm_name ! Please check the Event-Log<br>";
-                } else {
-                    $strMsg .="Removed VNC config on VMWare ESX vm $vmware_vm_name<br>";
-                }
-                redirect_config($strMsg, $vmware_server_id, $vmware_vm_name);
-            break;
+					$vmware_server_appliance = new appliance();
+					$vmware_server_appliance->get_instance_by_id($vmware_server_id);
+					$vmware_server = new resource();
+					$vmware_server->get_instance_by_id($vmware_server_appliance->resources);
+					$vmware_server_resource_id = $vmware_server->id;
+					$vmware_server_resource_ip = $vmware_server->ip;
+					$resource_command="$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/vmware-esx/bin/openqrm-vmware-esx update_vm_vnc -i $vmware_server_resource_ip -n $vmware_vm_name -va $vmware_update_auth -vp $vmware_update_port";
+					// remove current stat file
+					$statfile="vmware-esx-stat/".$vmware_server_resource_ip.".".$vmware_vm_name.".vm_config";
+					if (file_exists($statfile)) {
+						unlink($statfile);
+					}
+					// send command
+					$openqrm_server->send_command($resource_command);
+					// and wait for the resulting statfile
+					if (!wait_for_statfile($statfile)) {
+						$strMsg .= "Error during update_vnc of VMWare ESX vm $vmware_vm_name ! Please check the Event-Log<br>";
+					} else {
+						$strMsg .="Updated VNC config on VMWare ESX vm $vmware_vm_name<br>";
+					}
+					redirect_config($strMsg, $vmware_server_id, $vmware_vm_name);
+				break;
+
+			case 'remove_vnc':
+					show_progressbar();
+					$vmware_server_appliance = new appliance();
+					$vmware_server_appliance->get_instance_by_id($vmware_server_id);
+					$vmware_server = new resource();
+					$vmware_server->get_instance_by_id($vmware_server_appliance->resources);
+					$vmware_server_resource_id = $vmware_server->id;
+					$vmware_server_resource_ip = $vmware_server->ip;
+					$resource_command="$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/vmware-esx/bin/openqrm-vmware-esx remove_vm_vnc -i $vmware_server_resource_ip -n $vmware_vm_name";
+					// remove current stat file
+					$statfile="vmware-esx-stat/".$vmware_server_resource_ip.".".$vmware_vm_name.".vm_config";
+					if (file_exists($statfile)) {
+						unlink($statfile);
+					}
+					// send command
+					$openqrm_server->send_command($resource_command);
+					// and wait for the resulting statfile
+					if (!wait_for_statfile($statfile)) {
+						$strMsg .= "Error during removing VNC config on VMWare ESX vm $vmware_vm_name ! Please check the Event-Log<br>";
+					} else {
+						$strMsg .="Removed VNC config on VMWare ESX vm $vmware_vm_name<br>";
+					}
+					redirect_config($strMsg, $vmware_server_id, $vmware_vm_name);
+				break;
 
 
-        case 'get_config':
-            show_progressbar();
-            // refresh config parameter
-            $vmware_server_appliance = new appliance();
-            $vmware_server_appliance->get_instance_by_id($vmware_server_id);
-            $vmware_server = new resource();
-            $vmware_server->get_instance_by_id($vmware_server_appliance->resources);
-            $vmware_server_resource_id = $vmware_server->id;
-            $vmware_server_resource_ip = $vmware_server->ip;
-            $resource_command="$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/vmware-esx/bin/openqrm-vmware-esx post_vm_config -n $vmware_vm_name -i $vmware_server_resource_ip";
-            // remove current stat file
-            $statfile="vmware-esx-stat/".$vmware_server_resource_ip.".".$vmware_vm_name.".vm_config";
-            if (file_exists($statfile)) {
-                unlink($statfile);
-            }
-            // send command via the openQRM server
-            $openqrm_server->send_command($resource_command);
-            // and wait for the resulting statfile
-            if (!wait_for_statfile($statfile)) {
-                $strMsg = "Error refreshing config of VMWare ESX vm $vmware_vm_name ! Please check the Event-Log<br>";
-            } else {
-                $strMsg = "";
-            }
-            redirect_config($strMsg, $vmware_server_id, $vmware_vm_name);
-            break;
+			case 'get_config':
+				show_progressbar();
+				// refresh config parameter
+				$vmware_server_appliance = new appliance();
+				$vmware_server_appliance->get_instance_by_id($vmware_server_id);
+				$vmware_server = new resource();
+				$vmware_server->get_instance_by_id($vmware_server_appliance->resources);
+				$vmware_server_resource_id = $vmware_server->id;
+				$vmware_server_resource_ip = $vmware_server->ip;
+				$resource_command="$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/vmware-esx/bin/openqrm-vmware-esx post_vm_config -n $vmware_vm_name -i $vmware_server_resource_ip";
+				// remove current stat file
+				$statfile="vmware-esx-stat/".$vmware_server_resource_ip.".".$vmware_vm_name.".vm_config";
+				if (file_exists($statfile)) {
+					unlink($statfile);
+				}
+				// send command via the openQRM server
+				$openqrm_server->send_command($resource_command);
+				// and wait for the resulting statfile
+				if (!wait_for_statfile($statfile)) {
+					$strMsg = "Error refreshing config of VMWare ESX vm $vmware_vm_name ! Please check the Event-Log<br>";
+				} else {
+					$strMsg = "";
+				}
+				redirect_config($strMsg, $vmware_server_id, $vmware_vm_name);
+				break;
 
-    }
+		}
+	}
 }
 
 
@@ -325,18 +329,19 @@ function vmware_vm_config() {
 	global $vmware_vm_name;
 	global $OPENQRM_SERVER_BASE_DIR;
 	global $OPENQRM_USER;
+	global $thisfile;
 	global $refresh_delay;
 
 	$vmware_server_appliance = new appliance();
 	$vmware_server_appliance->get_instance_by_id($vmware_server_id);
 	$vmware_server = new resource();
 	$vmware_server->get_instance_by_id($vmware_server_appliance->resources);
-    $vmware_server_resource_ip = $vmware_server->ip;
+	$vmware_server_resource_ip = $vmware_server->ip;
 	$vmware_vm_conf_file=$OPENQRM_SERVER_BASE_DIR."/openqrm/plugins/vmware-esx/web/vmware-esx-stat/".$vmware_server_resource_ip.".".$vmware_vm_name.".vm_config";
 	$store = openqrm_parse_conf($vmware_vm_conf_file);
 	extract($store);
 
-    // CPU
+	// CPU
 	$vm_cpus_disp .= "<form action=\"$thisfile\" method=post>";
 	$vm_cpus_disp .= "<input type=hidden name=vmware_component value='cpus'>";
 	$vm_cpus_disp .= "<input type=hidden name=vmware_server_id value=$vmware_server_id>";
@@ -344,7 +349,7 @@ function vmware_vm_config() {
 	$html = new htmlobject_input();
 	$html->name = "Cpus";
 	$html->id = 'p'.uniqid();
-	$html->value = "$store[OPENQRM_VMWARE_VM_CPUS]";
+	$html->value = $store['OPENQRM_VMWARE_VM_CPUS'];
 	$html->title = "CPU";
 	$html->disabled = true;
 	$html->maxlength="10";
@@ -353,7 +358,7 @@ function vmware_vm_config() {
 	$vm_cpus_disp .= "</form>";
 
 
-    // RAM
+	// RAM
 	$vm_ram_disp = "<form action=\"$thisfile\" method=post>";
 	$vm_ram_disp .= "<input type=hidden name=vmware_component value='ram'>";
 	$vm_ram_disp .= "<input type=hidden name=vmware_server_id value=$vmware_server_id>";
@@ -361,7 +366,7 @@ function vmware_vm_config() {
 	$html = new htmlobject_input();
 	$html->name = "Ram";
 	$html->id = 'p'.uniqid();
-	$html->value = "$store[OPENQRM_VMWARE_VM_RAM]";
+	$html->value = $store['OPENQRM_VMWARE_VM_RAM'];
 	$html->title = "Ram (MB)";
 	$html->disabled = true;
 	$html->maxlength="10";
@@ -369,7 +374,7 @@ function vmware_vm_config() {
 	$vm_ram_disp .= "<input type=submit value='Edit'>";
 	$vm_ram_disp .= "</form>";
 
-    // net
+	// net
 	$vm_net_disp = "<form action=\"$thisfile\" method=post>";
 	$vm_net_disp .= "<input type=hidden name=vmware_component value='net'>";
 	$vm_net_disp .= "<input type=hidden name=vmware_server_id value=$vmware_server_id>";
@@ -379,83 +384,91 @@ function vmware_vm_config() {
 	$html = new htmlobject_input();
 	$html->name = "net1";
 	$html->id = 'p'.uniqid();
-	$html->value = "$store[OPENQRM_VMWARE_VM_MAC_1]";
+	$html->value = $store['OPENQRM_VMWARE_VM_MAC_1'];
 	$html->title = "Network-1";
 	$html->disabled = true;
 	$html->maxlength="10";
 	$vm_net_disp .= htmlobject_box_from_object($html, ' input');
 
-	if (strlen($store[OPENQRM_VMWARE_VM_MAC_2])) {
-		$html = new htmlobject_input();
-		$html->name = "net2";
-		$html->id = 'p'.uniqid();
-		$html->value = "$store[OPENQRM_VMWARE_VM_MAC_2]";
-		$html->title = "Network-2";
-		$html->disabled = true;
-		$html->maxlength="10";
-		$vm_net_disp .= htmlobject_box_from_object($html, ' input');
+	if (isset($store['OPENQRM_VMWARE_VM_MAC_2'])) {
+		if (strlen($store['OPENQRM_VMWARE_VM_MAC_2'])) {
+			$html = new htmlobject_input();
+			$html->name = "net2";
+			$html->id = 'p'.uniqid();
+			$html->value = $store['OPENQRM_VMWARE_VM_MAC_2'];
+			$html->title = "Network-2";
+			$html->disabled = true;
+			$html->maxlength="10";
+			$vm_net_disp .= htmlobject_box_from_object($html, ' input');
+		}
 	}
 
-	if (strlen($store[OPENQRM_VMWARE_VM_MAC_3])) {
-		$html = new htmlobject_input();
-		$html->name = "net3";
-		$html->id = 'p'.uniqid();
-		$html->value = "$store[OPENQRM_VMWARE_VM_MAC_3]";
-		$html->title = "Network-3";
-		$html->disabled = true;
-		$html->maxlength="10";
-		$vm_net_disp .= htmlobject_box_from_object($html, ' input');
+	if (isset($store['OPENQRM_VMWARE_VM_MAC_3'])) {
+		if (strlen($store['OPENQRM_VMWARE_VM_MAC_3'])) {
+			$html = new htmlobject_input();
+			$html->name = "net3";
+			$html->id = 'p'.uniqid();
+			$html->value = $store['OPENQRM_VMWARE_VM_MAC_3'];
+			$html->title = "Network-3";
+			$html->disabled = true;
+			$html->maxlength="10";
+			$vm_net_disp .= htmlobject_box_from_object($html, ' input');
+		}
 	}
 
-	if (strlen($store[OPENQRM_VMWARE_VM_MAC_4])) {
-		$html = new htmlobject_input();
-		$html->name = "net4";
-		$html->id = 'p'.uniqid();
-		$html->value = "$store[OPENQRM_VMWARE_VM_MAC_4]";
-		$html->title = "Network-4";
-		$html->disabled = true;
-		$html->maxlength="10";
-		$vm_net_disp .= htmlobject_box_from_object($html, ' input');
+	if (isset($store['OPENQRM_VMWARE_VM_MAC_4'])) {
+		if (strlen($store['OPENQRM_VMWARE_VM_MAC_4'])) {
+			$html = new htmlobject_input();
+			$html->name = "net4";
+			$html->id = 'p'.uniqid();
+			$html->value = $store['OPENQRM_VMWARE_VM_MAC_4'];
+			$html->title = "Network-4";
+			$html->disabled = true;
+			$html->maxlength="10";
+			$vm_net_disp .= htmlobject_box_from_object($html, ' input');
+		}
 	}
 
-	if (strlen($store[OPENQRM_VMWARE_VM_MAC_5])) {
-		$html = new htmlobject_input();
-		$html->name = "net5";
-		$html->id = 'p'.uniqid();
-		$html->value = "$store[OPENQRM_VMWARE_VM_MAC_5]";
-		$html->title = "Network-5";
-		$html->disabled = true;
-		$html->maxlength="10";
-		$vm_net_disp .= htmlobject_box_from_object($html, ' input');
+	if (isset($store['OPENQRM_VMWARE_VM_MAC_5'])) {
+		if (strlen($store['OPENQRM_VMWARE_VM_MAC_5'])) {
+			$html = new htmlobject_input();
+			$html->name = "net5";
+			$html->id = 'p'.uniqid();
+			$html->value = $store['OPENQRM_VMWARE_VM_MAC_5'];
+			$html->title = "Network-5";
+			$html->disabled = true;
+			$html->maxlength="10";
+			$vm_net_disp .= htmlobject_box_from_object($html, ' input');
+		}
 	}
 
 	$vm_net_disp .= "<input type=submit value='Edit'>";
 	$vm_net_disp .= "</form>";
 
-    // vnc
+	// vnc
 	$vm_vnc_disp = "<form action=\"$thisfile\" method=post>";
 	$vm_vnc_disp .= "<input type=hidden name=vmware_component value='vnc'>";
 	$vm_vnc_disp .= "<input type=hidden name=vmware_server_id value=$vmware_server_id>";
 	$vm_vnc_disp .= "<input type=hidden name=vmware_vm_name value=$vmware_vm_name>";
-    $vm_vnc_disp .= "Vnc-port <b>$store[OPENQRM_VMWARE_VM_VNC]</b> on <b>$vmware_server->ip</b><br>";
-	$vm_vnc_disp .= "Vnc-password : $store[OPENQRM_VMWARE_VM_VNC_PASS]";
+	$vm_vnc_disp .= "Vnc-port <b>".$store['OPENQRM_VMWARE_VM_VNC']."</b> on <b>$vmware_server->ip</b><br>";
+	$vm_vnc_disp .= "Vnc-password : ".$store['OPENQRM_VMWARE_VM_VNC_PASS'];
 	$vm_vnc_disp .= "<br><br><input type=submit value='Edit'>";
 	$vm_vnc_disp .= "</form>";
 
-    // backlink
-    $backlink = "<a href='vmware-esx-manager.php?vmware_server_id=".$vmware_server_id."'>back</a>";
+	// backlink
+	$backlink = "<a href='vmware-esx-manager.php?vmware_server_id=".$vmware_server_id."'>back</a>";
 
    // set template
 	$t = new Template_PHPLIB();
 	$t->debug = false;
 	$t->setFile('tplfile', './tpl/' . 'vmware-vm-config.tpl.php');
 	$t->setVar(array(
-        'vm_cpus_disp' => $vm_cpus_disp,
-        'vm_ram_disp' => $vm_ram_disp,
-        'vm_net_disp' => $vm_net_disp,
-        'vm_disk_disp' => $vm_disk_disp,
-        'vm_vnc_disp' => $vm_vnc_disp,
-        'backlink' => $backlink,
+		'vm_cpus_disp' => $vm_cpus_disp,
+		'vm_ram_disp' => $vm_ram_disp,
+		'vm_net_disp' => $vm_net_disp,
+		'vm_disk_disp' => $vm_disk_disp,
+		'vm_vnc_disp' => $vm_vnc_disp,
+		'backlink' => $backlink,
 	));
 	$disp =  $t->parse('out', 'tplfile');
 	return $disp;
@@ -468,23 +481,24 @@ function vmware_vm_config_ram() {
 	global $vmware_vm_name;
 	global $OPENQRM_SERVER_BASE_DIR;
 	global $OPENQRM_USER;
+	global $thisfile;
 	global $refresh_delay;
 
 	$vmware_server_appliance = new appliance();
 	$vmware_server_appliance->get_instance_by_id($vmware_server_id);
 	$vmware_server = new resource();
 	$vmware_server->get_instance_by_id($vmware_server_appliance->resources);
-    $vmware_server_resource_ip = $vmware_server->ip;
+	$vmware_server_resource_ip = $vmware_server->ip;
 	$vmware_vm_conf_file=$OPENQRM_SERVER_BASE_DIR."/openqrm/plugins/vmware-esx/web/vmware-esx-stat/".$vmware_server_resource_ip.".".$vmware_vm_name.".vm_config";
 	$store = openqrm_parse_conf($vmware_vm_conf_file);
 	extract($store);
-    $backlink = "<a href='vmware-vm-config.php?vmware_server_id=".$vmware_server_id."&vmware_vm_name=".$vmware_vm_name."'>back</a>";
+	$backlink = "<a href='vmware-vm-config.php?vmware_server_id=".$vmware_server_id."&vmware_vm_name=".$vmware_vm_name."'>back</a>";
 
 	$vm_config_ram_disp = "<form action=\"$thisfile\" method=post>";
 	$vm_config_ram_disp .= "<input type=hidden name=action value='update_ram'>";
 	$vm_config_ram_disp .= "<input type=hidden name=vmware_server_id value=$vmware_server_id>";
 	$vm_config_ram_disp .= "<input type=hidden name=vmware_vm_name value=$vmware_vm_name>";
-	$vm_config_ram_disp .= htmlobject_input('vmware_update_ram', array("value" => $store[OPENQRM_VMWARE_VM_RAM], "label" => 'Ram (MB)'), 'text', 10);
+	$vm_config_ram_disp .= htmlobject_input('vmware_update_ram', array("value" => $store['OPENQRM_VMWARE_VM_RAM'], "label" => 'Ram (MB)'), 'text', 10);
 	$vm_config_ram_disp .= "<input type=submit value='Update'>";
 	$vm_config_ram_disp .= "</form>";
 
@@ -493,8 +507,8 @@ function vmware_vm_config_ram() {
 	$t->debug = false;
 	$t->setFile('tplfile', './tpl/' . 'vmware-vm-config-ram.tpl.php');
 	$t->setVar(array(
-        'vm_config_ram_disp' => $vm_config_ram_disp,
-        'backlink' => $backlink,
+		'vm_config_ram_disp' => $vm_config_ram_disp,
+		'backlink' => $backlink,
 	));
 	$disp =  $t->parse('out', 'tplfile');
 	return $disp;
@@ -509,20 +523,21 @@ function vmware_vm_config_cpus() {
 	global $vmware_vm_name;
 	global $OPENQRM_SERVER_BASE_DIR;
 	global $OPENQRM_USER;
+	global $thisfile;
 	global $refresh_delay;
 
 	$vmware_server_appliance = new appliance();
 	$vmware_server_appliance->get_instance_by_id($vmware_server_id);
 	$vmware_server = new resource();
 	$vmware_server->get_instance_by_id($vmware_server_appliance->resources);
-    $vmware_server_resource_ip = $vmware_server->ip;
+	$vmware_server_resource_ip = $vmware_server->ip;
 	$vmware_vm_conf_file=$OPENQRM_SERVER_BASE_DIR."/openqrm/plugins/vmware-esx/web/vmware-esx-stat/".$vmware_server_resource_ip.".".$vmware_vm_name.".vm_config";
 	$store = openqrm_parse_conf($vmware_vm_conf_file);
 	extract($store);
-    $backlink = "<a href='vmware-vm-config.php?vmware_server_id=".$vmware_server_id."&vmware_vm_name=".$vmware_vm_name."'>back</a>";
+	$backlink = "<a href='vmware-vm-config.php?vmware_server_id=".$vmware_server_id."&vmware_vm_name=".$vmware_vm_name."'>back</a>";
 
-    // cpus array for the select
-    $cpu_identifier_array = array();
+	// cpus array for the select
+	$cpu_identifier_array = array();
 	$cpu_identifier_array[] = array("value" => "1", "label" => "1 CPU");
 	$cpu_identifier_array[] = array("value" => "2", "label" => "2 CPUs");
 	$cpu_identifier_array[] = array("value" => "3", "label" => "3 CPUs");
@@ -532,7 +547,7 @@ function vmware_vm_config_cpus() {
 	$vm_config_cpus_disp .= "<input type=hidden name=action value='update_cpus'>";
 	$vm_config_cpus_disp .= "<input type=hidden name=vmware_server_id value=$vmware_server_id>";
 	$vm_config_cpus_disp .= "<input type=hidden name=vmware_server_name value=$vmware_vm_name>";
-    $vm_config_cpus_disp .= htmlobject_select('vmware_update_cpus', $cpu_identifier_array, 'CPUs', array($store[OPENQRM_VMWARE_VM_CPUS]));
+	$vm_config_cpus_disp .= htmlobject_select('vmware_update_cpus', $cpu_identifier_array, 'CPUs', array($store['OPENQRM_VMWARE_VM_CPUS']));
 	$vm_config_cpus_disp .= "<input type=submit value='Update'>";
 	$vm_config_cpus_disp .= "</form>";
 
@@ -541,8 +556,8 @@ function vmware_vm_config_cpus() {
 	$t->debug = false;
 	$t->setFile('tplfile', './tpl/' . 'vmware-vm-config-cpus.tpl.php');
 	$t->setVar(array(
-        'vm_config_cpus_disp' => $vm_config_cpus_disp,
-        'backlink' => $backlink,
+		'vm_config_cpus_disp' => $vm_config_cpus_disp,
+		'backlink' => $backlink,
 	));
 	$disp =  $t->parse('out', 'tplfile');
 	return $disp;
@@ -555,24 +570,25 @@ function vmware_vm_config_net() {
 	global $vmware_vm_name;
 	global $OPENQRM_SERVER_BASE_DIR;
 	global $OPENQRM_USER;
+	global $thisfile;
 	global $refresh_delay;
 
 	$vmware_server_appliance = new appliance();
 	$vmware_server_appliance->get_instance_by_id($vmware_server_id);
 	$vmware_server = new resource();
 	$vmware_server->get_instance_by_id($vmware_server_appliance->resources);
-    $vmware_server_resource_ip = $vmware_server->ip;
+	$vmware_server_resource_ip = $vmware_server->ip;
 	$vmware_vm_conf_file=$OPENQRM_SERVER_BASE_DIR."/openqrm/plugins/vmware-esx/web/vmware-esx-stat/".$vmware_server_resource_ip.".".$vmware_vm_name.".vm_config";
 	$store = openqrm_parse_conf($vmware_vm_conf_file);
 	extract($store);
-    $backlink = "<a href='vmware-vm-config.php?vmware_server_id=".$vmware_server_id."&vmware_vm_name=".$vmware_vm_name."'>back</a>";
+	$backlink = "<a href='vmware-vm-config.php?vmware_server_id=".$vmware_server_id."&vmware_vm_name=".$vmware_vm_name."'>back</a>";
 
 	// the first nic must not be changed, this is the identifier for openQRM
 	// disable the first nic, this is from what we manage the vm
 	$html = new htmlobject_input();
 	$html->name = "net1";
 	$html->id = 'p'.uniqid();
-	$html->value = "$store[OPENQRM_VMWARE_VM_MAC_1]";
+	$html->value = $store['OPENQRM_VMWARE_VM_MAC_1'];
 	$html->title = "Network-1";
 	$html->disabled = true;
 	$html->maxlength="10";
@@ -580,63 +596,68 @@ function vmware_vm_config_net() {
 
 	$nic_number=1;
 	// remove nic 2
-	if (strlen($store[OPENQRM_VMWARE_VM_MAC_2])) {
-		$vm_config_nic2_disp = "<input type=hidden name=action value='remove_vm_net'>";
-		$vm_config_nic2_disp .= "<input type=hidden name=vmware_server_id value=$vmware_server_id>";
-		$vm_config_nic2_disp .= "<input type=hidden name=vmware_server_name value=$vmware_vm_name>";
-		$vm_config_nic2_disp .= "<input type=hidden name=vmware_nic_nr value=1>";
-		$html = new htmlobject_input();
-		$html->name = "remove_vm_net";
-		$html->id = 'p'.uniqid();
-		$html->value = "$store[OPENQRM_VMWARE_VM_MAC_2]";
-		$html->title = "Network-2";
-		$html->disabled = true;
-		$html->maxlength="10";
-		$vm_config_nic2_disp .= htmlobject_box_from_object($html, ' input');
-        $vm_config_nic2_disp .= "<input type=submit value='Remove'>";
-		$nic_number++;
-
+	if (isset($store['OPENQRM_VMWARE_VM_MAC_2'])) {
+		if (strlen($store['OPENQRM_VMWARE_VM_MAC_2'])) {
+			$vm_config_nic2_disp = "<input type=hidden name=action value='remove_vm_net'>";
+			$vm_config_nic2_disp .= "<input type=hidden name=vmware_server_id value=$vmware_server_id>";
+			$vm_config_nic2_disp .= "<input type=hidden name=vmware_server_name value=$vmware_vm_name>";
+			$vm_config_nic2_disp .= "<input type=hidden name=vmware_nic_nr value=1>";
+			$html = new htmlobject_input();
+			$html->name = "remove_vm_net";
+			$html->id = 'p'.uniqid();
+			$html->value = $store['OPENQRM_VMWARE_VM_MAC_2'];
+			$html->title = "Network-2";
+			$html->disabled = true;
+			$html->maxlength="10";
+			$vm_config_nic2_disp .= htmlobject_box_from_object($html, ' input');
+			$vm_config_nic2_disp .= "<input type=submit value='Remove'>";
+			$nic_number++;
+		}
 	}
 	// remove nic 3
-	if (strlen($store[OPENQRM_VMWARE_VM_MAC_3])) {
-		$vm_config_nic3_disp = "<input type=hidden name=action value='remove_vm_net'>";
-		$vm_config_nic3_disp .= "<input type=hidden name=vmware_server_id value=$vmware_server_id>";
-		$vm_config_nic3_disp .= "<input type=hidden name=vmware_server_name value=$vmware_vm_name>";
-		$vm_config_nic3_disp .= "<input type=hidden name=vmware_nic_nr value=2>";
+	if (isset($store['OPENQRM_VMWARE_VM_MAC_3'])) {
+		if (strlen($store['OPENQRM_VMWARE_VM_MAC_3'])) {
+			$vm_config_nic3_disp = "<input type=hidden name=action value='remove_vm_net'>";
+			$vm_config_nic3_disp .= "<input type=hidden name=vmware_server_id value=$vmware_server_id>";
+			$vm_config_nic3_disp .= "<input type=hidden name=vmware_server_name value=$vmware_vm_name>";
+			$vm_config_nic3_disp .= "<input type=hidden name=vmware_nic_nr value=2>";
 
-		$html = new htmlobject_input();
-		$html->name = "remove_vm_net";
-		$html->id = 'p'.uniqid();
-		$html->value = "$store[OPENQRM_VMWARE_VM_MAC_3]";
-		$html->title = "Network-3";
-		$html->disabled = true;
-		$html->maxlength="10";
-		$vm_config_nic3_disp .= htmlobject_box_from_object($html, ' input');
-        $vm_config_nic3_disp .= "<input type=submit value='Remove'>";
-		$nic_number++;
+			$html = new htmlobject_input();
+			$html->name = "remove_vm_net";
+			$html->id = 'p'.uniqid();
+			$html->value = $store['OPENQRM_VMWARE_VM_MAC_3'];
+			$html->title = "Network-3";
+			$html->disabled = true;
+			$html->maxlength="10";
+			$vm_config_nic3_disp .= htmlobject_box_from_object($html, ' input');
+			$vm_config_nic3_disp .= "<input type=submit value='Remove'>";
+			$nic_number++;
+		}
 	}
 
 	// remove nic 4
-	if (strlen($store[OPENQRM_VMWARE_VM_MAC_4])) {
-		$vm_config_nic4_disp = "<input type=hidden name=action value='remove_vm_net'>";
-		$vm_config_nic4_disp .= "<input type=hidden name=vmware_server_id value=$vmware_server_id>";
-		$vm_config_nic4_disp .= "<input type=hidden name=vmware_server_name value=$vmware_vm_name>";
-		$vm_config_nic4_disp .= "<input type=hidden name=vmware_nic_nr value=3>";
+	if (isset($store['OPENQRM_VMWARE_VM_MAC_4'])) {
+		if (strlen($store['OPENQRM_VMWARE_VM_MAC_4'])) {
+			$vm_config_nic4_disp = "<input type=hidden name=action value='remove_vm_net'>";
+			$vm_config_nic4_disp .= "<input type=hidden name=vmware_server_id value=$vmware_server_id>";
+			$vm_config_nic4_disp .= "<input type=hidden name=vmware_server_name value=$vmware_vm_name>";
+			$vm_config_nic4_disp .= "<input type=hidden name=vmware_nic_nr value=3>";
 
-		$html = new htmlobject_input();
-		$html->name = "remove_vm_net";
-		$html->id = 'p'.uniqid();
-		$html->value = "$store[OPENQRM_VMWARE_VM_MAC_4]";
-		$html->title = "Network-4";
-		$html->disabled = true;
-		$html->maxlength="10";
-		$vm_config_nic4_disp .= htmlobject_box_from_object($html, ' input');
-        $vm_config_nic4_disp .= "<input type=submit value='Remove'>";
-		$nic_number++;
+			$html = new htmlobject_input();
+			$html->name = "remove_vm_net";
+			$html->id = 'p'.uniqid();
+			$html->value = $store['OPENQRM_VMWARE_VM_MAC_4'];
+			$html->title = "Network-4";
+			$html->disabled = true;
+			$html->maxlength="10";
+			$vm_config_nic4_disp .= htmlobject_box_from_object($html, ' input');
+			$vm_config_nic4_disp .= "<input type=submit value='Remove'>";
+			$nic_number++;
+		}
 	}
 
 
-    // add nic
+	// add nic
 	if ($nic_number < 4) {
 		$resource_mac_gen = new resource();
 		$resource_mac_gen->generate_mac();
@@ -648,24 +669,24 @@ function vmware_vm_config_net() {
 		$vm_config_add_nic_disp .= "<input type=hidden name=vmware_nic_nr value=$nic_number>";
 		$vm_config_add_nic_disp .= htmlobject_input('vmware_new_nic', array("value" => $suggested_mac, "label" => 'Add Network'), 'text', 10);
 
-        $submit = "<input type=submit value='Submit'>";
-    } else {
-        $submit = "";
-    }
+		$submit = "<input type=submit value='Submit'>";
+	} else {
+		$submit = "";
+	}
 
   // set template
 	$t = new Template_PHPLIB();
 	$t->debug = false;
 	$t->setFile('tplfile', './tpl/' . 'vmware-vm-config-nics.tpl.php');
 	$t->setVar(array(
-        'vm_config_nic1_disp' => $vm_config_nic1_disp,
-        'vm_config_nic2_disp' => $vm_config_nic2_disp,
-        'vm_config_nic3_disp' => $vm_config_nic3_disp,
-        'vm_config_nic4_disp' => $vm_config_nic4_disp,
-        'vm_config_add_nic_disp' => $vm_config_add_nic_disp,
-        'submit' => $submit,
-        'thisfile' => $thisfile,
-        'backlink' => $backlink,
+		'vm_config_nic1_disp' => $vm_config_nic1_disp,
+		'vm_config_nic2_disp' => $vm_config_nic2_disp,
+		'vm_config_nic3_disp' => $vm_config_nic3_disp,
+		'vm_config_nic4_disp' => $vm_config_nic4_disp,
+		'vm_config_add_nic_disp' => $vm_config_add_nic_disp,
+		'submit' => $submit,
+		'thisfile' => $thisfile,
+		'backlink' => $backlink,
 
 	));
 	$disp =  $t->parse('out', 'tplfile');
@@ -681,24 +702,25 @@ function vmware_vm_config_vnc() {
 	global $vmware_vm_name;
 	global $OPENQRM_SERVER_BASE_DIR;
 	global $OPENQRM_USER;
+	global $thisfile;
 	global $refresh_delay;
 
 	$vmware_server_appliance = new appliance();
 	$vmware_server_appliance->get_instance_by_id($vmware_server_id);
 	$vmware_server = new resource();
 	$vmware_server->get_instance_by_id($vmware_server_appliance->resources);
-    $vmware_server_resource_ip = $vmware_server->ip;
+	$vmware_server_resource_ip = $vmware_server->ip;
 	$vmware_vm_conf_file=$OPENQRM_SERVER_BASE_DIR."/openqrm/plugins/vmware-esx/web/vmware-esx-stat/".$vmware_server_resource_ip.".".$vmware_vm_name.".vm_config";
 	$store = openqrm_parse_conf($vmware_vm_conf_file);
 	extract($store);
-    $backlink = "<a href='vmware-vm-config.php?vmware_server_id=".$vmware_server_id."&vmware_vm_name=".$vmware_vm_name."'>back</a>";
+	$backlink = "<a href='vmware-vm-config.php?vmware_server_id=".$vmware_server_id."&vmware_vm_name=".$vmware_vm_name."'>back</a>";
 
 	$vm_config_vnc_disp = "<form action=\"$thisfile\" method=post>";
 	$vm_config_vnc_disp .= "<input type=hidden name=action value='update_vnc'>";
 	$vm_config_vnc_disp .= "<input type=hidden name=vmware_server_id value=$vmware_server_id>";
 	$vm_config_vnc_disp .= "<input type=hidden name=vmware_server_name value=$vmware_vm_name>";
-    $vm_config_vnc_disp .= htmlobject_input('vmware_update_vnc_port', array("value" => $store[OPENQRM_VMWARE_VM_VNC], "label" => 'VNC Port'), 'text', 10);
-    $vm_config_vnc_disp .= htmlobject_input('vmware_update_vnc_auth', array("value" => $store[OPENQRM_VMWARE_VM_VNC_PASS], "label" => 'VNC Password'), 'text', 10);
+	$vm_config_vnc_disp .= htmlobject_input('vmware_update_vnc_port', array("value" => $store['OPENQRM_VMWARE_VM_VNC'], "label" => 'VNC Port'), 'text', 10);
+	$vm_config_vnc_disp .= htmlobject_input('vmware_update_vnc_auth', array("value" => $store['OPENQRM_VMWARE_VM_VNC_PASS'], "label" => 'VNC Password'), 'text', 10);
 	$vm_config_vnc_disp .= "<input type=submit value='Update'>";
 	$vm_config_vnc_disp .= "</form>";
 
@@ -714,9 +736,9 @@ function vmware_vm_config_vnc() {
 	$t->debug = false;
 	$t->setFile('tplfile', './tpl/' . 'vmware-vm-config-vnc.tpl.php');
 	$t->setVar(array(
-        'vm_config_vnc_disp' => $vm_config_vnc_disp,
-        'vm_remove_vnc_disp' => $vm_remove_vnc_disp,
-        'backlink' => $backlink,
+		'vm_config_vnc_disp' => $vm_config_vnc_disp,
+		'vm_remove_vnc_disp' => $vm_remove_vnc_disp,
+		'backlink' => $backlink,
 	));
 	$disp =  $t->parse('out', 'tplfile');
 	return $disp;
@@ -743,6 +765,13 @@ if ($OPENQRM_USER->role == "administrator") {
 		$output[] = array('label' => 'VMWare ESX Configure VM', 'value' => vmware_vm_config());
 	}
 }
+
+
+?>
+<script type="text/javascript">
+	$("#progressbar").remove();
+</script>
+<?php
 
 echo htmlobject_tabmenu($output);
 

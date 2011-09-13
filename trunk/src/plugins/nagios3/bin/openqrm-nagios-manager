@@ -32,40 +32,129 @@ NAGIOS_GENERATED_CONF="$NAGIOS_CONF_DIR/openqrm-network.cfg"
 NAGIOS_CHECK_CMD=$1
 SUBNETFILE="/tmp/subnet.xml"
 CURRENTDIR=`pwd`
+
+OPENQRM_APPLIANCE_HOST_TEMPLATE="$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/nagios3/etc/templates/openqrm_appliance_host.template"
+OPENQRM_APPLIANCE_SERVICE_TEMPLATE="$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/nagios3/etc/templates/openqrm_appliance_service.template"
+OPENQRM_APPLIANCE_DEFAULT_SERVICE_TEMPLATE="$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/nagios3/etc/templates/openqrm_appliance_default_service.template"
 export LANG=C
 
 
-# let only root run this script
-WHOAMI=`whoami`
-if [ "$WHOAMI" != "root" ]; then
-	echo "ERROR: Please run this script as root!"
-	exit 6
-fi
-
 if ! which screen 1>/dev/null; then
 	echo "ERROR: The 'screen' utility is not installed! Please install and try again."
-	image_shelf_log "ERROR: The 'screen' utility is not installed! Please install and try again."
+	nagios3_log "ERROR: The 'screen' utility is not installed! Please install and try again."
 	exit 6
 fi
 
 # re-run in background via screen
 if [ "$RUN_IN_BACKGROUND" != "true" ]; then
-    if [ -x /usr/bin/screen.real ]; then
-        RUNSCREEN="/usr/bin/screen.real"
-    else
-        RUNSCREEN=`which screen`
-    fi
-    export RUN_IN_BACKGROUND=true
-    SCREEN_NAME=`date +%T%x | sed -e "s/://g" | sed -e "s#/##g"`
-    $RUNSCREEN -dmS $SCREEN_NAME $0 $@
-    exit
+	if [ -x /usr/bin/screen.real ]; then
+		RUNSCREEN="/usr/bin/screen.real"
+	else
+		RUNSCREEN=`which screen`
+	fi
+	export RUN_IN_BACKGROUND=true
+	SCREEN_NAME=`date +%T%x | sed -e "s/://g" | sed -e "s#/##g"`
+	$RUNSCREEN -dmS $SCREEN_NAME $0 $@
+	exit
 fi
 
 # get the ip config
 openqrm_server_get_config
 export resource_openqrmserver=$OPENQRM_SERVER_IP_ADDRESS
 
+# functions
 
+function nagios_manager_usage() {
+	echo "Usage: $0 [map|update_nagios]"
+	echo "       $0 automap -t <on|off>"
+	echo "       $0 add -n <appliance-name> -i <resource-ip> -p <service-ports-as-comma-separated-list>"
+	echo "       $0 remove_service -n <appliance-name> -p <service-ports-as-comma-separated-list>"
+	echo "       $0 remove_host -n <appliance-name>"
+	echo "       $0 event -n <appliance-name> -s <service-in-error> -m <event-message>"
+}
+
+function reload_cron() {
+	if [ -x /etc/init.d/cron ]; then
+		/etc/init.d/cron reload
+	elif [ -x /etc/init.d/crond ]; then
+		/etc/init.d/crond reload
+	else
+		echo "ERROR: Could not find cron init script in /etc/init.d/. Please reload cron manually!" | logger
+	fi
+}
+
+function reload_nagios() {
+	# quick hack to support icinga
+	if [ "$ICINGA_CONF_DIRECTORY" != "" ]; then
+		if [ -x /etc/init.d/nagios3 ]; then
+			/etc/init.d/icinga reload
+		fi
+	fi
+	if [ -x /etc/init.d/nagios3 ]; then
+		/etc/init.d/nagios3 restart
+	elif [ -x /etc/init.d/nagios ]; then
+		/etc/init.d/nagios restart
+	else
+		openqrm_post_event 0 "map" 3 "openqrm-nagios-manager" "Could not restart Nagios. Init script not found !."
+		echo "ERROR: Could not find nagios init script in /etc/init.d/. Please reload nagios manually!" | logger
+		return 1
+	fi
+}
+
+
+function get_service_by_port() {
+	F_SERVICE_PORT=$1
+	F_SERVICE_NAME=`grep "$F_SERVICE_PORT/tcp" /etc/services | awk '{ print $1":"$2}' | grep ":$F_SERVICE_PORT/tcp" | cut -d':' -f1 | head -n1`
+	if [ "$F_SERVICE_NAME" == "" ]; then
+		F_SERVICE_NAME="p$F_SERVICE_PORT"
+	fi
+	echo "$F_SERVICE_NAME"
+}
+
+
+# get parameters
+NAGIOS_CHECK_CMD=$1
+shift
+
+while [ $# -ne 0 ]; do
+	case "$1" in
+		-n)
+			APPLIANCE_NAME=$2
+			shift
+			;;
+		-i)
+			RESOURCE_IP=$2
+			shift
+			;;
+		-p)
+			SERVICE_PORT_LIST=$2
+			shift
+			;;
+		-t)
+			NAGIOS_AUTOMAP_TOGGLE=$2
+			shift
+			;;
+		-m)
+			NAGIOS_EVENT_MESSAGE=$2
+			shift
+			;;
+		-s)
+			NAGIOS_SERVICE_ERROR=$2
+			shift
+			;;
+		*)
+			echo "ERROR: Free commandline arguments are not allowed"
+			nagios_manager_usage
+			exit 6
+			;;
+	esac
+	shift
+done
+
+
+
+
+# main
 case "$NAGIOS_CHECK_CMD" in
 	map)
 		echo "Mapping the openQRM network"
@@ -73,7 +162,7 @@ case "$NAGIOS_CHECK_CMD" in
 		OPENQRM_NETWORK=`echo $OPENQRM_SERVER_IP_ADDRESS | cut -d'.' -f1-3`".*"
 		nagios_manager_lock aquire
 		openqrm_post_event 0 "map" 5 "openqrm-nagios-manager" "Starting to map the openQRM network!"
-		if ! nmap -sS -O -oX $SUBNETFILE $OPENQRM_NETWORK; then
+		if ! nmap --system-dns -sS -O -oX $SUBNETFILE $OPENQRM_NETWORK; then
 			nagios3_log openqrm-nagios-manager "ERROR while running nmap !"
 			nagios_manager_lock release
 			openqrm_post_event 0 "map" 3 "openqrm-nagios-manager" "Mapping the openQRM network failed!"
@@ -82,22 +171,18 @@ case "$NAGIOS_CHECK_CMD" in
 		openqrm_post_event 0 "map" 5 "openqrm-nagios-manager" "Mapping finished, generating the Nagios configuration!"
 		cd $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/nagios3/bin
 		./nmap2nagios-ng.pl -i -d -r $SUBNETFILE -o $NAGIOS_GENERATED_CONF
-        # fix check_ping in generated config
-        sed -i -e "s#check_ping#check_ping!100.0,20%!500.0,60%#" $NAGIOS_GENERATED_CONF
-        # fix check_dig in generated config
-        sed -i -e "s#check_dig#check_dig!google.com#" $NAGIOS_GENERATED_CONF
+		# fix check_ping in generated config
+		sed -i -e "s#check_ping#check_ping!100.0,20%!500.0,60%#" $NAGIOS_GENERATED_CONF
+		# fix check_dig in generated config
+		sed -i -e "s#check_dig#check_dig!google.com#" $NAGIOS_GENERATED_CONF
 		cd $CURRENTDIR
-        # check if the new config is valid
+		# check if the new config is valid
 		if $NAGIOS_BINARY -v $NAGIOS_ETC_DIRECTORY/nagios.cfg; then
-			if [ -x /etc/init.d/nagios3 ]; then
-				/etc/init.d/nagios3 restart
-			elif [ -x /etc/init.d/nagios ]; then
-				/etc/init.d/nagios restart
-			else
-				nagios_manager_lock release
-				openqrm_post_event 0 "map" 3 "openqrm-nagios-manager" "Could not restart Nagios. Init script not found !."
-				exit 1
+			# quick hack to support icinga
+			if [ "$ICINGA_CONF_DIRECTORY" != "" ]; then
+				ln -sf $NAGIOS_GENERATED_CONF $ICINGA_CONF_DIRECTORY/openqrm-network.cfg
 			fi
+			reload_nagios
 			nagios_manager_lock release
 			openqrm_post_event 0 "map" 5 "openqrm-nagios-manager" "Automatic Nagios configuration finished successfully"
 		else
@@ -108,98 +193,135 @@ case "$NAGIOS_CHECK_CMD" in
 			exit 1
 		fi
 		;;
-	init)
-		echo "openqrm-nagios-manager->init"
-        if [ -f /etc/redhat-release ]; then
-            # make sure extra conf dir exist
-            if [ ! -d $NAGIOS_ETC_DIRECTORY/conf.d ]; then
-                mkdir -p $NAGIOS_ETC_DIRECTORY/conf.d
-            fi
-            if ! grep ^cfg_dir $NAGIOS_ETC_DIRECTORY/nagios.cfg | grep "conf.d"; then
-                echo "" >> $NAGIOS_ETC_DIRECTORY/nagios.cfg
-                echo "# added by openQRM" >> $NAGIOS_ETC_DIRECTORY/nagios.cfg
-                echo "cfg_dir=$NAGIOS_ETC_DIRECTORY/conf.d" >> $NAGIOS_ETC_DIRECTORY/nagios.cfg
-            fi
-
-            # on centos we have to check that check_dig + check_mysql are defined
-            # check_dig
-            if ! grep -r check_dig $NAGIOS_ETC_DIRECTORY/* 1>/dev/null; then
-                echo "-> Adding check_dig Nagios definition ..."
-                cp -f $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/nagios3/etc/templates/openqrm_check_dig.centos.template $NAGIOS_ETC_DIRECTORY/conf.d/openqrm_check_dig.cfg
-            fi
-            # check_myslq
-            if ! grep -r check_mysql $NAGIOS_ETC_DIRECTORY/* 1>/dev/null; then
-                echo "-> Adding check_mysql Nagios definition ..."
-                cp -f $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/nagios3/etc/templates/openqrm_check_mysql.centos.template $NAGIOS_ETC_DIRECTORY/conf.d/openqrm_check_mysql.cfg
-            fi
-
-        elif [ -f /etc/SuSE-release ]; then
-            NAGIOS3_PACKAGE_DEPENDENCIES=""
-			openqrm_post_event 0 "init" 5 "openqrm-nagios-manager" "Auto-setup of ndoutils is not supported for SUSE based distributions, skipping..."
-        fi
-
-        # linking the web dir
-        ln -sf $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/nagios3/web $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/base/plugins/nagios3
-        # link the boot-service
-        ln -sf $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/nagios3/web/boot-service-nagios3.tgz $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/boot-service/boot-service-nagios3.tgz
-        # Nagios Single-Sign-On
-        # First backup original nagios.password
-        mv $NAGIOS_ETC_DIRECTORY/htpasswd.users $NAGIOS_ETC_DIRECTORY/htpasswd.users.bkp
-        # link openqrm .htaccess to nagios
-        ln -s $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/base/.htpasswd $NAGIOS_ETC_DIRECTORY/htpasswd.users
-        # First backup original nagios cgi.cfg
-        if [ ! -f $NAGIOS_ETC_DIRECTORY/cgi.cfg.bkp ]; then
-            cp -f $NAGIOS_ETC_DIRECTORY/cgi.cfg $NAGIOS_ETC_DIRECTORY/cgi.cfg.bkp
-        fi
-        # change nagiosadmin 2 openqrm for accessing nagios-gui
-        sed -i -e 's/nagiosadmin/openqrm/' $NAGIOS_ETC_DIRECTORY/cgi.cfg
-        # First backup original config.js
-        if [ ! -f /usr/share/nagios3/htdocs/config.js.bkp ]; then
-            cp -f /usr/share/nagios3/htdocs/config.js /usr/share/nagios3/htdocs/config.js.bkp
-        fi
-        # Fix WebGUI for Debian
-        sed -i "s/nagios\/cgi-bin/nagios3\/cgi-bin/g"  /usr/share/nagios3/htdocs/config.js
-        exit 0
-        ;;
 
 	automap)
 		echo "openqrm-nagios-manager->automap"
-        NAGIOS_AUTOMAP_TOGGLE=$2
-        case "$NAGIOS_AUTOMAP_TOGGLE" in
-            on)
-                # for the web-status
-                touch $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/nagios3/web/.automap
-                # create cron job which will update the svn repo with files which were added by the web gui
-                cat $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/nagios3/etc/cron.d/openqrm-nagios3-automap.cron | \
-                    sed -e "s#@@OPENQRM_SERVER_BASE_DIR@@#$OPENQRM_SERVER_BASE_DIR#g" > /etc/cron.d/openqrm-nagios3-automap
-                if [ -x /etc/init.d/cron ]; then
-                    /etc/init.d/cron reload
-                elif [ -x /etc/init.d/crond ]; then
-                    /etc/init.d/crond reload
-                else
-                    echo "Could not find cron init script in /etc/init.d/. Please reload cron manually!"
-                fi
-    			openqrm_post_event 0 "automap" 5 "openqrm-nagios-manager" "Enabling auto-mapping of the openQRM-network"
-                ;;
+		case "$NAGIOS_AUTOMAP_TOGGLE" in
+			on)
+				# for the web-status
+				touch $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/nagios3/web/.automap
+				# create cron job which will update the svn repo with files which were added by the web gui
+				cat $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/nagios3/etc/cron.d/openqrm-nagios3-automap.cron | \
+					sed -e "s#@@OPENQRM_SERVER_BASE_DIR@@#$OPENQRM_SERVER_BASE_DIR#g" > /etc/cron.d/openqrm-nagios3-automap
+				reload_cron
+				openqrm_post_event 0 "automap" 5 "openqrm-nagios-manager" "Enabling auto-mapping of the openQRM-network"
+				;;
 
-            off)
-                rm -f $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/nagios3/web/.automap
-                rm -f /etc/cron.d/openqrm-nagios3-automap
-                if [ -x /etc/init.d/cron ]; then
-                    /etc/init.d/cron reload
-                elif [ -x /etc/init.d/crond ]; then
-                    /etc/init.d/crond reload
-                else
-                    echo "Could not find cron init script in /etc/init.d/. Please reload cron manually!"
-                fi
-                openqrm_post_event 0 "automap" 5 "openqrm-nagios-manager" "Disabling auto-mapping of the openQRM-network"
-                ;;
-        esac
-        exit 0
-        ;;
+			off)
+				rm -f $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/nagios3/web/.automap
+				rm -f /etc/cron.d/openqrm-nagios3-automap
+				reload_cron
+				openqrm_post_event 0 "automap" 5 "openqrm-nagios-manager" "Disabling auto-mapping of the openQRM-network"
+				;;
+		esac
+		exit 0
+		;;
+
+	add)
+		SERVICE_PORT_LIST=`echo $SERVICE_PORT_LIST | sed -e "s/,/ /g"`
+		nagios_manager_lock aquire
+		# reset existing service for now
+		rm -f $NAGIOS_CONF_DIR/$APPLIANCE_NAME.*.service.config.cfg
+		for SERVICE_PORT in `echo $SERVICE_PORT_LIST`; do
+			SERVICE_NAME=`get_service_by_port $SERVICE_PORT`
+			echo "openqrm-nagios-manager->adding appliance $APPLIANCE_NAME/$RESOURCE_IP/$SERVICE_NAME/$SERVICE_PORT"
+			APPLIANCE_HOST_CONFIG="$NAGIOS_CONF_DIR/$APPLIANCE_NAME.host.cfg"
+			APPLIANCE_SERVICE_TEMPLATE="$NAGIOS_CONF_DIR/$APPLIANCE_NAME.service.template.cfg"
+			APPLIANCE_SERVICE_CONFIG="$NAGIOS_CONF_DIR/$APPLIANCE_NAME.$SERVICE_NAME.service.config.cfg"
+			# generate host
+			cat $OPENQRM_APPLIANCE_HOST_TEMPLATE | \
+				sed -e "s#@@APPLIANCE_NAME@@#$APPLIANCE_NAME#g" | \
+				sed -e "s#@@RESOURCE_IP@@#$RESOURCE_IP#g" \
+				> $APPLIANCE_HOST_CONFIG
+			# generate service default template
+			cat $OPENQRM_APPLIANCE_DEFAULT_SERVICE_TEMPLATE | \
+				sed -e "s#@@APPLIANCE_NAME@@#$APPLIANCE_NAME#g" \
+				> $APPLIANCE_SERVICE_TEMPLATE
+			# generate service config
+			cat $OPENQRM_APPLIANCE_SERVICE_TEMPLATE | \
+				sed -e "s#@@OPENQRM_SERVER_BASE_DIR@@#$OPENQRM_SERVER_BASE_DIR#g" | \
+				sed -e "s#@@APPLIANCE_NAME@@#$APPLIANCE_NAME#g" | \
+				sed -e "s#@@SERVICE_NAME@@#$SERVICE_NAME.$APPLIANCE_NAME#g" | \
+				sed -e "s#@@SERVICE_PORT@@#$SERVICE_PORT#g" \
+				> $APPLIANCE_SERVICE_CONFIG
+
+			# quick hack to support icinga
+			if [ "$ICINGA_CONF_DIRECTORY" != "" ]; then
+				ln -sf $APPLIANCE_HOST_CONFIG $ICINGA_CONF_DIRECTORY/$APPLIANCE_NAME.host.cfg
+				ln -sf $APPLIANCE_SERVICE_TEMPLATE $ICINGA_CONF_DIRECTORY/$APPLIANCE_NAME.service.template.cfg
+				ln -sf $APPLIANCE_SERVICE_CONFIG $ICINGA_CONF_DIRECTORY/$APPLIANCE_NAME.$SERVICE_NAME.service.config.cfg
+			fi
+
+			# check for each part of the configuration
+			if ! $NAGIOS_BINARY -v $NAGIOS_ETC_DIRECTORY/nagios.cfg; then
+				# remove completely
+				rm -f $NAGIOS_CONF_DIR/$APPLIANCE_NAME.*
+				# quick hack to support icinga
+				if [ "$ICINGA_CONF_DIRECTORY" != "" ]; then
+					rm -f $ICINGA_CONF_DIRECTORY/$APPLIANCE_NAME.*
+				fi
+				openqrm_post_event 0 "add" 2 "openqrm-nagios-manager" "Failed to add $SERVICE_NAME to $APPLIANCE_NAME! Reverting configuration ..."
+				break
+			fi
+
+		done
+
+		reload_nagios
+		nagios_manager_lock release
+		exit 0
+		;;
+
+	remove_host)
+		echo "openqrm-nagios-manager->removing appliance $APPLIANCE_NAME/$RESOURCE_IP"
+		# remove service config
+		nagios_manager_lock aquire
+		rm -f $NAGIOS_CONF_DIR/$APPLIANCE_NAME.*
+		# quick hack to support icinga
+		if [ "$ICINGA_CONF_DIRECTORY" != "" ]; then
+			rm -f $ICINGA_CONF_DIRECTORY/$APPLIANCE_NAME.*
+		fi
+		reload_nagios
+		nagios_manager_lock release
+		exit 0
+		;;
+
+	remove_service)
+		SERVICE_PORT_LIST=`echo $SERVICE_PORT_LIST | sed -e "s/,/ /g"`
+		nagios_manager_lock aquire
+		for SERVICE_PORT in `echo $SERVICE_PORT_LIST`; do
+			SERVICE_NAME=`get_service_by_port $SERVICE_PORT`
+			echo "openqrm-nagios-manager->removing $SERVICE_NAME/$SERVICE_PORT from appliance $APPLIANCE_NAME"
+			APPLIANCE_SERVICE_CONFIG="$NAGIOS_CONF_DIR/$APPLIANCE_NAME.$SERVICE_NAME.service.config.cfg"
+			# remove service config
+			rm -f $APPLIANCE_SERVICE_CONFIG
+			# quick hack to support icinga
+			if [ "$ICINGA_CONF_DIRECTORY" != "" ]; then
+				rm -f $ICINGA_CONF_DIRECTORY/$APPLIANCE_NAME.$SERVICE_NAME.service.config.cfg
+			fi
+		done
+		reload_nagios
+		nagios_manager_lock release
+		exit 0
+		;;
+
+	update_nagios)
+		echo "openqrm-nagios-manager->reloading nagios"
+		nagios_manager_lock aquire
+		reload_nagios
+		nagios_manager_lock release
+		exit 0
+		;;
+
+	event)
+		echo "openqrm-nagios-manager->event"
+		NAGIOS_SERVICE_ERROR=`echo $NAGIOS_SERVICE_ERROR | cut -d'.' -f1`
+		openqrm_post_event 0 "nagios" 2 "openqrm-nagios-manager" "Service $NAGIOS_SERVICE_ERROR on appliance $APPLIANCE_NAME in state : $NAGIOS_EVENT_MESSAGE"
+		exit 0
+		;;
+
+
 	*)
-		echo "Usage: $0 [map|init]"
-		echo "       $0 automap [on|off]"
+		nagios_manager_usage
 		exit 1
 		;;
 esac

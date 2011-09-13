@@ -1,7 +1,7 @@
 #!/bin/bash
 
-RESPARAM="/cygdrive/c/Programme/openQRM-Client/resource-parameter.conf"
-SLEEP="/cygdrive/c/Programme/openQRM-Client/sleep.exe"
+RESPARAM="/cygdrive/c/openQRM-Client/resource-parameter.conf"
+SLEEP="/cygdrive/c/openQRM-Client/sleep.exe"
 
 # source the parameters 
 if [ ! -f $RESPARAM ]; then
@@ -13,9 +13,9 @@ fi
 export SERVER_PROTOCOL=$openqrm_web_protocol
 # define wget to use with https
 if [ "$SERVER_PROTOCOL" == "https" ]; then
-    WGET="/cygdrive/c/Programme/openQRM-Client/wget.exe --no-check-certificate -q -O wgetlog"
+    WGET="/cygdrive/c/openQRM-Client/wget.exe --no-check-certificate -q -O wgetlog"
 else
-    export WGET="/cygdrive/c/Programme/openQRM-Client/wget.exe -q -O wgetlog"
+    export WGET="/cygdrive/c/openQRM-Client/wget.exe -q -O wgetlog"
 fi
 
 
@@ -141,7 +141,7 @@ function getparams() {
     . $RESPARAM
     resource_mac=`echo $1 | sed -e "s/-/:/g"`
     export SERVER_PROTOCOL=$openqrm_web_protocol
-    export WGET=/cygdrive/c/Programme/openQRM-Client/wget.exe
+    export WGET=/cygdrive/c/openQRM-Client/wget.exe
     OPENQRM_RESOURCE_INFO_URL="$SERVER_PROTOCOL://$resource_openqrmserver/openqrm/action/resource-monitor.php?resource_command=get_parameter&resource_mac=$resource_mac"
     $WGET --no-check-certificate -q -O wgetlog "$OPENQRM_RESOURCE_INFO_URL"
 }

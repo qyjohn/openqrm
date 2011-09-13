@@ -2,24 +2,24 @@
 <html lang="en">
 <head>
 	<title>Image-Shelf manager</title>
-    <link rel="stylesheet" type="text/css" href="../../css/htmlobject.css" />
-    <link rel="stylesheet" type="text/css" href="image-shelf.css" />
-    <link type="text/css" href="/openqrm/base/js/jquery/development-bundle/themes/smoothness/ui.all.css" rel="stylesheet" />
-    <script type="text/javascript" src="/openqrm/base/js/jquery/js/jquery-1.3.2.min.js"></script>
-    <script type="text/javascript" src="/openqrm/base/js/jquery/js/jquery-ui-1.7.1.custom.min.js"></script>
+	<link rel="stylesheet" type="text/css" href="../../css/htmlobject.css" />
+	<link rel="stylesheet" type="text/css" href="image-shelf.css" />
+	<link type="text/css" href="/openqrm/base/js/jquery/development-bundle/themes/smoothness/ui.all.css" rel="stylesheet" />
+	<script type="text/javascript" src="/openqrm/base/js/jquery/js/jquery-1.3.2.min.js"></script>
+	<script type="text/javascript" src="/openqrm/base/js/jquery/js/jquery-ui-1.7.1.custom.min.js"></script>
 
 <style type="text/css">
 
 .ui-progressbar-value {
-    background-image: url(/openqrm/base/img/progress.gif);
+	background-image: url(/openqrm/base/img/progress.gif);
 }
 
 #progressbar {
-    position: absolute;
-    left: 150px;
-    top: 250px;
-    width: 400px;
-    height: 20px;
+	position: absolute;
+	left: 150px;
+	top: 250px;
+	width: 400px;
+	height: 20px;
 }
 </style>
 </head>
@@ -32,19 +32,19 @@
 /*
   This file is part of openQRM.
 
-    openQRM is free software: you can redistribute it and/or modify
-    it under the terms of the GNU General Public License version 2
-    as published by the Free Software Foundation.
+	openQRM is free software: you can redistribute it and/or modify
+	it under the terms of the GNU General Public License version 2
+	as published by the Free Software Foundation.
 
-    openQRM is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    GNU General Public License for more details.
+	openQRM is distributed in the hope that it will be useful,
+	but WITHOUT ANY WARRANTY; without even the implied warranty of
+	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+	GNU General Public License for more details.
 
-    You should have received a copy of the GNU General Public License
-    along with openQRM.  If not, see <http://www.gnu.org/licenses/>.
+	You should have received a copy of the GNU General Public License
+	along with openQRM.  If not, see <http://www.gnu.org/licenses/>.
 
-    Copyright 2009, Matthias Rechenburg <matt@openqrm.com>
+	Copyright 2009, Matthias Rechenburg <matt@openqrm.com>
 */
 
 
@@ -78,7 +78,7 @@ $refresh_delay=1;
 $refresh_loop_max=20;
 // actions
 if (!strlen($step)) {
-    $step=1;
+	$step=1;
 }
 
 
@@ -88,116 +88,119 @@ function redirect($strMsg, $currenttab = 'tab0', $url = '', $step, $image_shelf_
 	if($url == '') {
 		$url = $thisfile.'?strMsg='.urlencode($strMsg).'&currenttab='.$currenttab.'&step='.$step.'&image_shelf_id='.$image_shelf_id;
 	}
-	// using meta refresh because of the java-script in the header	
+	// using meta refresh because of the java-script in the header
 	echo "<meta http-equiv=\"refresh\" content=\"0; URL=$url\">";
 	exit;
 }
 
 function wait_for_statfile($sfile) {
-    global $refresh_delay;
-    global $refresh_loop_max;
-    $refresh_loop=0;
-    while (!file_exists($sfile)) {
-        sleep($refresh_delay);
-        $refresh_loop++;
-        flush();
-        if ($refresh_loop > $refresh_loop_max)  {
-            return false;
-        }
-    }
-    return true;
+	global $refresh_delay;
+	global $refresh_loop_max;
+	$refresh_loop=0;
+	while (!file_exists($sfile)) {
+		sleep($refresh_delay);
+		$refresh_loop++;
+		flush();
+		if ($refresh_loop > $refresh_loop_max)  {
+			return false;
+		}
+	}
+	return true;
 }
 
 
 function show_progressbar() {
 ?>
-    <script type="text/javascript">
-        $("#progressbar").progressbar({
+	<script type="text/javascript">
+		$("#progressbar").progressbar({
 			value: 100
 		});
-        var options = {};
-        $("#progressbar").effect("shake",options,2000,null);
+		var options = {};
+		$("#progressbar").effect("shake",options,2000,null);
 	</script>
 <?php
-        flush();
+		flush();
 }
 
 
-
+$redir_msg = '';
 if(htmlobject_request('action') != '') {
-	switch (htmlobject_request('action')) {
-		case 'select':
-            if (isset($_REQUEST['identifier'])) {
-                foreach($_REQUEST['identifier'] as $id) {
-                    show_progressbar();
-                    $imageshelf = new imageshelf();
-                    $imageshelf->get_instance_by_id($id);
-                    $image_shelf_url = $imageshelf->uri;
-                    $image_shelf_name = $imageshelf->name;
-                    $image_shelf_id = $imageshelf->id;
-                    $image_shelf_user=$imageshelf->user;
-                    $image_shelf_password=$imageshelf->password;
-                    // remove current image-conf
-                    $image_shelf_conf = "$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/image-shelf/web/image-lists/$image_shelf_name/image-shelf.conf";
-                    if (file_exists($image_shelf_conf)) {
-                        unlink($image_shelf_conf);
-                    }
-                    // send command
-                    $openqrm_server->send_command("$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/image-shelf/bin/openqrm-image-shelf list -n $image_shelf_name -i $image_shelf_url -u $image_shelf_user -p $image_shelf_password");
-                    // and wait for the resulting statfile
-                    if (!wait_for_statfile($image_shelf_conf)) {
-                        $redir_msg = "Error getting the image-shelf.conf file from the Server ! Please check the Event-Log";
-                    } else {
-                        $redir_msg = "Displaying server-templates on Image-Shelf $image_shelf_name";
-                        // take some time to let the file fully arrive
-                        sleep(2);
-                    }
-                    redirect($redir_msg, '', '', 2, $id);
-                    break;
-                }
-            }
+	if ($OPENQRM_USER->role == "administrator") {
+
+		switch (htmlobject_request('action')) {
+			case 'select':
+				if (isset($_REQUEST['identifier'])) {
+					foreach($_REQUEST['identifier'] as $id) {
+						show_progressbar();
+						$imageshelf = new imageshelf();
+						$imageshelf->get_instance_by_id($id);
+						$image_shelf_url = $imageshelf->uri;
+						$image_shelf_name = $imageshelf->name;
+						$image_shelf_id = $imageshelf->id;
+						$image_shelf_user=$imageshelf->user;
+						$image_shelf_password=$imageshelf->password;
+						// remove current image-conf
+						$image_shelf_conf = "$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/image-shelf/web/image-lists/$image_shelf_name/image-shelf.conf";
+						if (file_exists($image_shelf_conf)) {
+							unlink($image_shelf_conf);
+						}
+						// send command
+						$openqrm_server->send_command("$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/image-shelf/bin/openqrm-image-shelf list -n $image_shelf_name -i $image_shelf_url -u $image_shelf_user -p $image_shelf_password");
+						// and wait for the resulting statfile
+						if (!wait_for_statfile($image_shelf_conf)) {
+							$redir_msg = "Error getting the image-shelf.conf file from the Server ! Please check the Event-Log";
+						} else {
+							$redir_msg = "Displaying server-templates on Image-Shelf $image_shelf_name";
+							// take some time to let the file fully arrive
+							sleep(2);
+						}
+						redirect($redir_msg, '', '', 2, $id);
+						break;
+					}
+				}
+				break;
+
+			case 'get':
+				if (isset($_REQUEST['identifier'])) {
+					foreach($_REQUEST['identifier'] as $id) {
+						$image_id = $id;
+						$image_shelf_id = htmlobject_request('image_shelf_id');
+						$step=3;
+						break;
+					}
+				}
+				break;
+
+			case 'put':
+				if (isset($_REQUEST['identifier'])) {
+					foreach($_REQUEST['identifier'] as $id) {
+						$final_image_id = $id;
+						$image_id = htmlobject_request('image_id');
+						$image_shelf_id = htmlobject_request('image_shelf_id');
+						$step=4;
+						break;
+					}
+				}
+				break;
+
+
+			case 'remove':
+				if (isset($_REQUEST['identifier'])) {
+					foreach($_REQUEST['identifier'] as $id) {
+						$imageshelf = new imageshelf();
+						$imageshelf->get_instance_by_id($id);
+						$imageshelf_name = $imageshelf->name;
+						$imageshelf->remove($id);
+						$redir_msg .= 'Removed imageshelf <b>'.$imageshelf_name.'</b><br>';
+						break;
+					}
+					$args = '?strMsg='.$redir_msg;
+					$args .= '&currentab=tab0';
+					$url = 'image-shelf-manager.php'.$args;
+					redirect($redir_msg, '', $url, 1, "");
+				}
 			break;
-
-		case 'get':
-            if (isset($_REQUEST['identifier'])) {
-                foreach($_REQUEST['identifier'] as $id) {
-                    $image_id = $id;
-                    $image_shelf_id = htmlobject_request('image_shelf_id');
-                    $step=3;
-                    break;
-                }
-            }
-			break;
-
-		case 'put':
-            if (isset($_REQUEST['identifier'])) {
-                foreach($_REQUEST['identifier'] as $id) {
-                    $final_image_id = $id;
-                    $image_id = htmlobject_request('image_id');
-                    $image_shelf_id = htmlobject_request('image_shelf_id');
-                    $step=4;
-                    break;
-                }
-            }
-			break;
-
-
-		case 'remove':
-            if (isset($_REQUEST['identifier'])) {
-                foreach($_REQUEST['identifier'] as $id) {
-                    $imageshelf = new imageshelf();
-                    $imageshelf->get_instance_by_id($id);
-                    $imageshelf_name = $imageshelf->name;
-                    $imageshelf->remove($id);
-                    $strMsg .= 'Removed imageshelf <b>'.$imageshelf_name.'</b><br>';
-                    break;
-                }
-                $args = '?strMsg='.$strMsg;
-                $args .= '&currentab=tab0';
-                $url = 'image-shelf-manager.php'.$args;
-                redirect($strMsg, '', $url, 1, "");
-            }
-		break;
+		}
 	}
 }
 
@@ -210,7 +213,7 @@ function image_shelf_select() {
 	global $OPENQRM_SERVER_BASE_DIR;
 	global $thisfile;
 
-    $table = new htmlobject_table_builder('imageshelf_id', '', '', '', 'select');
+	$table = new htmlobject_table_builder('imageshelf_id', '', '', '', 'select');
 	$arHead = array();
 
 	$arHead['imageshelf_id'] = array();
@@ -253,7 +256,7 @@ function image_shelf_select() {
 		$table->bottom = array('select', 'remove');
 		$table->identifier = 'imageshelf_id';
 	}
-    $table->max = $imageshelf_tmp->get_count();
+	$table->max = $imageshelf_tmp->get_count();
 
    // set template
 	$t = new Template_PHPLIB();
@@ -281,7 +284,7 @@ function image_shelf_display($image_shelf_id) {
 	$image_shelf_name = $imageshelf->name;
 	$image_shelf_conf = "$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/image-shelf/web/image-lists/$image_shelf_name/image-shelf.conf";
 
-    $table = new htmlobject_table_builder('image_id', '', '', '', 'get');
+	$table = new htmlobject_table_builder('image_id', '', '', '', 'get');
 
 	$arHead = array();
 
@@ -308,11 +311,11 @@ function image_shelf_display($image_shelf_id) {
 
 	$image_count=0;
 	$arBody = array();
-    // be sure it is there, otherwise wait for it
-    if (!wait_for_statfile($image_shelf_conf)) {
-        $redir_msg = "Error getting the image-shelf.conf file from the Server ! Please check the Event-Log";
-        redirect($redir_msg, '', '', '', '');
-    }
+	// be sure it is there, otherwise wait for it
+	if (!wait_for_statfile($image_shelf_conf)) {
+		$redir_msg = "Error getting the image-shelf.conf file from the Server ! Please check the Event-Log";
+		redirect($redir_msg, '', '', '', '');
+	}
 	if (file_exists($image_shelf_conf)) {
 		$image_shelf_conf_content=file($image_shelf_conf);
 		foreach ($image_shelf_conf_content as $value => $image) {
@@ -338,12 +341,12 @@ function image_shelf_display($image_shelf_id) {
 			$image_count++;
 		}
 	} else {
-        $redir_msg = "Could not connect to image-shelf $image_shelf_name ! Please check the Event-Log";
-        redirect($redir_msg, '', '', '', '');
+		$redir_msg = "Could not connect to image-shelf $image_shelf_name ! Please check the Event-Log";
+		redirect($redir_msg, '', '', '', '');
 
 	}
 
-    $table->add_headrow("<input type=\"hidden\" name=\"image_shelf_id\" value=\"$image_shelf_id\"><input type=\"hidden\" name=\"step\" value=\"$step\">");
+	$table->add_headrow("<input type=\"hidden\" name=\"image_shelf_id\" value=\"$image_shelf_id\"><input type=\"hidden\" name=\"step\" value=\"$step\">");
 	$table->id = 'Tabelle';
 	$table->css = 'htmlobject_table';
 	$table->border = 1;
@@ -382,8 +385,8 @@ function image_storage_select($image_id, $image_shelf_id) {
 
 	$image_tmp = new image();
 
-    // nfs table
-    $table = new htmlobject_table_builder('image_id', '', '', '', 'put_nfs');
+	// nfs table
+	$table = new htmlobject_table_builder('image_id', '', '', '', 'put_nfs');
 
 	$arHead = array();
 	$arHead['image_icon'] = array();
@@ -418,18 +421,18 @@ function image_storage_select($image_id, $image_shelf_id) {
 		$image->get_instance_by_id($image_db["image_id"]);
 		$image_deployment = new deployment();
 		$image_deployment->get_instance_by_type($image_db["image_type"]);
-        $arBody[] = array(
-            'image_icon' => "<img width=20 height=20 src=$image_icon>",
-            'image_id' => $image_db["image_id"],
-            'image_name' => $image_db["image_name"],
-            'image_version' => $image_db["image_version"],
-            // use the image_type to transport image_id + image_shelf_id
-            'image_type' => "$image_deployment->description",
-            'image_comment' => $image_db["image_comment"],
-        );
-    }
-    
-    $table->add_headrow("<input type=\"hidden\" name=\"image_shelf_id\" value=\"$image_shelf_id\"><input type=\"hidden\" name=\"image_id\" value=\"$image_id\"><input type=\"hidden\" name=\"step\" value=\"$step\">");
+		$arBody[] = array(
+			'image_icon' => "<img width=20 height=20 src=$image_icon>",
+			'image_id' => $image_db["image_id"],
+			'image_name' => $image_db["image_name"],
+			'image_version' => $image_db["image_version"],
+			// use the image_type to transport image_id + image_shelf_id
+			'image_type' => "$image_deployment->description",
+			'image_comment' => $image_db["image_comment"],
+		);
+	}
+
+	$table->add_headrow("<input type=\"hidden\" name=\"image_shelf_id\" value=\"$image_shelf_id\"><input type=\"hidden\" name=\"image_id\" value=\"$image_id\"><input type=\"hidden\" name=\"step\" value=\"$step\">");
 	$table->id = 'Tabelle';
 	$table->css = 'htmlobject_table';
 	$table->border = 1;
@@ -444,11 +447,11 @@ function image_storage_select($image_id, $image_shelf_id) {
 		$table->bottom = array('put');
 		$table->identifier = 'image_id';
 	}
-    $table->max = $image_tmp->get_count_per_type("nfs-deployment");
+	$table->max = $image_tmp->get_count_per_type("nfs-deployment");
 
 
-    // lvm-nfs table
-    $table1 = new htmlobject_table_builder('image_id', '', '', '', 'put_lvmnfs');
+	// lvm-nfs table
+	$table1 = new htmlobject_table_builder('image_id', '', '', '', 'put_lvmnfs');
 
 	$arHead1 = array();
 	$arHead1['image_icon'] = array();
@@ -482,18 +485,18 @@ function image_storage_select($image_id, $image_shelf_id) {
 		$image->get_instance_by_id($image_db["image_id"]);
 		$image_deployment = new deployment();
 		$image_deployment->get_instance_by_type($image_db["image_type"]);
-        $arBody1[] = array(
-            'image_icon' => "<img width=20 height=20 src=$image_icon>",
-            'image_id' => $image_db["image_id"],
-            'image_name' => $image_db["image_name"],
-            'image_version' => $image_db["image_version"],
-            // use the image_type to transport image_id + image_shelf_id
-            'image_type' => "$image_deployment->description",
-            'image_comment' => $image_db["image_comment"],
-        );
-    }
+		$arBody1[] = array(
+			'image_icon' => "<img width=20 height=20 src=$image_icon>",
+			'image_id' => $image_db["image_id"],
+			'image_name' => $image_db["image_name"],
+			'image_version' => $image_db["image_version"],
+			// use the image_type to transport image_id + image_shelf_id
+			'image_type' => "$image_deployment->description",
+			'image_comment' => $image_db["image_comment"],
+		);
+	}
 
-    $table1->add_headrow("<input type=\"hidden\" name=\"image_shelf_id\" value=\"$image_shelf_id\"><input type=\"hidden\" name=\"image_id\" value=\"$image_id\"><input type=\"hidden\" name=\"step\" value=\"$step\">");
+	$table1->add_headrow("<input type=\"hidden\" name=\"image_shelf_id\" value=\"$image_shelf_id\"><input type=\"hidden\" name=\"image_id\" value=\"$image_id\"><input type=\"hidden\" name=\"step\" value=\"$step\">");
 	$table1->id = 'Tabelle';
 	$table1->css = 'htmlobject_table';
 	$table1->border = 1;
@@ -508,16 +511,16 @@ function image_storage_select($image_id, $image_shelf_id) {
 		$table1->bottom = array('put');
 		$table1->identifier = 'image_id';
 	}
-    $table1->max = $image_tmp->get_count_per_type("lvm-nfs-deployment");
+	$table1->max = $image_tmp->get_count_per_type("lvm-nfs-deployment");
 
-    // set template
+	// set template
 	$t = new Template_PHPLIB();
 	$t->debug = false;
 	$t->setFile('tplfile', './tpl/' . 'image-shelf-put.tpl.php');
 	$t->setVar(array(
 		'image_shelf_nfs_table' => $table->get_string(),
 		'image_shelf_lvm_nfs_table' => $table1->get_string(),
-        'image_template' => $image_id,
+		'image_template' => $image_id,
 	));
 	$disp =  $t->parse('out', 'tplfile');
 	return $disp;
@@ -529,7 +532,7 @@ function image_storage_select($image_id, $image_shelf_id) {
 
 function image_shelf_final($final_image_id, $image_id, $image_shelf_id) {
 	global $openqrm_server;
-	global $OPENQRM_USER;
+	global $OPENQRM_ADMIN;
 	global $OPENQRM_SERVER_BASE_DIR;
 	global $thisfile;
 	// here we execute the request !
@@ -542,11 +545,11 @@ function image_shelf_final($final_image_id, $image_id, $image_shelf_id) {
 	$image_shelf_user=$imageshelf->user;
 	$image_shelf_password=$imageshelf->password;
 	$image_shelf_conf = "$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/image-shelf/web/image-lists/$image_shelf_name/image-shelf.conf";
-    // be sure it is there, otherwise wait for it
-    if (!wait_for_statfile($image_shelf_conf)) {
-        $redir_msg = "Error getting the image-shelf.conf file from the Server ! Please check the Event-Log";
-        redirect($redir_msg, '', '', '', '');
-    }
+	// be sure it is there, otherwise wait for it
+	if (!wait_for_statfile($image_shelf_conf)) {
+		$redir_msg = "Error getting the image-shelf.conf file from the Server ! Please check the Event-Log";
+		redirect($redir_msg, '', '', '', '');
+	}
 	$image_shelf_conf_content=file($image_shelf_conf);
 	foreach ($image_shelf_conf_content as $value => $image) {
 		$image_parameter = explode("|", $image);
@@ -574,17 +577,17 @@ function image_shelf_final($final_image_id, $image_id, $image_shelf_id) {
 	$final_storage_resource->get_instance_by_id($final_storage->resource_id);
 	$final_storage_resource_ip = $final_storage_resource->ip;
 	$final_image_export = $final_image->rootdevice;
-    // send command
-	$openqrm_server->send_command("$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/image-shelf/bin/openqrm-image-shelf get -n $image_shelf_name -i $image_shelf_uri -f $image_filename -s $final_storage_resource_ip:$final_image_export -d $image_distribution -u $image_shelf_user -p $image_shelf_password -o $OPENQRM_USER->name -q $OPENQRM_USER->password");
+	// send command
+	$openqrm_server->send_command("$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/image-shelf/bin/openqrm-image-shelf get -n $image_shelf_name -i $image_shelf_uri -f $image_filename -s $final_storage_resource_ip:$final_image_export -d $image_distribution -u $image_shelf_user -p $image_shelf_password -o $OPENQRM_ADMIN->name -q $OPENQRM_ADMIN->password");
 
-    // set template
+	// set template
 	$t = new Template_PHPLIB();
 	$t->debug = false;
 	$t->setFile('tplfile', './tpl/' . 'image-shelf-final.tpl.php');
 	$t->setVar(array(
-        'image_shelf_url' => $image_shelf_uri,
+		'image_shelf_url' => $image_shelf_uri,
 		'image_filename' => $image_filename,
-        'final_image_name' => $final_image->name,
+		'final_image_name' => $final_image->name,
 	));
 	$disp =  $t->parse('out', 'tplfile');
 	return $disp;
@@ -614,6 +617,14 @@ switch ($step) {
 if(strtolower(OPENQRM_USER_ROLE_NAME) == 'administrator') {
 	$output[] = array('label' => 'New Image-Shelf', 'target' => 'image-shelf-new.php');
 }
+
+
+?>
+<script type="text/javascript">
+	$("#progressbar").remove();
+</script>
+<?php
+
 
 echo htmlobject_tabmenu($output);
 

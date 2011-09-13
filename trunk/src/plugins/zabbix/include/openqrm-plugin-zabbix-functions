@@ -40,7 +40,7 @@ function zabbix_log() {
 function zabbix_manager_lock() {
 	local COMMAND=$1
 	local RET=1
-	
+
 	if [ ! -d `dirname $ZABBIX_MANAGER_LOCK_FILE` ]; then
 		mkdir -p `dirname $ZABBIX_MANAGER_LOCK_FILE`
 	fi
@@ -60,7 +60,7 @@ function zabbix_manager_lock() {
 		*)
 			zabbix_log zabbix_manager_lock "No such command. Try 'aquire' or 'release'"
 			return 1
-			;;	
+			;;
 	esac
 }
 

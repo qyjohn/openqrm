@@ -5,19 +5,19 @@
 /*
   This file is part of openQRM.
 
-    openQRM is free software: you can redistribute it and/or modify
-    it under the terms of the GNU General Public License version 2
-    as published by the Free Software Foundation.
+	openQRM is free software: you can redistribute it and/or modify
+	it under the terms of the GNU General Public License version 2
+	as published by the Free Software Foundation.
 
-    openQRM is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    GNU General Public License for more details.
+	openQRM is distributed in the hope that it will be useful,
+	but WITHOUT ANY WARRANTY; without even the implied warranty of
+	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+	GNU General Public License for more details.
 
-    You should have received a copy of the GNU General Public License
-    along with openQRM.  If not, see <http://www.gnu.org/licenses/>.
+	You should have received a copy of the GNU General Public License
+	along with openQRM.  If not, see <http://www.gnu.org/licenses/>.
 
-    Copyright 2009, Matthias Rechenburg <matt@openqrm.com>
+	Copyright 2009, Matthias Rechenburg <matt@openqrm.com>
 */
 
 
@@ -72,7 +72,7 @@ global $event;
 		global $OPENQRM_SERVER_IP_ADDRESS;
 		global $OPENQRM_EXEC_PORT;
 		global $IMAGE_AUTHENTICATION_TABLE;
-        global $NETAPP_STORAGE_SERVER_TABLE;
+		global $NETAPP_STORAGE_SERVER_TABLE;
 		global $openqrm_server;
 
 		$appliance = new appliance();
@@ -99,27 +99,31 @@ global $event;
 		$resource_mac=$resource->mac;
 		$resource_ip=$resource->ip;
 
-        $na_storage = new netapp_storage();
-        $na_storage->get_instance_by_storage_id($storage->id);
-        $na_storage_ip = $storage_ip;
-        $na_user = $na_storage->storage_user;
-        $na_password = $na_storage->storage_password;
+		$na_storage = new netapp_storage();
+		$na_storage->get_instance_by_storage_id($storage->id);
+		$na_storage_ip = $storage_ip;
+		$na_user = $na_storage->storage_user;
+		$na_password = $na_storage->storage_password;
 
 
 		switch($cmd) {
 			case "start":
-					// generate a password for the image
+				// authenticate the rootfs / needs openqrm user + pass
+				$openqrm_admin_user = new user("openqrm");
+				$openqrm_admin_user->set_user();
+
+				// generate a password for the image
 				$image_password = $image->generatePassword(12);
 				$image_deployment_parameter = $image->deployment_parameter;
 				$image->set_deployment_parameters("IMAGE_ISCSI_AUTH", $image_password);
 				$event->log("storage_auth_function", $_SERVER['REQUEST_TIME'], 5, "openqrm-netapp-deployment-auth-hook.php", "Authenticating $image_name / $image_rootdevice to resource $resource_mac with password $image_password", "", "", 0, 0, $appliance_id);
-				$auth_start_cmd = "$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/$deployment_plugin_name/bin/openqrm-$deployment_plugin_name auth -n $image_name -r $image_rootdevice -i $image_password -p $na_password -e $na_storage_ip";
-                $output = shell_exec($auth_start_cmd);
+				$auth_start_cmd = "$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/$deployment_plugin_name/bin/openqrm-$deployment_plugin_name auth -n $image_name -r $image_rootdevice -i $image_password -p $na_password -e $na_storage_ip -ou $openqrm_admin_user->name -op $openqrm_admin_user->password";
+				$output = shell_exec($auth_start_cmd);
 
 				$event->log("storage_auth_function", $_SERVER['REQUEST_TIME'], 5, "openqrm-netapp-deployment-auth-hook.php", "!! START hook Running : $auth_start_cmd", "", "", 0, 0, $appliance_id);
 
 
-                // authenticate the install-from-nfs export
+				// authenticate the install-from-nfs export
 				$run_disable_deployment_export=0;
 				$install_from_nfs_param = trim($image->get_deployment_parameter("IMAGE_INSTALL_FROM_NFS"));
 				if (strlen($install_from_nfs_param)) {
@@ -147,7 +151,7 @@ global $event;
 					$run_disable_deployment_export=1;
 				}
 
-	 			// authenticate the transfer-to-nfs export
+				// authenticate the transfer-to-nfs export
 				$transfer_from_nfs_param = trim($image->get_deployment_parameter("IMAGE_TRANSFER_TO_NFS"));
 				if (strlen($transfer_from_nfs_param)) {
 					// storage -> resource -> auth
@@ -224,7 +228,7 @@ global $event;
 		global $OPENQRM_SERVER_BASE_DIR;
 		global $OPENQRM_SERVER_IP_ADDRESS;
 		global $OPENQRM_EXEC_PORT;
-        global $NETAPP_STORAGE_SERVER_TABLE;
+		global $NETAPP_STORAGE_SERVER_TABLE;
 
 		$image = new image();
 		$image->get_instance_by_id($image_id);
@@ -245,20 +249,20 @@ global $event;
 		$deployment_type = $deployment->type;
 		$deployment_plugin_name = $deployment->storagetype;
 
-        $na_storage = new netapp_storage();
-        $na_storage->get_instance_by_storage_id($storage->id);
-        $na_storage_ip = $storage_ip;
-        $na_user = $na_storage->storage_user;
-        $na_password = $na_storage->storage_password;
+		$na_storage = new netapp_storage();
+		$na_storage->get_instance_by_storage_id($storage->id);
+		$na_storage_ip = $storage_ip;
+		$na_user = $na_storage->storage_user;
+		$na_password = $na_storage->storage_password;
 
 
 		$event->log("storage_auth_stop_in_background", $_SERVER['REQUEST_TIME'], 5, "openqrm-netapp-deployment-auth-hook.php", "Authenticating $image_name / $image_rootdevice with password $image_password", "", "", 0, 0, $appliance_id);
 		$auth_stop_cmd = "$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/$deployment_plugin_name/bin/openqrm-$deployment_plugin_name auth -n $image_name -r $image_rootdevice -i $image_password -p $na_password -e $na_storage_ip";
-        $output = shell_exec($auth_stop_cmd);
+		$output = shell_exec($auth_stop_cmd);
 
-    	$event->log("storage_auth_function", $_SERVER['REQUEST_TIME'], 5, "openqrm-netapp-deployment-auth-hook.php", "!! STOP hook Running : $auth_stop_cmd", "", "", 0, 0, $appliance_id);
+		$event->log("storage_auth_function", $_SERVER['REQUEST_TIME'], 5, "openqrm-netapp-deployment-auth-hook.php", "!! STOP hook Running : $auth_stop_cmd", "", "", 0, 0, $appliance_id);
 
-        // and update the image params
+		// and update the image params
 		$image->set_deployment_parameters("IMAGE_ISCSI_AUTH", $image_password);
 
 	}
@@ -280,7 +284,7 @@ global $event;
 		global $OPENQRM_SERVER_BASE_DIR;
 		global $OPENQRM_SERVER_IP_ADDRESS;
 		global $OPENQRM_EXEC_PORT;
-        global $NETAPP_STORAGE_SERVER_TABLE;
+		global $NETAPP_STORAGE_SERVER_TABLE;
 
 		$image = new image();
 		$image->get_instance_by_id($image_id);

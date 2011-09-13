@@ -64,3 +64,19 @@ The created Xen vm is then booting into openQRM as regular resources
 </li>
 </ul>
 <br>
+<br>
+
+<b>Requirements for VM live-migration:</b>
+<br>
+<ul>
+<li>
+Shared storage between the Xen Hosts for the location of the VM config/swap files (/var/lib/xen/openqrm)
+</li>
+</ul>
+<br>
+<br>
+<hr>
+<br>
+
+
+<br>

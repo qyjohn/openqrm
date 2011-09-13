@@ -2,19 +2,19 @@
 /*
   This file is part of openQRM.
 
-    openQRM is free software: you can redistribute it and/or modify
-    it under the terms of the GNU General Public License version 2
-    as published by the Free Software Foundation.
+	openQRM is free software: you can redistribute it and/or modify
+	it under the terms of the GNU General Public License version 2
+	as published by the Free Software Foundation.
 
-    openQRM is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    GNU General Public License for more details.
+	openQRM is distributed in the hope that it will be useful,
+	but WITHOUT ANY WARRANTY; without even the implied warranty of
+	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+	GNU General Public License for more details.
 
-    You should have received a copy of the GNU General Public License
-    along with openQRM.  If not, see <http://www.gnu.org/licenses/>.
+	You should have received a copy of the GNU General Public License
+	along with openQRM.  If not, see <http://www.gnu.org/licenses/>.
 
-    Copyright 2009, Matthias Rechenburg <matt@openqrm.com>
+	Copyright 2009, Matthias Rechenburg <matt@openqrm.com>
 */
 
 
@@ -40,18 +40,18 @@ global $event;
 
 
 function wait_for_identfile($sfile) {
-    $refresh_delay=1;
-    $refresh_loop_max=20;
-    $refresh_loop=0;
-    while (!file_exists($sfile)) {
-        sleep($refresh_delay);
-        $refresh_loop++;
-        flush();
-        if ($refresh_loop > $refresh_loop_max)  {
-            return false;
-        }
-    }
-    return true;
+	$refresh_delay=1;
+	$refresh_loop_max=20;
+	$refresh_loop=0;
+	while (!file_exists($sfile)) {
+		sleep($refresh_delay);
+		$refresh_loop++;
+		flush();
+		if ($refresh_loop > $refresh_loop_max)  {
+			return false;
+		}
+	}
+	return true;
 }
 
 
@@ -59,7 +59,7 @@ function get_image_rootdevice_identifier($netapp_iscsi_storage_id) {
 	global $OPENQRM_SERVER_BASE_DIR;
 	global $OPENQRM_USER;
 	global $event;
-    global $NETAPP_STORAGE_SERVER_TABLE;
+	global $NETAPP_STORAGE_SERVER_TABLE;
 
 	// place for the storage stat files
 	$StorageDir = $_SERVER["DOCUMENT_ROOT"].'/openqrm/base/plugins/netapp-storage/storage';
@@ -68,30 +68,30 @@ function get_image_rootdevice_identifier($netapp_iscsi_storage_id) {
 	$storage->get_instance_by_id($netapp_iscsi_storage_id);
 	$storage_resource = new resource();
 	$storage_resource->get_instance_by_id($storage->resource_id);
-    // get the password for the netapp-filer
-    $na_storage = new netapp_storage();
-    $na_storage->get_instance_by_storage_id($netapp_iscsi_storage_id);
-    if (!strlen($na_storage->storage_id)) {
-        $rootdevice_identifier_array[] = array("value" => "", "label" => "NetApp Storage server $netapp_iscsi_storage_id not configured yet");
-    	return $rootdevice_identifier_array;
-    }
-    // remove ident file
-    $ident_file = "$StorageDir/$storage_resource->ip.netapp.ident";
-    if (file_exists($ident_file)) {
-        unlink($ident_file);
-    }
-    // send command
-    $openqrm_server_command="$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/netapp-storage/bin/openqrm-netapp-storage post_identifier -p \"$na_storage->storage_password\" -e \"$storage_resource->ip\"";
-    $cmd_output = shell_exec($openqrm_server_command);
-    // wait for command + fresh ident file
-    if (!wait_for_identfile($ident_file)) {
-        $event->log("get_image_rootdevice_identifier", $_SERVER['REQUEST_TIME'], 2, "image.netapp-iscsi-deployment", "Timeout while requesting image identifier from storage id $storage->id", "", "", 0, 0, 0);
-        return;
-    }
-    $fcontent = file($ident_file);
-    foreach($fcontent as $lun_info) {
-        $image_name = dirname(trim($lun_info));
-        $rootdevice_identifier_array[] = array("value" => "$image_name", "label" => "$image_name");
+	// get the password for the netapp-filer
+	$na_storage = new netapp_storage();
+	$na_storage->get_instance_by_storage_id($netapp_iscsi_storage_id);
+	if (!strlen($na_storage->storage_id)) {
+		$rootdevice_identifier_array[] = array("value" => "", "label" => "NetApp Storage server $netapp_iscsi_storage_id not configured yet");
+		return $rootdevice_identifier_array;
+	}
+	// remove ident file
+	$ident_file = "$StorageDir/$storage_resource->ip.netapp.ident";
+	if (file_exists($ident_file)) {
+		unlink($ident_file);
+	}
+	// send command
+	$openqrm_server_command="$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/netapp-storage/bin/openqrm-netapp-storage post_identifier -p \"$na_storage->storage_password\" -e \"$storage_resource->ip\"";
+	$cmd_output = shell_exec($openqrm_server_command);
+	// wait for command + fresh ident file
+	if (!wait_for_identfile($ident_file)) {
+		$event->log("get_image_rootdevice_identifier", $_SERVER['REQUEST_TIME'], 2, "image.netapp-iscsi-deployment", "Timeout while requesting image identifier from storage id $storage->id", "", "", 0, 0, 0);
+		return;
+	}
+	$fcontent = file($ident_file);
+	foreach($fcontent as $lun_info) {
+		$image_name = dirname(trim($lun_info));
+		$rootdevice_identifier_array[] = array("value" => "$image_name", "label" => "$image_name");
 	}
 	return $rootdevice_identifier_array;
 
@@ -99,6 +99,18 @@ function get_image_rootdevice_identifier($netapp_iscsi_storage_id) {
 
 function get_image_default_rootfs() {
 	return "ext3";
+}
+
+function get_rootfs_transfer_methods() {
+	return true;
+}
+
+function get_rootfs_set_password_method() {
+	return true;
+}
+
+function get_is_network_deployment() {
+	return true;
 }
 
 ?>

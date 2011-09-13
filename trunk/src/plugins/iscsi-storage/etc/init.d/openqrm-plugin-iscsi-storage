@@ -31,38 +31,42 @@ function openqrm_plugin_iscsi_storage_start() {
 	openqrm_plugin_iscsi_storage_stop 1>/dev/null 2>&1
 	echo "Starting the openQRM iscsi-storage-plugin"
 	touch $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/base/plugins/iscsi-storage/.running
-    if [ -x "/etc/init.d/iscsi-target" ]; then
-        if [ -x "`which invoke-rc.d 2>/dev/null`" ]; then
-            invoke-rc.d iscsi-target start
-        else
-            /etc/init.d/iscsi-target start
-        fi
-    elif [ -x /etc/init.d/iscsitarget ]; then
-        if [ -x "`which invoke-rc.d 2>/dev/null`" ]; then
-            invoke-rc.d iscsitarget start
-        else
-            /etc/init.d/iscsitarget start
-        fi
-    fi
+	if [ "$ISCSI_STORAGE_AUTO_START" == "yes" ]; then
+		if [ -x "/etc/init.d/iscsi-target" ]; then
+			if [ -x "`which invoke-rc.d 2>/dev/null`" ]; then
+				invoke-rc.d iscsi-target start
+			else
+				/etc/init.d/iscsi-target start
+			fi
+		elif [ -x /etc/init.d/iscsitarget ]; then
+			if [ -x "`which invoke-rc.d 2>/dev/null`" ]; then
+				invoke-rc.d iscsitarget start
+			else
+				/etc/init.d/iscsitarget start
+			fi
+		fi
+	fi
 }
 
 
 function openqrm_plugin_iscsi_storage_stop() {
 	echo "Stopping the openQRM iscsi-storage-plugin"
 	rm -f $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/base/plugins/iscsi-storage/.running
-    if [ -x "/etc/init.d/iscsi-target" ]; then
-        if [ -x "`which invoke-rc.d 2>/dev/null`" ]; then
-            invoke-rc.d iscsi-target stop
-        else
-            /etc/init.d/iscsi-target stop
-        fi
-    elif [ -x /etc/init.d/iscsitarget ]; then
-        if [ -x "`which invoke-rc.d 2>/dev/null`" ]; then
-            invoke-rc.d iscsitarget stop
-        else
-            /etc/init.d/iscsitarget stop
-        fi
-    fi
+	if [ "$ISCSI_STORAGE_AUTO_START" == "yes" ]; then
+		if [ -x "/etc/init.d/iscsi-target" ]; then
+			if [ -x "`which invoke-rc.d 2>/dev/null`" ]; then
+				invoke-rc.d iscsi-target stop
+			else
+				/etc/init.d/iscsi-target stop
+			fi
+		elif [ -x /etc/init.d/iscsitarget ]; then
+			if [ -x "`which invoke-rc.d 2>/dev/null`" ]; then
+				invoke-rc.d iscsitarget stop
+			else
+				/etc/init.d/iscsitarget stop
+			fi
+		fi
+	fi
 }
 
 function openqrm_plugin_iscsi_storage_uninstall() {
@@ -71,7 +75,7 @@ function openqrm_plugin_iscsi_storage_uninstall() {
 	if [ "$USERNAME" == "" ] && [ "$PASSWORD" == "" ]; then
 		echo -n "iscsi-storage: Please give a username to uninstall the plugin : "
 		read USERNAME
-		echo	
+		echo
 		echo -n "iscsi-storage: Please give the password for user $USERNAME : "
 		read PASSWORD
 		echo
@@ -99,7 +103,7 @@ function openqrm_plugin_iscsi_storage_init() {
 	if [ "$USERNAME" == "" ] && [ "$PASSWORD" == "" ]; then
 		echo -n "iscsi-storage: Please give a username to init the plugin : "
 		read USERNAME
-		echo	
+		echo
 		echo -n "iscsi-storage: Please give the password for user $USERNAME : "
 		read PASSWORD
 		echo
@@ -124,10 +128,10 @@ function openqrm_plugin_iscsi_storage_init() {
 	if [ ! -x $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/boot-service/iscsiadm ]; then
 		cp -f `which iscsiadm` $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/boot-service/
 	fi
-    # create storage dir for stat files
-    mkdir -p $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/iscsi-storage/web/storage
-    chmod 777 $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/iscsi-storage/web/storage
-	
+	# create storage dir for stat files
+	mkdir -p $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/iscsi-storage/web/storage
+	chmod 777 $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/iscsi-storage/web/storage
+
 }
 
 USER=$2

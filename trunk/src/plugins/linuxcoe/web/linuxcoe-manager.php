@@ -7,19 +7,19 @@
 /*
   This file is part of openQRM.
 
-    openQRM is free software: you can redistribute it and/or modify
-    it under the terms of the GNU General Public License version 2
-    as published by the Free Software Foundation.
+	openQRM is free software: you can redistribute it and/or modify
+	it under the terms of the GNU General Public License version 2
+	as published by the Free Software Foundation.
 
-    openQRM is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    GNU General Public License for more details.
+	openQRM is distributed in the hope that it will be useful,
+	but WITHOUT ANY WARRANTY; without even the implied warranty of
+	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+	GNU General Public License for more details.
 
-    You should have received a copy of the GNU General Public License
-    along with openQRM.  If not, see <http://www.gnu.org/licenses/>.
+	You should have received a copy of the GNU General Public License
+	along with openQRM.  If not, see <http://www.gnu.org/licenses/>.
 
-    Copyright 2009, Matthias Rechenburg <matt@openqrm.com>
+	Copyright 2009, Matthias Rechenburg <matt@openqrm.com>
 */
 
 // error_reporting(E_ALL);
@@ -48,7 +48,7 @@ function redirect($strMsg, $currenttab = 'tab0', $url = '') {
 	if($url == '') {
 		$url = $thisfile.'?strMsg='.urlencode($strMsg).'&currenttab='.$currenttab;
 	}
-	// using meta refresh because of the java-script in the header	
+	// using meta refresh because of the java-script in the header
 	echo "<meta http-equiv=\"refresh\" content=\"0; URL=$url\">";
 	exit;
 }
@@ -64,7 +64,7 @@ function linuxcoe_display($page) {
 	global $thisfile;
 	$install_lock_file = "$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/linuxcoe/web/lock/install-lock";
 
-	// check if the user reads the setup/install page 
+	// check if the user reads the setup/install page
 	if (file_exists($install_lock_file)) {
 		$page = "setup";
 	}

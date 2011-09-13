@@ -3,19 +3,19 @@
 /*
   This file is part of openQRM.
 
-    openQRM is free software: you can redistribute it and/or modify
-    it under the terms of the GNU General Public License version 2
-    as published by the Free Software Foundation.
+	openQRM is free software: you can redistribute it and/or modify
+	it under the terms of the GNU General Public License version 2
+	as published by the Free Software Foundation.
 
-    openQRM is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    GNU General Public License for more details.
+	openQRM is distributed in the hope that it will be useful,
+	but WITHOUT ANY WARRANTY; without even the implied warranty of
+	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+	GNU General Public License for more details.
 
-    You should have received a copy of the GNU General Public License
-    along with openQRM.  If not, see <http://www.gnu.org/licenses/>.
+	You should have received a copy of the GNU General Public License
+	along with openQRM.  If not, see <http://www.gnu.org/licenses/>.
 
-    Copyright 2009, Matthias Rechenburg <matt@openqrm.com>
+	Copyright 2009, Matthias Rechenburg <matt@openqrm.com>
 */
 
 $linuxcoe_command = $_REQUEST["linuxcoe_command"];
@@ -58,19 +58,19 @@ $event->log("$linuxcoe_command", $_SERVER['REQUEST_TIME'], 5, "linuxcoe-action",
 			// linuxcoe_resource_id INT(5)
 			// linuxcoe_install_time VARCHAR(20)
 			// linuxcoe_profile_name VARCHAR(100)
-			
+
 			$create_linuxcoe_resources = "create table linuxcoe_resources(linuxcoe_id INT(5), linuxcoe_resource_id INT(5), linuxcoe_install_time VARCHAR(20), linuxcoe_profile_name VARCHAR(100))";
 			$db=openqrm_get_db_connection();
 			$recordSet = &$db->Execute($create_linuxcoe_resources);
 
-		    $db->Close();
+			$db->Close();
 			break;
 
 		case 'uninstall':
 			$drop_linuxcoe_resources = "drop table linuxcoe_resources";
 			$db=openqrm_get_db_connection();
 			$recordSet = &$db->Execute($drop_linuxcoe_resources);
-		    $db->Close();
+			$db->Close();
 			break;
 
 

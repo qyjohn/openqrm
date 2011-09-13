@@ -2,19 +2,19 @@
 /*
   This file is part of openQRM.
 
-    openQRM is free software: you can redistribute it and/or modify
-    it under the terms of the GNU General Public License version 2
-    as published by the Free Software Foundation.
+	openQRM is free software: you can redistribute it and/or modify
+	it under the terms of the GNU General Public License version 2
+	as published by the Free Software Foundation.
 
-    openQRM is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    GNU General Public License for more details.
+	openQRM is distributed in the hope that it will be useful,
+	but WITHOUT ANY WARRANTY; without even the implied warranty of
+	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+	GNU General Public License for more details.
 
-    You should have received a copy of the GNU General Public License
-    along with openQRM.  If not, see <http://www.gnu.org/licenses/>.
+	You should have received a copy of the GNU General Public License
+	along with openQRM.  If not, see <http://www.gnu.org/licenses/>.
 
-    Copyright 2009, Matthias Rechenburg <matt@openqrm.com>
+	Copyright 2009, Matthias Rechenburg <matt@openqrm.com>
 */
 -->
 <h1><img border=0 src="/openqrm/base/plugins/sanboot-storage/img/plugin.png"> Sanboot-storage plugin</h1>
@@ -31,45 +31,45 @@ This makes it extremely useful specifically for Windows systems because Windows 
 Requirements for a sanboot-storage server :
 <br>
 <ul>
-    <li>
-      one or more dedicated LVM volume group(s) with free space available
-    </li>
-    <li>
-      Enterprise iSCSI Target installed
-    </li>
-    <li>
-      Software AOE Shelf 'vblade' installed
-    </li>
+	<li>
+	  one or more dedicated LVM volume group(s) with free space available
+	</li>
+	<li>
+	  Enterprise iSCSI Target installed
+	</li>
+	<li>
+	  Software AOE Shelf 'vblade' installed
+	</li>
 </ul>
 
 <br>
 Howto deploy Windows systems booted directly from SAN
 <br>
 <ul>
-    <li>
-      Enable and start the 'dhcpd', 'tftpd', 'sanboot-storage' and 'windows' plugin
-    </li>
-    <li>
-      Start a physical system with the boot-sequence set to : first network-boot, second CDROM
-    </li>
-    <li>
-      The system now boots from the network and is automatically added to openQRM as new, idle resource
-    </li>
-    <li>
-      Create a new storage from type 'sanboot-storage'
-    </li>
-    <li>
-      Create a new volume on the sanboot storage
-    </li>
-    <li>
-      Create a new image out of the just created volume
-    </li>
-    <li>
-      Create a new appliance using the idle resource, the default kernel and the previous created image.
-    </li>
-    <li>
-      Start the appliance
-    </li>
+	<li>
+	  Enable and start the 'dhcpd', 'tftpd', 'sanboot-storage' and 'windows' plugin
+	</li>
+	<li>
+	  Start a physical system with the boot-sequence set to : first network-boot, second CDROM
+	</li>
+	<li>
+	  The system now boots from the network and is automatically added to openQRM as new, idle resource
+	</li>
+	<li>
+	  Create a new storage from type 'sanboot-storage'
+	</li>
+	<li>
+	  Create a new volume on the sanboot storage
+	</li>
+	<li>
+	  Create a new image out of the just created volume
+	</li>
+	<li>
+	  Create a new appliance using the idle resource, the default kernel and the previous created image.
+	</li>
+	<li>
+	  Start the appliance
+	</li>
 </ul>
 
 <br>

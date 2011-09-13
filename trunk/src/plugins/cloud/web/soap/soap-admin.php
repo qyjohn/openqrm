@@ -20,24 +20,24 @@
 ?>
 <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
 <html>
-  <head>
-    <title>openQRM Cloud SOAP-WebService</title>
-    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
-  </head>
-  <body>
+<head>
+<title>openQRM Cloud SOAP-WebService</title>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+</head>
+<body>
 
 <table border="0" width="700" cellspacing="2" cellpadding="2">
-    <thead>
-        <tr>
-            <th></th>
-            <th><h2>openQRM Cloud SOAP-WebService</h2></th>
-            <th></th>
-        </tr>
-    </thead>
-    <tbody>
-        <tr>
-            <td></td>
-            <td>
+<thead>
+<tr>
+<th></th>
+<th><h2>openQRM Cloud SOAP-WebService</h2></th>
+<th></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td></td>
+<td>
 
 <h4>SOAP-WebService for the Cloud Administrator</h4>
 
@@ -48,19 +48,19 @@ The Cloud SOAP WebService in "admin" mode exposes the following methods :
 
 $lines = file('../class/cloudsoap.class.php');
 foreach ($lines as $line_num => $line) {
-    if (strstr($line, "function ")) {
-        $function_name = str_replace("function ", "", $line);
-        $function_name = str_replace("{", "", $function_name);
-        echo "&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<b>".htmlspecialchars($function_name) . "</b><br />\n";
-    }
+	if (strstr($line, "function ")) {
+		$function_name = str_replace("function ", "", $line);
+		$function_name = str_replace("{", "", $function_name);
+		echo "&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<b>".htmlspecialchars($function_name) . "</b><br />\n";
+	}
 }
 $lines = file('../class/cloudsoapadmin.class.php');
 foreach ($lines as $line_num => $line) {
-    if (strstr($line, "function ")) {
-        $function_name = str_replace("function ", "", $line);
-        $function_name = str_replace("{", "", $function_name);
-        echo "&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<b>".htmlspecialchars($function_name) . "</b><br />\n";
-    }
+	if (strstr($line, "function ")) {
+		$function_name = str_replace("function ", "", $line);
+		$function_name = str_replace("{", "", $function_name);
+		echo "&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<b>".htmlspecialchars($function_name) . "</b><br />\n";
+	}
 }
 
 ?>
@@ -74,11 +74,11 @@ A detailed API documentation can be found here <a href="/cloud-portal/user/soap/
 <br>
 <br>
 
-            </td>
-            <td></td>
-        </tr>
-    </tbody>
+</td>
+<td></td>
+</tr>
+</tbody>
 </table>
 
-  </body>
+</body>
 </html>

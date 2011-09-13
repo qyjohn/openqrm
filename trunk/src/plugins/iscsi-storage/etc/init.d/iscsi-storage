@@ -21,6 +21,7 @@
 OPENQRM_SERVER_BASE_DIR=$(pushd $(dirname $0)/../../../../.. > /dev/null; echo $PWD; popd > /dev/null)
 . $OPENQRM_SERVER_BASE_DIR/openqrm/include/openqrm-functions
 . $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/iscsi-storage/include/openqrm-plugin-iscsi-storage-functions
+. $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/iscsi-storage/etc/openqrm-plugin-iscsi-storage.conf
 LINE_IFS='
 '
 
@@ -31,38 +32,41 @@ fi
 
 function iscsi_storage_start() {
 	echo "Starting the openQRM iscsi-storage-plugin"
-    if [ -x "/etc/init.d/iscsi-target" ]; then
-        if [ -x "`which invoke-rc.d 2>/dev/null`" ]; then
-            invoke-rc.d iscsi-target start
-        else
-            /etc/init.d/iscsi-target start
-        fi
-    elif [ -x /etc/init.d/iscsitarget ]; then
-        if [ -x "`which invoke-rc.d 2>/dev/null`" ]; then
-            invoke-rc.d iscsitarget start
-        else
-            /etc/init.d/iscsitarget start
-        fi
-    fi
+	if [ "$ISCSI_STORAGE_AUTO_START" == "yes" ]; then
+		if [ -x "/etc/init.d/iscsi-target" ]; then
+			if [ -x "`which invoke-rc.d 2>/dev/null`" ]; then
+				invoke-rc.d iscsi-target start
+			else
+				/etc/init.d/iscsi-target start
+			fi
+		elif [ -x /etc/init.d/iscsitarget ]; then
+			if [ -x "`which invoke-rc.d 2>/dev/null`" ]; then
+				invoke-rc.d iscsitarget start
+			else
+				/etc/init.d/iscsitarget start
+			fi
+		fi
+	fi
 }
 
 
 function iscsi_storage_stop() {
 	echo "Stopping the openQRM iscsi-storage-plugin"
-    if [ -x "/etc/init.d/iscsi-target" ]; then
-        if [ -x "`which invoke-rc.d 2>/dev/null`" ]; then
-            invoke-rc.d iscsi-target stop
-        else
-            /etc/init.d/iscsi-target stop
-        fi
-    elif [ -x /etc/init.d/iscsitarget ]; then
-        if [ -x "`which invoke-rc.d 2>/dev/null`" ]; then
-            invoke-rc.d iscsitarget stop
-        else
-            /etc/init.d/iscsitarget stop
-        fi
-    fi
-
+	if [ "$ISCSI_STORAGE_AUTO_START" == "yes" ]; then
+		if [ -x "/etc/init.d/iscsi-target" ]; then
+			if [ -x "`which invoke-rc.d 2>/dev/null`" ]; then
+				invoke-rc.d iscsi-target stop
+			else
+				/etc/init.d/iscsi-target stop
+			fi
+		elif [ -x /etc/init.d/iscsitarget ]; then
+			if [ -x "`which invoke-rc.d 2>/dev/null`" ]; then
+				invoke-rc.d iscsitarget stop
+			else
+				/etc/init.d/iscsitarget stop
+			fi
+		fi
+	fi
 }
 
 

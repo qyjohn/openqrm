@@ -28,7 +28,7 @@ function vmware_esx_log() {
 	local COMPONENT=$1
 	shift
 	local MESSAGE=$@
-    echo "vmware-esx plug-in" "$COMPONENT : $MESSAGE"
+	echo "vmware-esx plug-in" "$COMPONENT : $MESSAGE"
 	logger -i -t "vmware-esx plug-in" "$COMPONENT : $MESSAGE"
 }
 
@@ -37,7 +37,7 @@ function vmware_esx_log() {
 function vmware_esx_lock() {
 	local COMMAND=$1
 	local RET=1
-	
+
 	if [ ! -d `dirname $VMWARE_SERVER_LOCK_FILE` ]; then
 		mkdir -p `dirname $VMWARE_SERVER_LOCK_FILE`
 	fi
@@ -57,7 +57,7 @@ function vmware_esx_lock() {
 		*)
 			vmware_esx_log vmware_esx_lock "No such command. Try 'aquire' or 'release'"
 			return 1
-			;;	
+			;;
 	esac
 }
 

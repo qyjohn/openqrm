@@ -45,7 +45,7 @@ function openqrm_plugin_windows_uninstall() {
 	if [ "$USERNAME" == "" ] && [ "$PASSWORD" == "" ]; then
 		echo -n "windows: Please give a username to uninstall the plugin : "
 		read USERNAME
-		echo	
+		echo
 		echo -n "windows: Please give the password for user $USERNAME : "
 		read PASSWORD
 		echo
@@ -61,7 +61,7 @@ function openqrm_plugin_windows_init() {
 	if [ "$USERNAME" == "" ] && [ "$PASSWORD" == "" ]; then
 		echo -n "windows: Please give a username to init the plugin : "
 		read USERNAME
-		echo	
+		echo
 		echo -n "windows: Please give the password for user $USERNAME : "
 		read PASSWORD
 		echo
@@ -69,7 +69,7 @@ function openqrm_plugin_windows_init() {
 	echo "Initializing the openQRM windows-plugin"
 	# linking the web dir
 	ln -sf $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/windows/web $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/base/plugins/windows
-	
+
 }
 
 USER=$2

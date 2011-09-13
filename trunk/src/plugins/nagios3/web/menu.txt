@@ -20,37 +20,20 @@
 #	Alt
 #	IMG
 #	Target
-..|Nagios3
-...|About|plugins/nagios3/nagios3-about.php|How to use|nagios3/plugin.png
-...|Config|plugins/nagios3/nagios3-overview.php|Automatic Nagios Configuration|nagios3/setup.png
-...|Overview|plugins/nagios3/nagios3-redir.php?re=cgi-bin/tac.cgi'|Tactical Data-Center Overview|nagios3/overview.png
-...|Services|plugins/nagios3/nagios3-redir.php?re='cgi-bin/status.cgi?host=all'|Service Availability|nagios3/services.png
-...|Hosts|plugins/nagios3/nagios3-redir.php?re='cgi-bin/status.cgi?hostgroup=all&style=hostdetail'|Resource Availability|nagios3/hosts.png
-...|Status-Map|plugins/nagios3/nagios3-redir.php?re='cgi-bin/statusmap.cgi?host=all'|Status Map|nagios3/map.png
-...|Host-Group
-....|Overview|plugins/nagios3/nagios3-redir.php?re='cgi-bin/status.cgi?hostgroup=all&style=overview'|Overview of the HostGroups|nagios3/hostgroup.png
-....|Summary|plugins/nagios3/nagios3-redir.php?re='cgi-bin/status.cgi?hostgroup=all&style=summary'|HostGroups Summary|nagios3/hostgroup.png
-....|Grid|plugins/nagios3/nagios3-redir.php?re='cgi-bin/status.cgi?hostgroup=all&style=grid'|HostGroups Grid|nagios3/hostgroup.png
-...|Service-Group
-....|Overview|plugins/nagios3/nagios3-redir.php?re='cgi-bin/status.cgi?servicegroup=all&style=overviewall'|Overview of the Service|nagios3/services.png
-....|Summary|plugins/nagios3/nagios3-redir.php?re='cgi-bin/status.cgi?servicegroup=all&style=summary'|ServiceGroup Summary|nagios3/services.png
-....|Grid|plugins/nagios3/nagios3-redir.php?re='cgi-bin/status.cgi?servicegroup=all&style=grid'|ServiceGroup Grid|nagios3/services.png
-...|Problems
-....|Hosts|plugins/nagios3/nagios3-redir.php?re='cgi-bin/status.cgi?host=all&servicestatustypes=28up=al'|Service Status All Hosts|nagios3/problem.png
-....|HostGroups|plugins/nagios3/nagios3-redir.php?re='cgi-bin/status.cgi?hostgroup=all&style=hostdetail&hoststatustypes=12'|Service Status All HostGroups|nagios3/problem.png
-....|Outages|plugins/nagios3/nagios3-redir.php?re='cgi-bin/outages.cgi'|Blocking Outages|nagios3/problem.png
-...|Reporting
-....|Trends|plugins/nagios3/nagios3-redir.php?re='cgi-bin/trends.cgi'|Nagios Trend Reporting|nagios3/charts.png
-....|Availability|plugins/nagios3/nagios3-redir.php?re='cgi-bin/avail.cgi'|Reporting Availability|nagios3/charts.png
-....|Alerts Histogram|plugins/nagios3/nagios3-redir.php?re='cgi-bin/histogram.cgi'|Nagios Reporting Alerts Histogram|nagios3/charts.png
-....|Alerts History|plugins/nagios3/nagios3-redir.php?re='cgi-bin/history.cgi?host=allram.'|Nagios Reporting Alerts History|nagios3/charts.png
-....|Alerts Summary|plugins/nagios3/nagios3-redir.php?re='cgi-bin/summary.cgi'|Nagios Reporting Alert Summary|nagios3/charts.png
-....|Notifications|plugins/nagios3/nagios3-redir.php?re='cgi-bin/notifications.cgi?contact=all'|Nagios Reporting Notifications|nagios3/charts.png
-....|Event-Log|plugins/nagios3/nagios3-redir.php?re='cgi-bin/showlog.cgi'|Nagios Reporting Event Log|nagios3/charts.png
-...|Configuration
-....|Nagios Process|plugins/nagios3/nagios3-redir.php?re='cgi-bin/extinfo.cgi?&type=0'|Nagios Process Configuration|nagios3/setup.png
-....|Performance|plugins/nagios3/nagios3-redir.php?re='cgi-bin/extinfo.cgi?&type=4'|Nagios Performance Configuration|nagios3/setup.png
-....|Scheduling|plugins/nagios3/nagios3-redir.php?re='cgi-bin/extinfo.cgi?&type=7'|Nagios Scheduling Configuration|nagios3/setup.png
-....|Scheduling|plugins/nagios3/nagios3-redir.php?re='cgi-bin/config.cgi'|Nagios Scheduling Configuration|nagios3/setup.png
-...|Nagvis
-....|Maps|plugins/nagios3/nagios3-redir.php?re=nagvis/index.php'|Nagvis Maps|nagios3/map.png
+..|Nagios3|/nagios3/|Main|
+...|插件介绍|plugins/nagios3/nagios3-about.php|How to use|nagios3/plugin.png
+...|配置管理
+....|服务配置|plugins/nagios3/nagios3-service-config.php|Service Configuration|nagios3/setup.png
+....|器件配置|plugins/nagios3/nagios3-appliance-config.php|Appliance Service Checks|nagios3/setup.png
+....|自动配置|plugins/nagios3/nagios3-overview.php|Automatic Nagios Configuration|nagios3/setup.png
+...|数据中心概览|plugins/nagios3/nagios3-redir.php?re=cgi-bin/tac.cgi'|Tactical Data-Center Overview|nagios3/overview.png
+...|所有服务|plugins/nagios3/nagios3-redir.php?re='cgi-bin/status.cgi?host=all'|Service Availability|nagios3/services.png
+...|所有主机|plugins/nagios3/nagios3-redir.php?re='cgi-bin/status.cgi?hostgroup=all&style=hostdetail'|Resource Availability|nagios3/hosts.png
+...|状态概览|plugins/nagios3/nagios3-redir.php?re='cgi-bin/statusmap.cgi?host=all'|Status Map|nagios3/map.png
+..|Icinga|/icinga/|Main|
+...|Overview|/icinga/cgi-bin/tac.cgi|Tactical Data-center Overview|nagios3/services.png
+...|Hosts|/icinga/cgi-bin/status.cgi?hostgroup=all&style=hostdetail|Resource Availability|nagios3/services.png
+...|Services|/icinga/cgi-bin/status.cgi?host=all|Service Availability|nagios3/services.png
+...|Performance|/icinga/cgi-bin/extinfo.cgi?&type=4|Performance Informations|nagios3/map.png
+...|Queue|/icinga/cgi-bin/extinfo.cgi?&type=7|Service Check Queue|nagios3/map.png
+...|Events|/icinga/cgi-bin/showlog.cgi|Service Check Queue|nagios3/setup.png

@@ -47,8 +47,8 @@ my $DIR  = "/var/lib/collectd";
 my $HOST = undef;
 
 GetOptions (
-    "host=s"     => \$HOST,
-    "data-dir=s" => \$DIR
+	"host=s"     => \$HOST,
+	"data-dir=s" => \$DIR
 );
 
 my @COLORS = (0xff7777, 0x7777ff, 0x55ff55, 0xffcc77, 0xff77ff, 0x77ffff,
@@ -148,7 +148,7 @@ foreach my $bn (@rrds){
 	print "$bn\n";
 
 	my $rrd = "$DIR/${bn}.rrd";
-	my $cmd = "rrdtool info $rrd |grep 'ds\\[' |sed 's/^ds\\[//'" 
+	my $cmd = "rrdtool info $rrd |grep 'ds\\[' |sed 's/^ds\\[//'"
 		." |sed 's/\\].*//' |sort |uniq";
 	my @dss = `$cmd`; chomp(@dss);
 
@@ -170,7 +170,7 @@ foreach my $bn (@rrds){
 		$defs .= sprintf(" AREA:${ds}_max#%06x ", $faded_color);
 	}
 
-	# all LINE	
+	# all LINE
 	$i = 0;
 
 	foreach my $ds (@dss){

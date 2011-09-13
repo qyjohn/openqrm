@@ -19,19 +19,24 @@
 
 KVM=`which kvm`
 if [ "$KVM" == "" ]; then
-    KVM=`which qemu-kvm`
-    if [ "$KVM" == "" ]; then
-        echo "ERROR: kvm ist not installed on this system !" | logger
-        exit 1
-    fi
+	KVM=`which qemu-kvm`
+	if [ "$KVM" == "" ]; then
+		# maybe it is centos and not in the path
+		if [ -x /usr/libexec/qemu-kvm ]; then
+			KVM=/usr/libexec/qemu-kvm
+		else
+			echo "ERROR: kvm ist not installed on this system !" | logger
+			exit 1
+		fi
+	fi
 fi
 # which screen binary to use
 if [ -x /usr/bin/screen.real ]; then
-    RUNSCREEN="/usr/bin/screen.real"
+	RUNSCREEN="/usr/bin/screen.real"
 else
-    RUNSCREEN=`which screen`
+	RUNSCREEN=`which screen`
 fi
-
+mkdir -p /var/run/openqrm/kvm
 
 # source the component config files
 VM_CONF_DIR=`dirname $0`
@@ -52,11 +57,12 @@ VM_NAME=`basename $VM_CONF_DIR`
 . $VM_CONF_DIR/boot
 
 
+
 KVM_VM_DISK="$KVM_VM_DISK_1 $KVM_VM_DISK_2 $KVM_VM_DISK_3 $KVM_VM_DISK_4"
 KVM_VM_NET="$KVM_VM_NET_1 $KVM_VM_NET_2 $KVM_VM_NET_3 $KVM_VM_NET_4 $KVM_VM_NET_5"
 
 echo "KVM vm $VM_NAME starting up ..." | logger
-$RUNSCREEN -dmS $KVM_VM_MAC_1 $KVM $KVM_VM_DISK -m $KVM_VM_RAM -smp $KVM_VM_CPUS $KVM_VM_BOOT $KVM_VM_NET -vnc $KVM_VM_VNC
+$RUNSCREEN -dmS $KVM_VM_MAC_1 $KVM $KVM_VM_DISK -m $KVM_VM_RAM -smp $KVM_VM_CPUS $KVM_VM_BOOT $KVM_VM_NET -vnc $KVM_VM_VNC -balloon virtio -monitor unix:/var/run/openqrm/kvm/kvm.$VM_NAME.mon,server,nowait
 
 
 

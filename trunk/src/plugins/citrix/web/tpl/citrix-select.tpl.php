@@ -27,8 +27,8 @@
 <h1><img border=0 src="/openqrm/base/plugins/citrix/img/manager.png"> Citrix XenServer VM Manager</h1>
 
 <div style="float:left;">
-<h4>Please select a Citrix XenServer Host from the list below</h4>
-{citrix_server_table}
+	<h4>Please select a Citrix XenServer Host from the list below</h4>
+	{citrix_server_table}
 </div>
 
 </form>

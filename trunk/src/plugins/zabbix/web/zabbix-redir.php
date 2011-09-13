@@ -17,7 +17,7 @@
     Copyright 2009, Matthias Rechenburg <matt@openqrm.com>
 */
 
-$re = $_REQUEST["re"];
+// $re = $_REQUEST["re"];
 
 $RootDir = $_SERVER["DOCUMENT_ROOT"].'/openqrm/base';
 require_once "$RootDir/class/openqrm_server.class.php";

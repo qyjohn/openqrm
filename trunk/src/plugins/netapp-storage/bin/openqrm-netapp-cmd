@@ -20,8 +20,8 @@
 #
 
 if {[llength $argv]<2} {
-        send_user "usage: $argv0 <netapp-ip> <command> \[na-root-password\]\n"
-        exit
+		send_user "usage: $argv0 <netapp-ip> <command> \[na-root-password\]\n"
+		exit
 }
 
 set NETAPP_IP [lindex $argv 0]

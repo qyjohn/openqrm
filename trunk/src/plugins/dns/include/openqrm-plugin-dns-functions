@@ -76,7 +76,7 @@ function dns_lock() {
 		*)
 			dns_log dns_lock "No such command. Try 'aquire' or 'release'"
 			return 1
-			;;	
+			;;
 	esac
 }
 

@@ -1,3 +1,9 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+
+<head>
+<title>CloudPro云计算门户</title>
 <link rel="stylesheet" type="text/css" href="css/mycloud.css" />
 
 <?php
@@ -34,19 +40,19 @@ function terms_and_condition() {
 	global $OPENQRM_USER;
 	global $thisfile;
 
-	$disp = $disp."<h1><b>General terms and conditions of the openQRM Cloud</b></h1>";
+	$disp = $disp."<h1><b>CloudPro云计算服务条款</b></h1>";
 	$disp = $disp."<br>";
-	$disp = $disp."Please find below the rules for this Cloud Computing Portal :";
+	$disp = $disp."所有使用CloudPro云计算服务的用户，必须遵守如下条款：";
 	$disp = $disp."<ol>";
 
-	$disp = $disp."<li>You must not use the systems in the Cloud for any 'bad' or illegal activities!</li>";
-	$disp = $disp."<li>Manage your systems via the 'my-appliances' web-application.</li>";
-	$disp = $disp."<li>Please do not reboot or halt them via the commandline.</li>";
-	$disp = $disp."<li>Please do not stop the openQRM services on your appliances.</li>";
-	$disp = $disp."<li>Please do not stop or re-configure the network-interfaces of your systems.</li>";
+	$disp = $disp."<li>（1）不利用本系统所提供的计算能力进行任何非法活动。</li>";
+	$disp = $disp."<li>（2）仅通过本系统Web 界面所提供的“我的器件”功能管理您的计算资源。</li>";
+	$disp = $disp."<li>（3）请勿使用命令行方式重启或者关闭计算资源。</li>";
+	$disp = $disp."<li>（4）请勿关闭您的器件中的openQRM服务。</li>";
+	$disp = $disp."<li>（5）请勿停用或者重新配置本系统任何计算资源的网卡。</li>";
 	$disp = $disp."</ol>";
 
-	$disp = $disp."Otherwise please enjoy this Cloud and get your advantages of the computing power 'on-demand'.";
+	$disp = $disp."除此之外，您可以自由地享受CloudPro给您所带来的便利。";
 	$disp = $disp."<br>";
 	$disp = $disp."<hr>";
 
@@ -60,7 +66,7 @@ $output = array();
 // include header
 include "$DocRoot/cloud-portal/mycloud-head.php";
 
-$output[] = array('label' => 'General terms and conditions of the openQRM Cloud', 'value' => terms_and_condition());
+$output[] = array('label' => 'CloudPro云计算服务条款', 'value' => terms_and_condition());
 echo htmlobject_tabmenu($output);
 
 // include footer

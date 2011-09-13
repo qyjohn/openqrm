@@ -5,19 +5,19 @@
  /*
   This file is part of openQRM.
 
-    openQRM is free software: you can redistribute it and/or modify
-    it under the terms of the GNU General Public License version 2
-    as published by the Free Software Foundation.
+	openQRM is free software: you can redistribute it and/or modify
+	it under the terms of the GNU General Public License version 2
+	as published by the Free Software Foundation.
 
-    openQRM is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    GNU General Public License for more details.
+	openQRM is distributed in the hope that it will be useful,
+	but WITHOUT ANY WARRANTY; without even the implied warranty of
+	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+	GNU General Public License for more details.
 
-    You should have received a copy of the GNU General Public License
-    along with openQRM.  If not, see <http://www.gnu.org/licenses/>.
+	You should have received a copy of the GNU General Public License
+	along with openQRM.  If not, see <http://www.gnu.org/licenses/>.
 
-    Copyright 2009, Matthias Rechenburg <matt@openqrm.com>
+	Copyright 2009, Matthias Rechenburg <matt@openqrm.com>
 */
 
 
@@ -39,7 +39,7 @@ require_once "$RootDir/include/openqrm-server-config.php";
  * @author Matt Rechenburg <mattr_sf@users.sourceforge.net>
  * @version 1.0
  */
- 
+
 global $OPENQRM_SERVER_BASE_DIR;
 global $OPENQRM_EXEC_PORT;
 global $IMAGE_AUTHENTICATION_TABLE;
@@ -67,10 +67,10 @@ global $event;
 		global $OPENQRM_EXEC_PORT;
 		global $IMAGE_AUTHENTICATION_TABLE;
 		global $openqrm_server;
-	
+
 		$appliance = new appliance();
 		$appliance->get_instance_by_id($appliance_id);
-	
+
 		$image = new image();
 		$image->get_instance_by_id($appliance->imageid);
 		$image_name=$image->name;
@@ -81,36 +81,40 @@ global $event;
 		$root_device=substr($image_rootdevice, $ident_separate);
 		$image_location=dirname($root_device);
 		$image_location_name=basename($image_location);
-	
+
 		$storage = new storage();
 		$storage->get_instance_by_id($image->storageid);
 		$storage_resource = new resource();
 		$storage_resource->get_instance_by_id($storage->resource_id);
 		$storage_ip = $storage_resource->ip;
-	
+
 		$deployment = new deployment();
 		$deployment->get_instance_by_type($image->type);
 		$deployment_type = $deployment->type;
 		$deployment_plugin_name = $deployment->storagetype;
-	
+
 		$resource = new resource();
 		$resource->get_instance_by_id($appliance->resources);
 		$resource_mac=$resource->mac;
 		$resource_ip=$resource->ip;
 		$resource_id=$resource->id;
-	
+
 		switch($cmd) {
 			case "start":
+				// authenticate the rootfs / needs openqrm user + pass
+				$openqrm_admin_user = new user("openqrm");
+				$openqrm_admin_user->set_user();
+
 				// generate a password for the image
 				$image_password = $image->generatePassword(12);
 				$image_deployment_parameter = $image->deployment_parameter;
 				$image->set_deployment_parameters("IMAGE_ISCSI_AUTH", $image_password);
-				$event->log("storage_auth_function", $_SERVER['REQUEST_TIME'], 5, "openqrm-iscsi-san-deployment-auth-hook.php", "Authenticating $image_name / $image_location_name to resource $resource_mac", "", "", 0, 0, $appliance_id);
-				$auth_start_cmd = "$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/$deployment_plugin_name/bin/openqrm-$deployment_plugin_name auth -r $image_location_name -i $image_password -t iscsi-san-deployment";
+				$event->log("storage_auth_function", $_SERVER['REQUEST_TIME'], 5, "openqrm-iscsi-san-deployment-auth-hook.php", "Authenticating $image_name / $image_rootdevice to resource $resource_mac", "", "", 0, 0, $appliance_id);
+				$auth_start_cmd = "$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/$deployment_plugin_name/bin/openqrm-$deployment_plugin_name auth -n $image_name -r $image_rootdevice -i $image_password -t iscsi-san-deployment  -u $openqrm_admin_user->name -p $openqrm_admin_user->password";
 				$resource->send_command($storage_ip, $auth_start_cmd);
 
-                // assign resource to boot from san via dhcpd.conf params
-                // we need to run it here just before the resource reboots
+				// assign resource to boot from san via dhcpd.conf params
+				// we need to run it here just before the resource reboots
 				$event->log("storage_auth_function", $_SERVER['REQUEST_TIME'], 5, "openqrm-iscsi-san-deployment-auth-hook.php", "Setting resource $resource_mac dhcpd-config to boot from san", "", "", 0, 0, $appliance_id);
 
 				$sanboot_assing_cmd = "$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/$deployment_plugin_name/bin/openqrm-$deployment_plugin_name-assign assign -n $image_location_name -i $storage_ip -p $image_password -m $resource_mac -r $resource_id -z $resource_ip -t iscsi-san-deployment";
@@ -130,18 +134,18 @@ global $event;
 				);
 				$image_authentication->add($image_auth_ar);
 				$event->log("storage_auth_function", $_SERVER['REQUEST_TIME'], 5, "openqrm-iscsi-san-deployment-auth-hook.php", "Registered image $appliance->imageid for de-authentication the root-fs exports when resource $appliance->resources is idle again.", "", "", 0, 0, $appliance_id);
-                // stopping sanboot assignment is in the appliance hook, must before the reboot of the resource
+				// stopping sanboot assignment is in the appliance hook, must before the reboot of the resource
 
-                // set IMAGE_VIRTUAL_RESOURCE_COMMAND to false here, after the reboot of the resource
-                $image->set_deployment_parameters("IMAGE_VIRTUAL_RESOURCE_COMMAND", "false");
-                break;
-			
+				// set IMAGE_VIRTUAL_RESOURCE_COMMAND to false here, after the reboot of the resource
+				$image->set_deployment_parameters("IMAGE_VIRTUAL_RESOURCE_COMMAND", "false");
+				break;
+
 		}
-	
+
 	}
-	
-	
-	
+
+
+
 	//--------------------------------------------------
 	/**
 	* de-authenticates the storage volume for the appliance resource
@@ -153,12 +157,12 @@ global $event;
 	*/
 	//--------------------------------------------------
 	function storage_auth_stop($image_id) {
-	
+
 		global $event;
 		global $OPENQRM_SERVER_BASE_DIR;
 		global $OPENQRM_SERVER_IP_ADDRESS;
 		global $OPENQRM_EXEC_PORT;
-	
+
 		$image = new image();
 		$image->get_instance_by_id($image_id);
 		$image_name=$image->name;
@@ -172,24 +176,24 @@ global $event;
 		$root_device=substr($image_rootdevice, $ident_separate);
 		$image_location=dirname($root_device);
 		$image_location_name=basename($image_location);
-	
+
 		$storage = new storage();
 		$storage->get_instance_by_id($image->storageid);
 		$storage_resource = new resource();
 		$storage_resource->get_instance_by_id($storage->resource_id);
 		$storage_ip = $storage_resource->ip;
-	
+
 		$deployment = new deployment();
 		$deployment->get_instance_by_type($image->type);
 		$deployment_type = $deployment->type;
 		$deployment_plugin_name = $deployment->storagetype;
-	
+
 		$auth_stop_cmd = "$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/$deployment_plugin_name/bin/openqrm-$deployment_plugin_name auth -r $image_location_name -i $image_password -t iscsi-san-deployment";
 		$resource = new resource();
 		$resource->send_command($storage_ip, $auth_stop_cmd);
 		// and update the image params
 		$image->set_deployment_parameters("IMAGE_ISCSI_AUTH", $image_password);
-	
+
 	}
 
 
@@ -207,32 +211,32 @@ global $event;
 	*/
 	//--------------------------------------------------
 	function storage_auth_deployment_stop($image_id) {
-	
+
 		global $event;
 		global $OPENQRM_SERVER_BASE_DIR;
 		global $OPENQRM_SERVER_IP_ADDRESS;
 		global $OPENQRM_EXEC_PORT;
-	
+
 		$image = new image();
 		$image->get_instance_by_id($image_id);
 		$image_name=$image->name;
 		$image_rootdevice=$image->rootdevice;
-	
+
 		$storage = new storage();
 		$storage->get_instance_by_id($image->storageid);
 		$storage_resource = new resource();
 		$storage_resource->get_instance_by_id($storage->resource_id);
 		$storage_ip = $storage_resource->ip;
-	
+
 		$deployment = new deployment();
 		$deployment->get_instance_by_type($image->type);
 		$deployment_type = $deployment->type;
 		$deployment_plugin_name = $deployment->storagetype;
-	
-		// just for sending the commands	
+
+		// just for sending the commands
 		$resource = new resource();
-        // nothing todo
-	
+		// nothing todo
+
 	}
 
 

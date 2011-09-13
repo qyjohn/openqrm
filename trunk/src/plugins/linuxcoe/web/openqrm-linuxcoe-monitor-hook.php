@@ -3,19 +3,19 @@
 /*
   This file is part of openQRM.
 
-    openQRM is free software: you can redistribute it and/or modify
-    it under the terms of the GNU General Public License version 2
-    as published by the Free Software Foundation.
+	openQRM is free software: you can redistribute it and/or modify
+	it under the terms of the GNU General Public License version 2
+	as published by the Free Software Foundation.
 
-    openQRM is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    GNU General Public License for more details.
+	openQRM is distributed in the hope that it will be useful,
+	but WITHOUT ANY WARRANTY; without even the implied warranty of
+	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+	GNU General Public License for more details.
 
-    You should have received a copy of the GNU General Public License
-    along with openQRM.  If not, see <http://www.gnu.org/licenses/>.
+	You should have received a copy of the GNU General Public License
+	along with openQRM.  If not, see <http://www.gnu.org/licenses/>.
 
-    Copyright 2009, Matthias Rechenburg <matt@openqrm.com>
+	Copyright 2009, Matthias Rechenburg <matt@openqrm.com>
 */
 
 // error_reporting(E_ALL);
@@ -50,7 +50,7 @@ function openqrm_linuxcoe_monitor() {
 
 
 	$lcoe_resource = new linuxcoeresource();
-	$lcoe_resource_list = $lcoe_resource->get_ids();	
+	$lcoe_resource_list = $lcoe_resource->get_ids();
 
 	foreach($lcoe_resource_list as $lcoe_list) {
 		$linuxcoe_id = $lcoe_list['linuxcoe_id'];
@@ -71,14 +71,14 @@ function openqrm_linuxcoe_monitor() {
 			$lcoe_resource_ip=$resource->ip;
 			$lcoe_resource_cmd="$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/linuxcoe/bin/openqrm-linuxcoe-manager revert $lcoe_profile_name $lcoe_resource_id $lcoe_resource_ip $lcoe_resource_mac";
 			$openqrm_server->send_command($lcoe_resource_cmd);
-			
+
 			// remove object from db
 			$lcoe_res->remove($linuxcoe_id);
 
 		}
-	
+
 	}
-	
+
 }
 
 

@@ -20,5 +20,5 @@
 #	Alt
 #	IMG
 #	Target
-..|Local-server
-...|About|plugins/local-server/local-server-about.php|How to use|local-server/plugin.png
+..|本地服务器
+...|插件介绍|plugins/local-server/local-server-about.php|How to use|local-server/plugin.png

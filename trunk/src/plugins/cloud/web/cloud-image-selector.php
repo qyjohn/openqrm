@@ -54,71 +54,72 @@ $private_id_arr = htmlobject_request('cu_id');
 
 function redirect_private($strMsg, $currenttab = 'tab0') {
 	global $thisfile;
-    $url = $thisfile.'?strMsg='.urlencode($strMsg).'&currenttab='.$currenttab."&redirect=yes";
+	$url = $thisfile.'?strMsg='.urlencode($strMsg).'&currenttab='.$currenttab."&redirect=yes";
 	echo "<meta http-equiv=\"refresh\" content=\"0; URL=$url\">";
 	exit;
 }
 
 
 // check if we got some actions to do
+$strMsg = '';
 if (htmlobject_request('redirect') != 'yes') {
-    if(htmlobject_request('action') != '') {
-        switch (htmlobject_request('action')) {
-            case 'set':
-                if (isset($_REQUEST['identifier'])) {
-                    foreach($_REQUEST['identifier'] as $id) {
-                        $pimage = new image();
-                        $pimage->get_instance_by_id($id);
-                        $private_cu_id = $private_id_arr[$id];
-                        if ($private_cu_id == -1) {
-                            $private_name = "Hide";
-                        } else if ($private_cu_id == 0) {
-                            $private_name = "All";
-                        } else {
-                            $pclouduser = new clouduser();
-                            $pclouduser->get_instance_by_id($private_cu_id);
-                            $private_name = $pclouduser->name;
-                        }
-                        $strMsg .= "Setting image $pimage->name to $private_name ( $private_cu_id )....<br>";
+	if(htmlobject_request('action') != '') {
+		switch (htmlobject_request('action')) {
+			case 'set':
+				if (isset($_REQUEST['identifier'])) {
+					foreach($_REQUEST['identifier'] as $id) {
+						$pimage = new image();
+						$pimage->get_instance_by_id($id);
+						$private_cu_id = $private_id_arr[$id];
+						if ($private_cu_id == -1) {
+							$private_name = "Hide";
+						} else if ($private_cu_id == 0) {
+							$private_name = "All";
+						} else {
+							$pclouduser = new clouduser();
+							$pclouduser->get_instance_by_id($private_cu_id);
+							$private_name = $pclouduser->name;
+						}
+						$strMsg .= "Setting image $pimage->name to $private_name ( $private_cu_id )....<br>";
 
-                        // check if existing, if not create, otherwise update
-                        unset($cloud_private_image);
-                        $cloud_private_image = new cloudprivateimage();
-                        $cloud_private_image->get_instance_by_image_id($id);
-                        if (strlen($cloud_private_image->cu_id)) {
-                            if ($private_cu_id == -1) {
-                                // remove from table
-                                $cloud_private_image->remove($cloud_private_image->id);
-                            } else {
-                                // update
-                                $private_cloud_image_fields["co_cu_id"] = $private_cu_id;
-                                $cloud_private_image->update($cloud_private_image->id, $private_cloud_image_fields);
-                                unset($private_cloud_image_fields);
-                            }
+						// check if existing, if not create, otherwise update
+						unset($cloud_private_image);
+						$cloud_private_image = new cloudprivateimage();
+						$cloud_private_image->get_instance_by_image_id($id);
+						if (strlen($cloud_private_image->cu_id)) {
+							if ($private_cu_id == -1) {
+								// remove from table
+								$cloud_private_image->remove($cloud_private_image->id);
+							} else {
+								// update
+								$private_cloud_image_fields["co_cu_id"] = $private_cu_id;
+								$cloud_private_image->update($cloud_private_image->id, $private_cloud_image_fields);
+								unset($private_cloud_image_fields);
+							}
 
-                        } else {
-                            // create
-                            if ($private_cu_id >= 0) {
-                                // create array for add
-                                $private_cloud_image_fields["co_id"]=openqrm_db_get_free_id('co_id', $cloud_private_image->_db_table);
-                                $private_cloud_image_fields["co_image_id"] = $id;
-                                $private_cloud_image_fields["co_cu_id"] = $private_cu_id;
-                                $private_cloud_image_fields["co_state"] = 1;
-                                $cloud_private_image->add($private_cloud_image_fields);
-                                unset($private_cloud_image_fields);
-                            }
-                        }
-
-
-                    }
-                    redirect_private($strMsg, 'tab0');
-                }
-                break;
+						} else {
+							// create
+							if ($private_cu_id >= 0) {
+								// create array for add
+								$private_cloud_image_fields["co_id"]=openqrm_db_get_free_id('co_id', $cloud_private_image->_db_table);
+								$private_cloud_image_fields["co_image_id"] = $id;
+								$private_cloud_image_fields["co_cu_id"] = $private_cu_id;
+								$private_cloud_image_fields["co_state"] = 1;
+								$cloud_private_image->add($private_cloud_image_fields);
+								unset($private_cloud_image_fields);
+							}
+						}
 
 
+					}
+					redirect_private($strMsg, 'tab0');
+				}
+				break;
 
-        }
-    }
+
+
+		}
+	}
 }
 
 
@@ -126,17 +127,17 @@ function cloud_image_selector() {
 
 	global $OPENQRM_USER;
 	global $OPENQRM_SERVER_IP_ADDRESS;
-    global $OPENQRM_WEB_PROTOCOL;
+	global $OPENQRM_WEB_PROTOCOL;
 	global $thisfile;
 
-    // private-image enabled ?
-    $cp_conf = new cloudconfig();
-    $show_private_image = $cp_conf->get_value(21);	// show_private_image
-    if (strcmp($show_private_image, "true")) {
-        $strMsg = "<strong>Private image feature is not enabled in this Cloud !</strong>";
-        return $strMsg;
-        exit(0);
-    }
+	// private-image enabled ?
+	$cp_conf = new cloudconfig();
+	$show_private_image = $cp_conf->get_value(21);	// show_private_image
+	if (strcmp($show_private_image, "true")) {
+		$strMsg = "<strong>Private image feature is not enabled in this Cloud !</strong>";
+		return $strMsg;
+		exit(0);
+	}
 	// get external name
 	$external_portal_name = $cp_conf->get_value(3);  // 3 is the external name
 	if (!strlen($external_portal_name)) {
@@ -164,38 +165,38 @@ function cloud_image_selector() {
 
 	$arBody = array();
 
-    // prepare selector array
-    $cloud_user_sel = new clouduser();
-    $cloud_user_arr = $cloud_user_sel->get_list();
-    $cloud_user_arr = array_reverse($cloud_user_arr);
-    $cloud_user_arr[] = array('value'=> '0', 'label'=> 'All');
-    $cloud_user_arr[] = array('value'=> '-1', 'label'=> 'Hide');
-    $cloud_user_arr = array_reverse($cloud_user_arr);
+	// prepare selector array
+	$cloud_user_sel = new clouduser();
+	$cloud_user_arr = $cloud_user_sel->get_list();
+	$cloud_user_arr = array_reverse($cloud_user_arr);
+	$cloud_user_arr[] = array('value'=> '0', 'label'=> 'All');
+	$cloud_user_arr[] = array('value'=> '-1', 'label'=> 'Hide');
+	$cloud_user_arr = array_reverse($cloud_user_arr);
 
 	// db select
-    $image_count = 0;
+	$image_count = 0;
 	$image_list = new image();
 	$image_array = $image_list->display_overview($table->offset, $table->limit, $table->sort, $table->order);
 	foreach ($image_array as $index => $im) {
 		$image_id = $im["image_id"];
-        $image = new image();
-        $image->get_instance_by_id($image_id);
-        // is a private image already ?
-        $private_image = new cloudprivateimage();
-        $private_image->get_instance_by_image_id($image->id);
-        if (strlen($private_image->cu_id)) {
-            if ($private_image->cu_id > 0) {
-                $cloud_user = new clouduser();
-                $cloud_user->get_instance_by_id($private_image->cu_id);
-                $pi_selected = $cloud_user->id;
-            } else if ($private_image->cu_id == 0) {
-                 $pi_selected = 0;
-            } else {
-                $pi_selected = -1;
-            }
-        } else {
-            $pi_selected = -1;
-        }
+		$image = new image();
+		$image->get_instance_by_id($image_id);
+		// is a private image already ?
+		$private_image = new cloudprivateimage();
+		$private_image->get_instance_by_image_id($image->id);
+		if (strlen($private_image->cu_id)) {
+			if ($private_image->cu_id > 0) {
+				$cloud_user = new clouduser();
+				$cloud_user->get_instance_by_id($private_image->cu_id);
+				$pi_selected = $cloud_user->id;
+			} else if ($private_image->cu_id == 0) {
+				 $pi_selected = 0;
+			} else {
+				$pi_selected = -1;
+			}
+		} else {
+			$pi_selected = -1;
+		}
 
 		$arBody[] = array(
 			'image_id' => $image->id,
@@ -204,7 +205,7 @@ function cloud_image_selector() {
 			'image_type' => $image->type,
 			'image_selector' => htmlobject_select("cu_id[$image->id]", $cloud_user_arr, '', array($pi_selected)),
 		);
-        $image_count++;
+		$image_count++;
 	}
 
 	$table->id = 'Tabelle';
@@ -220,8 +221,8 @@ function cloud_image_selector() {
 		$table->bottom = array('set');
 		$table->identifier = 'image_id';
 	}
-    // do not show the openQRM server and idle image
-    $image_max = $image_list->get_count();
+	// do not show the openQRM server and idle image
+	$image_max = $image_list->get_count();
 	$table->max = $image_max-2;
 
 	//------------------------------------------------------------ set template
@@ -229,7 +230,7 @@ function cloud_image_selector() {
 	$t->debug = false;
 	$t->setFile('tplfile', './tpl/' . 'cloud-image-selector-tpl.php');
 	$t->setVar(array(
-        'external_portal_name' => $external_portal_name,
+		'external_portal_name' => $external_portal_name,
 		'cloud_private_image_table' => $table->get_string(),
 	));
 	$disp =  $t->parse('out', 'tplfile');

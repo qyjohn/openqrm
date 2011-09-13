@@ -36,7 +36,7 @@ function vbox_log() {
 function vbox_lock() {
 	local COMMAND=$1
 	local RET=1
-	
+
 	if [ ! -d `dirname $VBOX_SERVER_LOCK_FILE` ]; then
 		mkdir -p `dirname $VBOX_SERVER_LOCK_FILE`
 	fi
@@ -56,7 +56,7 @@ function vbox_lock() {
 		*)
 			vbox_log vbox_lock "No such command. Try 'aquire' or 'release'"
 			return 1
-			;;	
+			;;
 	esac
 }
 

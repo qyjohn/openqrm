@@ -9,19 +9,19 @@
 /*
   This file is part of openQRM.
 
-    openQRM is free software: you can redistribute it and/or modify
-    it under the terms of the GNU General Public License version 2
-    as published by the Free Software Foundation.
+	openQRM is free software: you can redistribute it and/or modify
+	it under the terms of the GNU General Public License version 2
+	as published by the Free Software Foundation.
 
-    openQRM is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    GNU General Public License for more details.
+	openQRM is distributed in the hope that it will be useful,
+	but WITHOUT ANY WARRANTY; without even the implied warranty of
+	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+	GNU General Public License for more details.
 
-    You should have received a copy of the GNU General Public License
-    along with openQRM.  If not, see <http://www.gnu.org/licenses/>.
+	You should have received a copy of the GNU General Public License
+	along with openQRM.  If not, see <http://www.gnu.org/licenses/>.
 
-    Copyright 2009, Matthias Rechenburg <matt@openqrm.com>
+	Copyright 2009, Matthias Rechenburg <matt@openqrm.com>
 */
 
 
@@ -55,55 +55,55 @@ if ($OPENQRM_USER->role != "administrator") {
 $event->log("$vbox_server_command", $_SERVER['REQUEST_TIME'], 5, "vbox-action", "Processing command $vbox_server_command", "", "", 0, 0, 0);
 switch ($vbox_server_command) {
 
-    // get the incoming vm list
-    case 'get_vbox_server':
-        if (!file_exists($VboxDir)) {
-            mkdir($VboxDir);
-        }
-        $filename = $VboxDir."/".$_POST['filename'];
-        $filedata = base64_decode($_POST['filedata']);
-        echo "<h1>$filename</h1>";
-        $fout = fopen($filename,"wb");
-        fwrite($fout, $filedata);
-        fclose($fout);
-        break;
+	// get the incoming vm list
+	case 'get_vbox_server':
+		if (!file_exists($VboxDir)) {
+			mkdir($VboxDir);
+		}
+		$filename = $VboxDir."/".$_POST['filename'];
+		$filedata = base64_decode($_POST['filedata']);
+		echo "<h1>$filename</h1>";
+		$fout = fopen($filename,"wb");
+		fwrite($fout, $filedata);
+		fclose($fout);
+		break;
 
-    // send command to send the vm list
-    case 'refresh_vm_list':
-        $vbox_appliance = new appliance();
-        $vbox_appliance->get_instance_by_id($vbox_server_id);
-        $vbox_server = new resource();
-        $vbox_server->get_instance_by_id($vbox_appliance->resources);
-        $resource_command="$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/vbox/bin/openqrm-vbox post_vm_list -u $OPENQRM_USER->name -p $OPENQRM_USER->password";
-        $vbox_server->send_command($vbox_server->ip, $resource_command);
-        break;
+	// send command to send the vm list
+	case 'refresh_vm_list':
+		$vbox_appliance = new appliance();
+		$vbox_appliance->get_instance_by_id($vbox_server_id);
+		$vbox_server = new resource();
+		$vbox_server->get_instance_by_id($vbox_appliance->resources);
+		$resource_command="$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/vbox/bin/openqrm-vbox post_vm_list -u $OPENQRM_ADMIN->name -p $OPENQRM_ADMIN->password";
+		$vbox_server->send_command($vbox_server->ip, $resource_command);
+		break;
 
-    // get the incoming vm config
-    case 'get_vbox_config':
-        if (!file_exists($VboxDir)) {
-            mkdir($VboxDir);
-        }
-        $filename = $VboxDir."/".$_POST['filename'];
-        $filedata = base64_decode($_POST['filedata']);
-        echo "<h1>$filename</h1>";
-        $fout = fopen($filename,"wb");
-        fwrite($fout, $filedata);
-        fclose($fout);
-        break;
+	// get the incoming vm config
+	case 'get_vbox_config':
+		if (!file_exists($VboxDir)) {
+			mkdir($VboxDir);
+		}
+		$filename = $VboxDir."/".$_POST['filename'];
+		$filedata = base64_decode($_POST['filedata']);
+		echo "<h1>$filename</h1>";
+		$fout = fopen($filename,"wb");
+		fwrite($fout, $filedata);
+		fclose($fout);
+		break;
 
-    // send command to send the vm config
-    case 'refresh_vm_config':
-        $vbox_appliance = new appliance();
-        $vbox_appliance->get_instance_by_id($vbox_server_id);
-        $vbox_server = new resource();
-        $vbox_server->get_instance_by_id($vbox_appliance->resources);
-        $resource_command="$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/vbox/bin/openqrm-vbox post_vm_config -n $vbox_server_name -u $OPENQRM_USER->name -p $OPENQRM_USER->password";
-        $vbox_server->send_command($vbox_server->ip, $resource_command);
-        break;
+	// send command to send the vm config
+	case 'refresh_vm_config':
+		$vbox_appliance = new appliance();
+		$vbox_appliance->get_instance_by_id($vbox_server_id);
+		$vbox_server = new resource();
+		$vbox_server->get_instance_by_id($vbox_appliance->resources);
+		$resource_command="$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/vbox/bin/openqrm-vbox post_vm_config -n $vbox_server_name -u $OPENQRM_ADMIN->name -p $OPENQRM_ADMIN->password";
+		$vbox_server->send_command($vbox_server->ip, $resource_command);
+		break;
 
-    default:
-        $event->log("$vbox_server_command", $_SERVER['REQUEST_TIME'], 3, "vbox-action", "No such vbox command ($vbox_server_command)", "", "", 0, 0, 0);
-        break;
+	default:
+		$event->log("$vbox_server_command", $_SERVER['REQUEST_TIME'], 3, "vbox-action", "No such vbox command ($vbox_server_command)", "", "", 0, 0, 0);
+		break;
 
 
 }

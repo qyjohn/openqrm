@@ -2,19 +2,19 @@
 /*
   This file is part of openQRM.
 
-    openQRM is free software: you can redistribute it and/or modify
-    it under the terms of the GNU General Public License version 2
-    as published by the Free Software Foundation.
+	openQRM is free software: you can redistribute it and/or modify
+	it under the terms of the GNU General Public License version 2
+	as published by the Free Software Foundation.
 
-    openQRM is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    GNU General Public License for more details.
+	openQRM is distributed in the hope that it will be useful,
+	but WITHOUT ANY WARRANTY; without even the implied warranty of
+	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+	GNU General Public License for more details.
 
-    You should have received a copy of the GNU General Public License
-    along with openQRM.  If not, see <http://www.gnu.org/licenses/>.
+	You should have received a copy of the GNU General Public License
+	along with openQRM.  If not, see <http://www.gnu.org/licenses/>.
 
-    Copyright 2009, Matthias Rechenburg <matt@openqrm.com>
+	Copyright 2009, Matthias Rechenburg <matt@openqrm.com>
 */
 
 
@@ -36,18 +36,18 @@ global $event;
 
 
 function wait_for_identfile($sfile) {
-    $refresh_delay=1;
-    $refresh_loop_max=20;
-    $refresh_loop=0;
-    while (!file_exists($sfile)) {
-        sleep($refresh_delay);
-        $refresh_loop++;
-        flush();
-        if ($refresh_loop > $refresh_loop_max)  {
-            return false;
-        }
-    }
-    return true;
+	$refresh_delay=1;
+	$refresh_loop_max=20;
+	$refresh_loop=0;
+	while (!file_exists($sfile)) {
+		sleep($refresh_delay);
+		$refresh_loop++;
+		flush();
+		if ($refresh_loop > $refresh_loop_max)  {
+			return false;
+		}
+	}
+	return true;
 }
 
 
@@ -57,16 +57,28 @@ function get_image_rootdevice_identifier($tmpfs_storage_id) {
 	global $event;
 
 	$rootdevice_identifier_array = array();
-    $rootdevice_identifier_array[] = array("value" => "500", "label" => "500MB tmpfs");
-    $rootdevice_identifier_array[] = array("value" => "1000", "label" => "1GB tmpfs");
-    $rootdevice_identifier_array[] = array("value" => "2000", "label" => "2GB tmpfs");
-    $rootdevice_identifier_array[] = array("value" => "5000", "label" => "5GB tmpfs");
+	$rootdevice_identifier_array[] = array("value" => "500", "label" => "500MB tmpfs");
+	$rootdevice_identifier_array[] = array("value" => "1000", "label" => "1GB tmpfs");
+	$rootdevice_identifier_array[] = array("value" => "2000", "label" => "2GB tmpfs");
+	$rootdevice_identifier_array[] = array("value" => "5000", "label" => "5GB tmpfs");
 	return $rootdevice_identifier_array;
 
 }
 
 function get_image_default_rootfs() {
 	return "ext3";
+}
+
+function get_rootfs_transfer_methods() {
+	return true;
+}
+
+function get_rootfs_set_password_method() {
+	return true;
+}
+
+function get_is_network_deployment() {
+	return true;
 }
 
 ?>

@@ -31,19 +31,19 @@
 
 <h4>Add new VM to Citrix XenServer Host id {citrix_server_id}</h4>
 <div style="float:left;">
-{citrix_server_name}
+	{citrix_server_name}
 
-<h4>VM Configuration</h4>
+	<h4>VM Configuration</h4>
 
-{citrix_server_cpus}
-{citrix_server_mac}
-{citrix_server_ram}
+	{citrix_server_cpus}
+	{citrix_server_mac}
+	{citrix_server_ram}
 </div>
 
 
 <div style="float:right;">
-{template_list_select}
-Please select one of the HVM templates supporting PXE-boot
+	{template_list_select}
+	Please select one of the HVM templates supporting PXE-boot
 
 </div>
 

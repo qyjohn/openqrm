@@ -8,19 +8,19 @@
 /*
   This file is part of openQRM.
 
-    openQRM is free software: you can redistribute it and/or modify
-    it under the terms of the GNU General Public License version 2
-    as published by the Free Software Foundation.
+	openQRM is free software: you can redistribute it and/or modify
+	it under the terms of the GNU General Public License version 2
+	as published by the Free Software Foundation.
 
-    openQRM is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    GNU General Public License for more details.
+	openQRM is distributed in the hope that it will be useful,
+	but WITHOUT ANY WARRANTY; without even the implied warranty of
+	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+	GNU General Public License for more details.
 
-    You should have received a copy of the GNU General Public License
-    along with openQRM.  If not, see <http://www.gnu.org/licenses/>.
+	You should have received a copy of the GNU General Public License
+	along with openQRM.  If not, see <http://www.gnu.org/licenses/>.
 
-    Copyright 2009, Matthias Rechenburg <matt@openqrm.com>
+	Copyright 2009, Matthias Rechenburg <matt@openqrm.com>
 */
 
 
@@ -76,56 +76,68 @@ unset($xen_fields["xen_command"]);
 $event->log("$xen_command", $_SERVER['REQUEST_TIME'], 5, "xen-action", "Processing xen command $xen_command", "", "", 0, 0, 0);
 switch ($xen_command) {
 
-    case 'get_xen':
-        if (!file_exists($XenDir)) {
-            mkdir($XenDir);
-        }
-        $filename = $XenDir."/".$_POST['filename'];
-        $filedata = base64_decode($_POST['filedata']);
-        echo "<h1>$filename</h1>";
-        $fout = fopen($filename,"wb");
-        fwrite($fout, $filedata);
-        fclose($fout);
-        break;
+	case 'get_xen':
+		if (!file_exists($XenDir)) {
+			mkdir($XenDir);
+		}
+		$filename = $XenDir."/".$_POST['filename'];
+		$filedata = base64_decode($_POST['filedata']);
+		echo "<h1>$filename</h1>";
+		$fout = fopen($filename,"wb");
+		fwrite($fout, $filedata);
+		fclose($fout);
+		break;
 
-    case 'refresh_vm_list':
-        $xen_appliance = new appliance();
-        $xen_appliance->get_instance_by_id($xen_id);
-        $xen = new resource();
-        $xen->get_instance_by_id($xen_appliance->resources);
-        $resource_command="$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/xen/bin/openqrm-xen post_vm_list -u $OPENQRM_USER->name -p $OPENQRM_USER->password";
-        $xen->send_command($xen->ip, $resource_command);
-        sleep($refresh_delay);
-        break;
-
-
-    // get the incoming vm config
-    case 'get_xen_config':
-        if (!file_exists($XenDir)) {
-            mkdir($XenDir);
-        }
-        $filename = $XenDir."/".$_POST['filename'];
-        $filedata = base64_decode($_POST['filedata']);
-        echo "<h1>$filename</h1>";
-        $fout = fopen($filename,"wb");
-        fwrite($fout, $filedata);
-        fclose($fout);
-        break;
-
-    // send command to send the vm config
-    case 'refresh_vm_config':
-        $xen_appliance = new appliance();
-        $xen_appliance->get_instance_by_id($xen_id);
-        $xen_server = new resource();
-        $xen_server->get_instance_by_id($xen_appliance->resources);
-        $resource_command="$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/xen/bin/openqrm-xen post_vm_config -n $xen_server_name -u $OPENQRM_USER->name -p $OPENQRM_USER->password";
-        $xen_server->send_command($xen_server->ip, $resource_command);
-        break;
+	case 'refresh_vm_list':
+		$xen_appliance = new appliance();
+		$xen_appliance->get_instance_by_id($xen_id);
+		$xen = new resource();
+		$xen->get_instance_by_id($xen_appliance->resources);
+		$resource_command="$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/xen/bin/openqrm-xen post_vm_list -u $OPENQRM_ADMIN->name -p $OPENQRM_ADMIN->password";
+		$xen->send_command($xen->ip, $resource_command);
+		sleep($refresh_delay);
+		break;
 
 
-    default:
-        $event->log("$xen_command", $_SERVER['REQUEST_TIME'], 3, "xen-action", "No such event command ($xen_command)", "", "", 0, 0, 0);
-        break;
+	// get the incoming vm config
+	case 'get_xen_config':
+		if (!file_exists($XenDir)) {
+			mkdir($XenDir);
+		}
+		$filename = $XenDir."/".$_POST['filename'];
+		$filedata = base64_decode($_POST['filedata']);
+		echo "<h1>$filename</h1>";
+		$fout = fopen($filename,"wb");
+		fwrite($fout, $filedata);
+		fclose($fout);
+		break;
+
+	// send command to send the vm config
+	case 'refresh_vm_config':
+		$xen_appliance = new appliance();
+		$xen_appliance->get_instance_by_id($xen_id);
+		$xen_server = new resource();
+		$xen_server->get_instance_by_id($xen_appliance->resources);
+		$resource_command="$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/xen/bin/openqrm-xen post_vm_config -n $xen_server_name -u $OPENQRM_ADMIN->name -p $OPENQRM_ADMIN->password";
+		$xen_server->send_command($xen_server->ip, $resource_command);
+		break;
+
+	// get VM migration status
+	case 'get_vm_migration':
+		if (!file_exists($XenDir)) {
+			mkdir($XenDir);
+		}
+		$filename = $XenDir."/".$_POST['filename'];
+		$filedata = base64_decode($_POST['filedata']);
+		echo "<h1>$filename</h1>";
+		$fout = fopen($filename,"wb");
+		fwrite($fout, $filedata);
+		fclose($fout);
+		break;
+
+	default:
+		$event->log("$xen_command", $_SERVER['REQUEST_TIME'], 3, "xen-action", "No such event command ($xen_command)", "", "", 0, 0, 0);
+		break;
 
 
 }

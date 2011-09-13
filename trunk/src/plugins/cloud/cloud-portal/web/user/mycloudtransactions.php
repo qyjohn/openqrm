@@ -1,27 +1,25 @@
-<html>
-<head>
+
 <link type="text/css" rel="stylesheet" href="../css/calendar.css">
 <link rel="stylesheet" type="text/css" href="../css/mycloud.css" />
 
-</head>
 
 <?php
 /*
   This file is part of openQRM.
 
-    openQRM is free software: you can redistribute it and/or modify
-    it under the terms of the GNU General Public License version 2
-    as published by the Free Software Foundation.
+	openQRM is free software: you can redistribute it and/or modify
+	it under the terms of the GNU General Public License version 2
+	as published by the Free Software Foundation.
 
-    openQRM is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    GNU General Public License for more details.
+	openQRM is distributed in the hope that it will be useful,
+	but WITHOUT ANY WARRANTY; without even the implied warranty of
+	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+	GNU General Public License for more details.
 
-    You should have received a copy of the GNU General Public License
-    along with openQRM.  If not, see <http://www.gnu.org/licenses/>.
+	You should have received a copy of the GNU General Public License
+	along with openQRM.  If not, see <http://www.gnu.org/licenses/>.
 
-    Copyright 2009, Matthias Rechenburg <matt@openqrm.com>
+	Copyright 2009, Matthias Rechenburg <matt@openqrm.com>
 */
 
 
@@ -64,7 +62,7 @@ function my_cloud_transactions() {
 	global $OPENQRM_USER;
 	global $thisfile;
 	global $auth_user;
-    $table = new htmlobject_table_builder('ct_id', 'DESC', '', '', 'transactions');
+	$table = new htmlobject_table_builder('ct_id', 'DESC', '', '', 'transactions');
 	$arHead = array();
 
 	$arHead['ct_id'] = array();
@@ -91,16 +89,16 @@ function my_cloud_transactions() {
 	$arBody = array();
 
 	// db select
-    $transaction_count=0;
-    $cu_tmp = new clouduser();
-    $cu_tmp->get_instance_by_name($auth_user);
+	$transaction_count=0;
+	$cu_tmp = new clouduser();
+	$cu_tmp->get_instance_by_name($auth_user);
 	$cl_transaction = new cloudtransaction();
 	$transaction_array = $cl_transaction->display_overview_per_clouduser($cu_tmp->id, $table->offset, $table->limit, $table->sort, $table->order);
 	foreach ($transaction_array as $index => $ct) {
 		// format time
 		$timestamp=$ct["ct_time"];
 		$ct_time = date("d-m-Y H-i", $timestamp);
-        $ct_charge = $ct["ct_ccu_charge"];
+		$ct_charge = $ct["ct_ccu_charge"];
 		// fill the array for the table
 		$arBody[] = array(
 			'ct_id' => $ct["ct_id"],
@@ -111,7 +109,7 @@ function my_cloud_transactions() {
 			'ct_reason' => $ct["ct_reason"],
 			'ct_comment' => $ct["ct_comment"],
 		);
-        $transaction_count++;
+		$transaction_count++;
 	}
 
 	$table->id = 'Tabelle';
@@ -123,13 +121,13 @@ function my_cloud_transactions() {
 	$table->head = $arHead;
 	$table->body = $arBody;
 	$table->identifier = 'ct_id';
-    $table->max = $cl_transaction->get_count_per_clouduser($cu_tmp->id);
-    // set template
+	$table->max = $cl_transaction->get_count_per_clouduser($cu_tmp->id);
+	// set template
 	$t = new Template_PHPLIB();
 	$t->debug = false;
 	$t->setFile('tplfile', './' . 'mycloudtransactions-tpl.php');
 	$t->setVar(array(
-        'mycloud_transaction_table' => $table->get_string(),
+		'mycloud_transaction_table' => $table->get_string(),
 	));
 	$disp =  $t->parse('out', 'tplfile');
 	return $disp;

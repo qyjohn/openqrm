@@ -34,7 +34,7 @@ require_once "$RootDir/include/user.inc.php";
 require_once "$RootDir/include/htmlobject.inc.php";
 
 function citrix_about() {
-   // set template
+	// set template
 	$t = new Template_PHPLIB();
 	$t->debug = false;
 	$t->setFile('tplfile', './tpl/' . 'citrix-about.tpl.php');

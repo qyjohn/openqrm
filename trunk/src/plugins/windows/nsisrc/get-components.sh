@@ -1,12 +1,13 @@
 #!/bin/bash
 
-COPSSH_DOWNLOAD="http://sourceforge.net/projects/sereds/files/copSSH/3.0.3/Copssh_3.0.3_Installer.zip/download"
+COPSSH_DOWNLOAD="http://downloads.sourceforge.net/project/sereds/Copssh/3.1.4/Copssh_3.1.4_Installer.zip"
 WGET_DOWNLOAD="http://users.ugent.be/~bpuype/cgi-bin/fetch.pl?dl=wget/wget.exe"
-SLEEP_DOWNLOAD="http://openqrm-ng.net/addons/openqrm-client/4.6/sleep.exe"
+SLEEP_DOWNLOAD="http://openqrm-support.de/openqrm-build/4.8/plugins/windows/sleep.exe"
 
-if [ ! -f Copssh_3.0.3_Installer.zip ]; then
-    echo "-> downloading Copssh 3.0.3 from $COPSSH_DOWNLOAD"
+if [ ! -f Copssh_3.1.4_Installer.zip ]; then
+    echo "-> downloading Copssh 3.1.4 from $COPSSH_DOWNLOAD"
     wget $COPSSH_DOWNLOAD
+    unzip Copssh_3.1.4_Installer.zip
 fi
 if [ ! -f wget.exe ]; then
     echo "-> downloading Wget.exe from $WGET_DOWNLOAD"

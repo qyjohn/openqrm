@@ -23,80 +23,80 @@
 }
 
 a {
-    text-decoration:none
+	text-decoration:none
 }
 
 #cloudoffer {
-    position: absolute;
-    left: 220px;
-    top: 265px;
-    width: 250px;
-    height: 20px;
+	position: absolute;
+	left: 220px;
+	top: 265px;
+	width: 250px;
+	height: 20px;
 }
 
 
 #cpu {
-    position: absolute;
-    left: 100px;
-    top: 280px;
-    width: 120px;
-    height: 70px;
+	position: absolute;
+	left: 100px;
+	top: 280px;
+	width: 120px;
+	height: 70px;
 }
 
 #disk {
-    position: absolute;
-    left: 185px;
-    top: 225px;
-    width: 100px;
-    height: 70px;
+	position: absolute;
+	left: 185px;
+	top: 225px;
+	width: 100px;
+	height: 70px;
 }
 
 #ha {
-    position: absolute;
-    left: 280px;
-    top: 210px;
-    width: 100px;
-    height: 70px;
+	position: absolute;
+	left: 280px;
+	top: 210px;
+	width: 100px;
+	height: 70px;
 }
 
 #kernel {
-    position: absolute;
-    left: 360px;
-    top: 200px;
-    width: 100px;
-    height: 70px;
+	position: absolute;
+	left: 360px;
+	top: 200px;
+	width: 100px;
+	height: 70px;
 }
 
 #memory {
-    position: absolute;
-    left: 420px;
-    top: 225px;
-    width: 100px;
-    height: 70px;
+	position: absolute;
+	left: 420px;
+	top: 225px;
+	width: 100px;
+	height: 70px;
 }
 
 #network {
-    position: absolute;
-    left: 500px;
-    top: 280px;
-    width: 100px;
-    height: 70px;
+	position: absolute;
+	left: 500px;
+	top: 280px;
+	width: 100px;
+	height: 70px;
 }
 
 #puppet {
-    position: absolute;
-    left: 420px;
-    top: 320px;
-    width: 100px;
-    height: 70px;
+	position: absolute;
+	left: 420px;
+	top: 320px;
+	width: 100px;
+	height: 70px;
 }
 
 #quantity {
-    position: absolute;
-    left: 320px;
-    top: 340px;
-    width: 100px;
-    height: 70px;
+	position: absolute;
+	left: 320px;
+	top: 340px;
+	width: 100px;
+	height: 70px;
 }
 
 #resource {

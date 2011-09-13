@@ -2,19 +2,19 @@
 /*
   This file is part of openQRM.
 
-    openQRM is free software: you can redistribute it and/or modify
-    it under the terms of the GNU General Public License version 2
-    as published by the Free Software Foundation.
+	openQRM is free software: you can redistribute it and/or modify
+	it under the terms of the GNU General Public License version 2
+	as published by the Free Software Foundation.
 
-    openQRM is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    GNU General Public License for more details.
+	openQRM is distributed in the hope that it will be useful,
+	but WITHOUT ANY WARRANTY; without even the implied warranty of
+	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+	GNU General Public License for more details.
 
-    You should have received a copy of the GNU General Public License
-    along with openQRM.  If not, see <http://www.gnu.org/licenses/>.
+	You should have received a copy of the GNU General Public License
+	along with openQRM.  If not, see <http://www.gnu.org/licenses/>.
 
-    Copyright 2009, Matthias Rechenburg <matt@openqrm.com>
+	Copyright 2009, Matthias Rechenburg <matt@openqrm.com>
 */
 
 
@@ -65,19 +65,19 @@ function get_group_info($group_name) {
 	global $event;
 	$filename = "$puppet_group_dir/$group_name.pp";
 	if (file_exists($filename)) {
-	    if (!$handle = fopen($filename, 'r')) {
+		if (!$handle = fopen($filename, 'r')) {
 			$event->log("get_group_info", $_SERVER['REQUEST_TIME'], 2, "puppet.class.php", "Cannot open file ($filename)", "", "", 0, 0, 0);
 			exit;
-   		}
+		}
 		while (!feof($handle)) {
 			$info = fgets($handle, 4096);
 			if (strstr($info, "#")) {
 				$info = str_replace("#", "", $info);
-		   		fclose($handle);
+				fclose($handle);
 				return $info;
 			}
 		}
-   	}
+	}
 
 
 }
@@ -99,20 +99,20 @@ function set_groups($appliance_name, $puppet_group_array) {
 	global $event;
 	$puppet_domain = $this->get_domain();
 	$filename = "$puppet_appliance_dir/$appliance_name.$puppet_domain.pp";
-    if (!$handle = fopen($filename, 'w+')) {
-    	$event->log("set_groups", $_SERVER['REQUEST_TIME'], 2, "puppet.class.php", "Cannot open file ($filename)", "", "", 0, 0, 0);
+	if (!$handle = fopen($filename, 'w+')) {
+		$event->log("set_groups", $_SERVER['REQUEST_TIME'], 2, "puppet.class.php", "Cannot open file ($filename)", "", "", 0, 0, 0);
 		exit;
-    }
-    // header 
-    fwrite($handle, "\nnode '$appliance_name.$puppet_domain' {\n");
-	// body with groups 
+	}
+	// header
+	fwrite($handle, "\nnode '$appliance_name.$puppet_domain' {\n");
+	// body with groups
 	foreach($puppet_group_array as $puppet_group) {
 		$puppet_include = "     include $puppet_group\n";
-	    fwrite($handle, $puppet_include);
+		fwrite($handle, $puppet_include);
 	}
 	// base
-    fwrite($handle, "}\n\n");
-    fclose($handle);
+	fwrite($handle, "}\n\n");
+	fclose($handle);
 }
 
 
@@ -124,10 +124,10 @@ function get_groups($appliance_name) {
 	$filename = "$puppet_appliance_dir/$appliance_name.$puppet_domain.pp";
 
 	if (file_exists($filename)) {
-	    if (!$handle = fopen($filename, 'r')) {
+		if (!$handle = fopen($filename, 'r')) {
 			$event->log("get_groups", $_SERVER['REQUEST_TIME'], 2, "puppet.class.php", "Cannot open file ($filename)", "", "", 0, 0, 0);
 			exit;
-   		}
+		}
 		while (!feof($handle)) {
 			$buffer = fgets($handle, 4096);
 			if (strstr($buffer, "include")) {
@@ -136,8 +136,8 @@ function get_groups($appliance_name) {
 				$puppet_group_array[] .= $buffer;
 			}
 		}
-   		fclose($handle);
-   	}
+		fclose($handle);
+	}
 
 
 	return $puppet_group_array;

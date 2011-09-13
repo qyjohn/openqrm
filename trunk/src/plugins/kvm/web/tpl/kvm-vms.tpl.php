@@ -24,14 +24,14 @@
 </style>
 <form action="{formaction}" method="GET">
 
-<h1><img border=0 src="/openqrm/base/plugins/kvm/img/manager.png"> KVM VM Manager</h1>
+<h1><img border=0 src="/openqrm/base/plugins/kvm/img/manager.png">KVM VM管理器</h1>
 
 <div style="float:left;">
 {kvm_server_table}
 </div>
-
+<p>
 <div style="float:left;">
-<h4>KVM vms on resource {kvm_server_id}/{kvm_server_name}</h4>
+<h3>在 {kvm_server_id}/{kvm_server_name} 上的KVM虚拟机：</h3>
 {kvm_vm_table}
 </div>
 

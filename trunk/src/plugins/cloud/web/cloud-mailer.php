@@ -58,104 +58,104 @@ function redirect($strMsg, $currenttab = 'tab0', $url = '') {
 if(htmlobject_request('action') != '') {
 	switch (htmlobject_request('action')) {
 		case 'send':
-            $strMsg = "";
-            $mailbody = htmlobject_request('mailbody');
-            $mailsubject = htmlobject_request('mailsubject');
-            $mailtype = htmlobject_request('mailtype');
-            $selected_user = htmlobject_request('selected_user');
-//            echo "sending mail ....<br>";
-//            echo "subject : $mailsubject<br>";
-//            echo "body : $mailbody<br>";
-//            echo "mailtype : $mailtype<br>";
-//            echo "selected_user : $selected_user<br>";
-            // check
-            if (!strlen($mailbody)) {
-                $strMsg .="Empty mail-body ! Not sending mail to $selected_user ... <br>";
-                redirect($strMsg, "tab0");
-                exit(0);
-            }
-            if (!strlen($mailsubject)) {
-                $strMsg .="Empty mail-subject ! Not sending mail to $selected_user ... <br>";
-                redirect($strMsg, "tab0");
-                exit(0);
-            }
+			$strMsg = "";
+			$mailbody = htmlobject_request('mailbody');
+			$mailsubject = htmlobject_request('mailsubject');
+			$mailtype = htmlobject_request('mailtype');
+			$selected_user = htmlobject_request('selected_user');
+	//            echo "sending mail ....<br>";
+	//            echo "subject : $mailsubject<br>";
+	//            echo "body : $mailbody<br>";
+	//            echo "mailtype : $mailtype<br>";
+	//            echo "selected_user : $selected_user<br>";
+			// check
+			if (!strlen($mailbody)) {
+				$strMsg .="Empty mail-body ! Not sending mail to $selected_user ... <br>";
+				redirect($strMsg, "tab0");
+				exit(0);
+			}
+			if (!strlen($mailsubject)) {
+				$strMsg .="Empty mail-subject ! Not sending mail to $selected_user ... <br>";
+				redirect($strMsg, "tab0");
+				exit(0);
+			}
 
 
 
-            // get admin email
-            $cc_conf = new cloudconfig();
-            $cc_admin_email = $cc_conf->get_value(1);  // 1 is admin_email
+			// get admin email
+			$cc_conf = new cloudconfig();
+			$cc_admin_email = $cc_conf->get_value(1);  // 1 is admin_email
 
-            if (!strcmp($selected_user, "all")) {
-                // get user id list
-                $c_user = new clouduser();
-                $c_user_list = $c_user->get_all_ids();
-                foreach ($c_user_list as $index => $id_list) {
-                    foreach ($id_list as $index => $id) {
-                        $mail_user = new clouduser();
-                        $mail_user->get_instance_by_id($id);
-                        $mail_user_forename = $mail_user->forename;
-                        $mail_user_lastname = $mail_user->lastname;
-                        $mail_user_email = $mail_user->email;
+			if (!strcmp($selected_user, "all")) {
+				// get user id list
+				$c_user = new clouduser();
+				$c_user_list = $c_user->get_all_ids();
+				foreach ($c_user_list as $index => $id_list) {
+					foreach ($id_list as $index => $id) {
+						$mail_user = new clouduser();
+						$mail_user->get_instance_by_id($id);
+						$mail_user_forename = $mail_user->forename;
+						$mail_user_lastname = $mail_user->lastname;
+						$mail_user_email = $mail_user->email;
 
-                        $full_body = "Dear $mail_user_forename $mail_user_lastname,\n\n$mailbody\n";
-                        $from_header = "From: $cc_admin_email" . "\r\n";
-                        $full_body = wordwrap($full_body, 70);
+						$full_body = "Dear $mail_user_forename $mail_user_lastname,\n\n$mailbody\n";
+						$from_header = "From: $cc_admin_email" . "\r\n";
+						$full_body = wordwrap($full_body, 70);
 
-                        // prepare headers
-                        $headers = "";
-                        // check if to send text or html mails
-                        if (!strcmp($mailtype, "html")) {
-                            // To send HTML mail, the Content-type header must be set
-                            $headers .= 'MIME-Version: 1.0' . "\r\n";
-                            $headers .= 'Content-type: text/html; charset=iso-8859-1' . "\r\n";
-                        }
-                        $headers .= from_header;
+						// prepare headers
+						$headers = "";
+						// check if to send text or html mails
+						if (!strcmp($mailtype, "html")) {
+							// To send HTML mail, the Content-type header must be set
+							$headers .= 'MIME-Version: 1.0' . "\r\n";
+							$headers .= 'Content-type: text/html; charset=iso-8859-1' . "\r\n";
+						}
+						$headers .= from_header;
 
-                        $res = mail($mail_user_email, $mailsubject, $full_body, $from_header);
-                        if ($res) {
-                            $strMsg .="Mail to $mail_user_forename $mail_user_lastname sent successfully!<br>";
-                        } else {
-                            $strMsg .="Could not sent mail to $mail_user_forename $mail_user_lastname !<br>";
-                        }
-                    }
-                }
-                redirect($strMsg, "tab0");
-                exit(0);
+						$res = mail($mail_user_email, $mailsubject, $full_body, $from_header);
+						if ($res) {
+							$strMsg .="Mail to $mail_user_forename $mail_user_lastname sent successfully!<br>";
+						} else {
+							$strMsg .="Could not sent mail to $mail_user_forename $mail_user_lastname !<br>";
+						}
+					}
+				}
+				redirect($strMsg, "tab0");
+				exit(0);
 
 
-            } else {
+			} else {
 
-                // echo "... sending to user $selected_user <br>";
-                $mail_user = new clouduser();
-                $mail_user->get_instance_by_name($selected_user);
-                $mail_user_forename = $mail_user->forename;
-                $mail_user_lastname = $mail_user->lastname;
-                $mail_user_email = $mail_user->email;
+				// echo "... sending to user $selected_user <br>";
+				$mail_user = new clouduser();
+				$mail_user->get_instance_by_name($selected_user);
+				$mail_user_forename = $mail_user->forename;
+				$mail_user_lastname = $mail_user->lastname;
+				$mail_user_email = $mail_user->email;
 
-                $full_body = "Dear $mail_user_forename $mail_user_lastname,\n\n$mailbody\n";
-                $from_header = "From: $cc_admin_email" . "\r\n";
-                $full_body = wordwrap($full_body, 70);
+				$full_body = "Dear $mail_user_forename $mail_user_lastname,\n\n$mailbody\n";
+				$from_header = "From: $cc_admin_email" . "\r\n";
+				$full_body = wordwrap($full_body, 70);
 
-                // prepare headers
-                $headers = "";
-                // check if to send text or html mails
-                if (!strcmp($mailtype, "html")) {
-                    // To send HTML mail, the Content-type header must be set
-                    $headers .= 'MIME-Version: 1.0' . "\r\n";
-                    $headers .= 'Content-type: text/html; charset=iso-8859-1' . "\r\n";
-                }
-                $headers .= from_header;
+				// prepare headers
+				$headers = "";
+				// check if to send text or html mails
+				if (!strcmp($mailtype, "html")) {
+					// To send HTML mail, the Content-type header must be set
+					$headers .= 'MIME-Version: 1.0' . "\r\n";
+					$headers .= 'Content-type: text/html; charset=iso-8859-1' . "\r\n";
+				}
+				$headers .= 'from_header';
 
-                $res = mail($mail_user_email, $mailsubject, $full_body, $from_header);
-                if ($res) {
-                    $strMsg .="Mail to $mail_user_forename $mail_user_lastname sent successfully!<br>";
-                } else {
-                    $strMsg .="Could not sent mail to $mail_user_forename $mail_user_lastname !<br>";
-                }
-                redirect($strMsg, "tab0");
-                exit(0);
-            }
+				$res = mail($mail_user_email, $mailsubject, $full_body, $from_header);
+				if ($res) {
+					$strMsg .="Mail to $mail_user_forename $mail_user_lastname sent successfully!<br>";
+				} else {
+					$strMsg .="Could not sent mail to $mail_user_forename $mail_user_lastname !<br>";
+				}
+				redirect($strMsg, "tab0");
+				exit(0);
+			}
 
 			break;
 	}
@@ -167,10 +167,10 @@ function cloud_user_mailer() {
 
 	global $OPENQRM_USER;
 	global $OPENQRM_SERVER_IP_ADDRESS;
-    global $OPENQRM_WEB_PROTOCOL;
+	global $OPENQRM_WEB_PROTOCOL;
 	global $thisfile;
-    global $mailbody;
-    global $mailsubject;
+	global $mailbody;
+	global $mailsubject;
 	$table = new htmlobject_table_builder();
 
 	$cc_conf = new cloudconfig();
@@ -180,42 +180,42 @@ function cloud_user_mailer() {
 		$external_portal_name = "$OPENQRM_WEB_PROTOCOL://$OPENQRM_SERVER_IP_ADDRESS/cloud-portal";
 	}
 
-    $cloud_user_select = "<select name=\"selected_user\">";
-    $cloud_user_select .= "<option>all</option>";
-    $sc_user = new clouduser();
-    $sc_user_list = $sc_user->get_all_ids();
-    foreach ($sc_user_list as $index => $id_list) {
-        foreach ($id_list as $index => $id) {
-            $smail_user = new clouduser();
-            $smail_user->get_instance_by_id($id);
-            $smail_user_forename = $smail_user->forename;
-            $smail_user_lastname = $smail_user->lastname;
-            $smail_user_email = $smail_user->email;
-            $smail_user_name = $smail_user->name;
-            $cloud_user_select .= "<option>$smail_user_name</option>";
-        }
-    }
-    $cloud_user_select .= "</select>";
-    $mailsubject = "<input type=\"text\" name=\"mailsubject\" value=\"$mailsubject\" size=\"40\" />";
-    $mailbody = "<textarea name=\"mailbody\" rows=\"10\" cols=\"50\">$mailbody</textarea>";
-    $hidden_vars = "<input type=\"hidden\" name=\"action\" value=\"send\" />";
+	$cloud_user_select = "<select name=\"selected_user\">";
+	$cloud_user_select .= "<option>all</option>";
+	$sc_user = new clouduser();
+	$sc_user_list = $sc_user->get_all_ids();
+	foreach ($sc_user_list as $index => $id_list) {
+		foreach ($id_list as $index => $id) {
+			$smail_user = new clouduser();
+			$smail_user->get_instance_by_id($id);
+			$smail_user_forename = $smail_user->forename;
+			$smail_user_lastname = $smail_user->lastname;
+			$smail_user_email = $smail_user->email;
+			$smail_user_name = $smail_user->name;
+			$cloud_user_select .= "<option>$smail_user_name</option>";
+		}
+	}
+	$cloud_user_select .= "</select>";
+	$mailsubject = "<input type=\"text\" name=\"mailsubject\" value=\"$mailsubject\" size=\"40\" />";
+	$mailbody = "<textarea name=\"mailbody\" rows=\"10\" cols=\"50\">$mailbody</textarea>";
+	$hidden_vars = "<input type=\"hidden\" name=\"action\" value=\"send\" />";
 
-    $mailtype = "text<input type=\"radio\" name=\"mailtype\" value=\"text\" checked=\"checked\"/>";
-    $submit = "&nbsp;&nbsp;&nbsp;<input type=\"submit\" value=\"Send\" name=\"submit\" />";
+	$mailtype = "text<input type=\"radio\" name=\"mailtype\" value=\"text\" checked=\"checked\"/>";
+	$submit = "&nbsp;&nbsp;&nbsp;<input type=\"submit\" value=\"Send\" name=\"submit\" />";
 
 	//------------------------------------------------------------ set template
 	$t = new Template_PHPLIB();
 	$t->debug = false;
 	$t->setFile('tplfile', './tpl/' . 'cloud-mailer-tpl.php');
 	$t->setVar(array(
-        'thisfile' => $thisfile,
-        'cloud_user_select' => $cloud_user_select,
-        'mailsubject' => $mailsubject,
-        'mailbody' => $mailbody,
-        'mailtype' => $mailtype,
-        'submit' => $submit,
-        'hidden_vars' => $hidden_vars,
-        'external_portal_name' => $external_portal_name,
+		'thisfile' => $thisfile,
+		'cloud_user_select' => $cloud_user_select,
+		'mailsubject' => $mailsubject,
+		'mailbody' => $mailbody,
+		'mailtype' => $mailtype,
+		'submit' => $submit,
+		'hidden_vars' => $hidden_vars,
+		'external_portal_name' => $external_portal_name,
 	));
 	$disp =  $t->parse('out', 'tplfile');
 	return $disp;

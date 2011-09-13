@@ -8,19 +8,19 @@
 /*
   This file is part of openQRM.
 
-    openQRM is free software: you can redistribute it and/or modify
-    it under the terms of the GNU General Public License version 2
-    as published by the Free Software Foundation.
+	openQRM is free software: you can redistribute it and/or modify
+	it under the terms of the GNU General Public License version 2
+	as published by the Free Software Foundation.
 
-    openQRM is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    GNU General Public License for more details.
+	openQRM is distributed in the hope that it will be useful,
+	but WITHOUT ANY WARRANTY; without even the implied warranty of
+	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+	GNU General Public License for more details.
 
-    You should have received a copy of the GNU General Public License
-    along with openQRM.  If not, see <http://www.gnu.org/licenses/>.
+	You should have received a copy of the GNU General Public License
+	along with openQRM.  If not, see <http://www.gnu.org/licenses/>.
 
-    Copyright 2009, Matthias Rechenburg <matt@openqrm.com>
+	Copyright 2009, Matthias Rechenburg <matt@openqrm.com>
 */
 
 
@@ -53,33 +53,33 @@ if ($OPENQRM_USER->role != "administrator") {
 $event->log("$vmware_server_command", $_SERVER['REQUEST_TIME'], 5, "vmware-server-action", "Processing command $vmware_server_command", "", "", 0, 0, 0);
 switch ($vmware_server_command) {
 
-    case 'get_vmware_server':
-        if (!file_exists($VMwareDir)) {
-            mkdir($VMwareDir);
-        }
-        $filename = $VMwareDir."/".$_POST['filename'];
-        $filedata = base64_decode($_POST['filedata']);
-        echo "<h1>$filename</h1>";
-        $fout = fopen($filename,"wb");
-        fwrite($fout, $filedata);
-        fclose($fout);
-        break;
+	case 'get_vmware_server':
+		if (!file_exists($VMwareDir)) {
+			mkdir($VMwareDir);
+		}
+		$filename = $VMwareDir."/".$_POST['filename'];
+		$filedata = base64_decode($_POST['filedata']);
+		echo "<h1>$filename</h1>";
+		$fout = fopen($filename,"wb");
+		fwrite($fout, $filedata);
+		fclose($fout);
+		break;
 
-    case 'get_vm_config':
-        if (!file_exists($VMwareDir)) {
-            mkdir($VMwareDir);
-        }
-        $filename = $VMwareDir."/".$_POST['filename'];
-        $filedata = base64_decode($_POST['filedata']);
-        echo "<h1>$filename</h1>";
-        $fout = fopen($filename,"wb");
-        fwrite($fout, $filedata);
-        fclose($fout);
-        break;
+	case 'get_vm_config':
+		if (!file_exists($VMwareDir)) {
+			mkdir($VMwareDir);
+		}
+		$filename = $VMwareDir."/".$_POST['filename'];
+		$filedata = base64_decode($_POST['filedata']);
+		echo "<h1>$filename</h1>";
+		$fout = fopen($filename,"wb");
+		fwrite($fout, $filedata);
+		fclose($fout);
+		break;
 
-    default:
-        $event->log("$vmware_server_command", $_SERVER['REQUEST_TIME'], 3, "vmware-server-action", "No such vmware-server command ($vmware_server_command)", "", "", 0, 0, 0);
-        break;
+	default:
+		$event->log("$vmware_server_command", $_SERVER['REQUEST_TIME'], 3, "vmware-server-action", "No such vmware-server command ($vmware_server_command)", "", "", 0, 0, 0);
+		break;
 
 
 }

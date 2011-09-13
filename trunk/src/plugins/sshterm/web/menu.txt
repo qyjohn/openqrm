@@ -13,14 +13,14 @@
 # You should have received a copy of the GNU General Public License
 # along with openQRM.  If not, see <http://www.gnu.org/licenses/>.
 #
-# Copyright 2009, Matthias Rechenburg <matt@openqrm.com>
+# Copyright 2010, Matthias Rechenburg <matt@openqrm.com>
 #
 #	Title
 #	Href
 #	Alt
 #	IMG
 #	Target
-..|SSH-Terminal
-...|About|plugins/sshterm/sshterm-about.php|How to use|sshterm/plugin.png
+..|SSH终端模拟器
+...|插件介绍|plugins/sshterm/sshterm-about.php|How to use|sshterm/plugin.png
 ...|openQRM|plugins/sshterm/sshterm-manager.php?action=login&identifier[]=0|SSH Login to the openQRM Server|sshterm/console.png
-...|SSH-Manager|plugins/sshterm/sshterm-manager.php|SSH-Manager|sshterm/setup.png
+...|SSH管理器|plugins/sshterm/sshterm-manager.php|SSH-Manager|sshterm/setup.png

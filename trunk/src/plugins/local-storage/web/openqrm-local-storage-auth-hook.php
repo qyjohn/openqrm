@@ -5,19 +5,19 @@
 /*
   This file is part of openQRM.
 
-    openQRM is free software: you can redistribute it and/or modify
-    it under the terms of the GNU General Public License version 2
-    as published by the Free Software Foundation.
+	openQRM is free software: you can redistribute it and/or modify
+	it under the terms of the GNU General Public License version 2
+	as published by the Free Software Foundation.
 
-    openQRM is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    GNU General Public License for more details.
+	openQRM is distributed in the hope that it will be useful,
+	but WITHOUT ANY WARRANTY; without even the implied warranty of
+	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+	GNU General Public License for more details.
 
-    You should have received a copy of the GNU General Public License
-    along with openQRM.  If not, see <http://www.gnu.org/licenses/>.
+	You should have received a copy of the GNU General Public License
+	along with openQRM.  If not, see <http://www.gnu.org/licenses/>.
 
-    Copyright 2009, Matthias Rechenburg <matt@openqrm.com>
+	Copyright 2009, Matthias Rechenburg <matt@openqrm.com>
 */
 
 
@@ -68,7 +68,7 @@ global $event;
 		global $OPENQRM_EXEC_PORT;
 		global $IMAGE_AUTHENTICATION_TABLE;
 		global $openqrm_server;
-        global $RootDir;
+		global $RootDir;
 
 		$appliance = new appliance();
 		$appliance->get_instance_by_id($appliance_id);
@@ -94,14 +94,18 @@ global $event;
 		$resource_mac=$resource->mac;
 		$resource_ip=$resource->ip;
 
- 		switch($cmd) {
+		switch($cmd) {
 			case "start":
+				// authenticate the rootfs / needs openqrm user + pass
+				$openqrm_admin_user = new user("openqrm");
+				$openqrm_admin_user->set_user();
+
 				// authenticate the rootfs
 				$event->log("storage_auth_function", $_SERVER['REQUEST_TIME'], 5, "openqrm-local-storage-auth-hook.php", "Authenticating $image_name / $image_rootdevice to resource $resource_ip", "", "", 0, 0, $appliance_id);
-				$auth_start_cmd = "$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/$deployment_plugin_name/bin/openqrm-$deployment_plugin_name auth -r $image_rootdevice -i $resource_ip";
+				$auth_start_cmd = "$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/$deployment_plugin_name/bin/openqrm-$deployment_plugin_name auth -n $image_name -r $image_rootdevice -i $resource_ip -u $openqrm_admin_user->name -p $openqrm_admin_user->password";
 				$resource->send_command($storage_ip, $auth_start_cmd);
 
-	 			// authenticate the install-from-nfs export
+				// authenticate the install-from-nfs export
 				$run_disable_deployment_export=0;
 				$install_from_nfs_param = trim($image->get_deployment_parameter("IMAGE_INSTALL_FROM_NFS"));
 				if (strlen($install_from_nfs_param)) {
@@ -129,7 +133,7 @@ global $event;
 					$run_disable_deployment_export=1;
 				}
 
-	 			// authenticate the transfer-to-nfs export
+				// authenticate the transfer-to-nfs export
 				$transfer_from_nfs_param = trim($image->get_deployment_parameter("IMAGE_TRANSFER_TO_NFS"));
 				if (strlen($transfer_from_nfs_param)) {
 					// storage -> resource -> auth

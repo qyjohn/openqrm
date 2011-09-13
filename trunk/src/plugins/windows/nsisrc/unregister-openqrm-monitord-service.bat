@@ -1,6 +1,6 @@
 @echo off
 C:
-chdir %PROGRAMFILES%\ICW\bin
+chdir \openQRM-Client\ICW\bin
 cygrunsrv.exe -E "openQRM-monitord"
 cygrunsrv.exe -R "openQRM-monitord"
 

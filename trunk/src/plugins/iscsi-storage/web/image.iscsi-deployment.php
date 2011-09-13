@@ -2,19 +2,19 @@
 /*
   This file is part of openQRM.
 
-    openQRM is free software: you can redistribute it and/or modify
-    it under the terms of the GNU General Public License version 2
-    as published by the Free Software Foundation.
+	openQRM is free software: you can redistribute it and/or modify
+	it under the terms of the GNU General Public License version 2
+	as published by the Free Software Foundation.
 
-    openQRM is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    GNU General Public License for more details.
+	openQRM is distributed in the hope that it will be useful,
+	but WITHOUT ANY WARRANTY; without even the implied warranty of
+	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+	GNU General Public License for more details.
 
-    You should have received a copy of the GNU General Public License
-    along with openQRM.  If not, see <http://www.gnu.org/licenses/>.
+	You should have received a copy of the GNU General Public License
+	along with openQRM.  If not, see <http://www.gnu.org/licenses/>.
 
-    Copyright 2009, Matthias Rechenburg <matt@openqrm.com>
+	Copyright 2009, Matthias Rechenburg <matt@openqrm.com>
 */
 
 
@@ -36,24 +36,24 @@ global $event;
 
 
 function wait_for_identfile($sfile) {
-    $refresh_delay=1;
-    $refresh_loop_max=20;
-    $refresh_loop=0;
-    while (!file_exists($sfile)) {
-        sleep($refresh_delay);
-        $refresh_loop++;
-        flush();
-        if ($refresh_loop > $refresh_loop_max)  {
-            return false;
-        }
-    }
-    return true;
+	$refresh_delay=1;
+	$refresh_loop_max=20;
+	$refresh_loop=0;
+	while (!file_exists($sfile)) {
+		sleep($refresh_delay);
+		$refresh_loop++;
+		flush();
+		if ($refresh_loop > $refresh_loop_max)  {
+			return false;
+		}
+	}
+	return true;
 }
 
 
 function get_image_rootdevice_identifier($iscsi_storage_id) {
 	global $OPENQRM_SERVER_BASE_DIR;
-	global $OPENQRM_USER;
+	global $OPENQRM_ADMIN;
 	global $event;
 
 	// place for the storage stat files
@@ -65,29 +65,41 @@ function get_image_rootdevice_identifier($iscsi_storage_id) {
 	$storage_resource->get_instance_by_id($storage->resource_id);
 	$storage_resource_id = $storage_resource->id;
 	$ident_file = "$StorageDir/$storage_resource_id.iscsi.ident";
-    if (file_exists($ident_file)) {
-        unlink($ident_file);
-    }
-    // send command
-	$resource_command="$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/iscsi-storage/bin/openqrm-iscsi-storage post_identifier -u $OPENQRM_USER->name -p $OPENQRM_USER->password";
+	if (file_exists($ident_file)) {
+		unlink($ident_file);
+	}
+	// send command
+	$resource_command="$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/iscsi-storage/bin/openqrm-iscsi-storage post_identifier -u $OPENQRM_ADMIN->name -p $OPENQRM_ADMIN->password";
 	$storage_resource->send_command($storage_resource->ip, $resource_command);
-    if (!wait_for_identfile($ident_file)) {
-        $event->log("get_image_rootdevice_identifier", $_SERVER['REQUEST_TIME'], 2, "image.iscsi-deployment", "Timeout while requesting image identifier from storage id $storage->id", "", "", 0, 0, 0);
-        return;
-    }
-    $fcontent = file($ident_file);
-    foreach($fcontent as $lun_info) {
-        $tpos = strpos($lun_info, ",");
-        $timage_name = trim(substr($lun_info, 0, $tpos));
-        $troot_device = trim(substr($lun_info, $tpos+1));
-        $rootdevice_identifier_array[] = array("value" => "$troot_device", "label" => "$timage_name");
-    }
+	if (!wait_for_identfile($ident_file)) {
+		$event->log("get_image_rootdevice_identifier", $_SERVER['REQUEST_TIME'], 2, "image.iscsi-deployment", "Timeout while requesting image identifier from storage id $storage->id", "", "", 0, 0, 0);
+		return;
+	}
+	$fcontent = file($ident_file);
+	foreach($fcontent as $lun_info) {
+		$tpos = strpos($lun_info, ",");
+		$timage_name = trim(substr($lun_info, 0, $tpos));
+		$troot_device = trim(substr($lun_info, $tpos+1));
+		$rootdevice_identifier_array[] = array("value" => "$troot_device", "label" => "$timage_name");
+	}
 	return $rootdevice_identifier_array;
 
 }
 
 function get_image_default_rootfs() {
 	return "ext3";
+}
+
+function get_rootfs_transfer_methods() {
+	return true;
+}
+
+function get_rootfs_set_password_method() {
+	return true;
+}
+
+function get_is_network_deployment() {
+	return true;
 }
 
 ?>

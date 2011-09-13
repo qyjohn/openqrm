@@ -58,15 +58,15 @@ function puppet_manager_usage() {
 
 # re-run in background via screen
 if [ "$RUN_IN_BACKGROUND" != "true" ]; then
-    if [ -x /usr/bin/screen.real ]; then
-        RUNSCREEN="/usr/bin/screen.real"
-    else
-        RUNSCREEN=`which screen`
-    fi
-    export RUN_IN_BACKGROUND=true
-    SCREEN_NAME=`date +%T%x | sed -e "s/://g" | sed -e "s#/##g"`
-    $RUNSCREEN -dmS $SCREEN_NAME $0 $@
-    exit
+	if [ -x /usr/bin/screen.real ]; then
+		RUNSCREEN="/usr/bin/screen.real"
+	else
+		RUNSCREEN=`which screen`
+	fi
+	export RUN_IN_BACKGROUND=true
+	SCREEN_NAME=`date +%T%x | sed -e "s/://g" | sed -e "s#/##g"`
+	$RUNSCREEN -dmS $SCREEN_NAME $0 $@
+	exit
 fi
 
 PUPPET_MANAGER_COMMAND=$1
@@ -77,8 +77,8 @@ case "$PUPPET_MANAGER_COMMAND" in
 		APPLIANCE_ID=$2
 		APPLIANCE_NAME=$3
 		APPLIANCE_IP=$4
+		openqrm_post_event 0 "start" 5 "openqrm-puppet-manager" "Appliance $APPLIANCE_NAME id $APPLIANCE_ID starting with ip-address $APPLIANCE_IP."
 		puppet_lock aquire
-		puppet_log openqrm-puppet-manager "Appliance $APPLIANCE_NAME id $APPLIANCE_ID starting with ip-address $APPLIANCE_IP"
 		puppetca --clean $APPLIANCE_NAME.$OPENQRM_SERVER_DOMAIN 2>&1 | logger
 		puppet_lock release
 		;;
@@ -86,25 +86,25 @@ case "$PUPPET_MANAGER_COMMAND" in
 		APPLIANCE_ID=$2
 		APPLIANCE_NAME=$3
 		APPLIANCE_IP=$4
+		openqrm_post_event 0 "stop" 5 "openqrm-puppet-manager" "Appliance $APPLIANCE_NAME id $APPLIANCE_ID stopping with ip-address $APPLIANCE_IP."
 		puppet_lock aquire
-		puppet_log openqrm-puppet-manager "Appliance $APPLIANCE_NAME id $APPLIANCE_ID stopping with ip-address $APPLIANCE_IP"
 		puppetca --clean $APPLIANCE_NAME.$OPENQRM_SERVER_DOMAIN 2>&1 | logger
 		puppet_lock release
 		;;
 	auto_sign_false)
+		openqrm_post_event 0 "auto_sign_false" 5 "openqrm-puppet-manager" "Stopping automatic signing of puppet-ca's."
 		puppet_lock aquire
-		puppet_log openqrm-puppet-manager "Stopping automatic signing of puppet-ca's"
 		rm -f /etc/puppet/autosign.conf
 		puppet_lock release
 		;;
 	auto_sign_true)
+		openqrm_post_event 0 "auto_sign_false" 5 "openqrm-puppet-manager" "Started automatic signing of puppet-ca's."
 		puppet_lock aquire
-		puppet_log openqrm-puppet-manager "Started automatic signing of puppet-ca's"
 		echo "*.$OPENQRM_SERVER_DOMAIN" > /etc/puppet/autosign.conf
 		puppet_lock release
 		;;
 	*)
-		echo "ERROR: Free commandline arguments are not allowed"
+		echo "ERROR: Free commandline arguments are not allowed!"
 		puppet_manager_usage
 		exit 6
 		;;

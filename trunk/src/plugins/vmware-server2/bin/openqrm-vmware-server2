@@ -32,7 +32,7 @@ elif [ -f $OPENQRM_SERVER_BASE_DIR/openqrm/etc/openqrm-server.conf ]; then
 	OPENQRM_SERVER_IP=$OPENQRM_SERVER_IP_ADDRESS
 	resource_id=0
 	resource_openqrmserver=$OPENQRM_SERVER_IP_ADDRESS
-    openqrm_web_protocol=$OPENQRM_WEB_PROTOCOL
+	openqrm_web_protocol=$OPENQRM_WEB_PROTOCOL
 fi
 export LANG=C
 OPENQRM_POSTENCODE="$OPENQRM_SERVER_BASE_DIR/openqrm/sbin/openqrm-postencode"
@@ -41,7 +41,7 @@ OPENQRM_VMWARE_SERVER_CMD_CHECK_DELAY="sleep 5"
 VMWARE_VIM_CMD="vmware-vim-cmd ${VMWARE_VIM_CMD_ARGS}"
 # define wget to use with https
 if [ "$openqrm_web_protocol" == "https" ]; then
-    WGET_NO_CERT_CHECK="--no-check-certificate"
+	WGET_NO_CERT_CHECK="--no-check-certificate"
 fi
 
 # let only root run this script
@@ -62,15 +62,15 @@ fi
 LOOP=0
 LOOP_MAX=10
 while [ "$url" == "" ]; do
-    eval `vmware-vim-cmd hostsvc/datastorebrowser/list firefox 2 | grep url | uniq | head -n1 | sed -e "s# ##g" | sed -e "s#,##g"`
-    if [ "$url" == "" ]; then
-        vmware_server2_log "WARNING: Could not find a default datastore on the VMware-server2, retrying $LOOP time !"
-    fi
-    if [ "$LOOP" == "$LOOP_MAX" ]; then
-    	vmware_server2_log "ERROR: Could not find a default datastore on the VMware-server2, exiting!"
-        exit 1
-    fi
-    LOOP=$(( LOOP + 1 ))
+	eval `vmware-vim-cmd hostsvc/datastorebrowser/list firefox 2 | grep url | uniq | head -n1 | sed -e "s# ##g" | sed -e "s#,##g"`
+	if [ "$url" == "" ]; then
+		vmware_server2_log "WARNING: Could not find a default datastore on the VMware-server2, retrying $LOOP time !"
+	fi
+	if [ "$LOOP" == "$LOOP_MAX" ]; then
+		vmware_server2_log "ERROR: Could not find a default datastore on the VMware-server2, exiting!"
+		exit 1
+	fi
+	LOOP=$(( LOOP + 1 ))
 done
 
 OPENQRM_VM_DIR=$url
@@ -78,9 +78,10 @@ OPENQRM_VM_DIR=$url
 
 function vmware-server2_usage() {
 	vmware_server2_log "Usage : $0 start/stop/reboot/add/delete/remove/list <-n vm-name>"
-	vmware_server2_log "Usage : $0 setboot <-m mac-address> <-b local/net>"
-	vmware_server2_log "Usage : $0 create <-n vm-name> <-m mac-address> <-r memory> [-d disk-size ] [-c cpus ] [-s swap-size ] [-va vnc-password ] [-vp vnc-port ]"
+	vmware_server2_log "        $0 setboot <-m mac-address> <-b local/net>"
+	vmware_server2_log "        $0 create <-n vm-name> <-m mac-address> <-r memory> [-d disk-size ] [-c cpus ] [-s swap-size ] [-va vnc-password ] [-vp vnc-port ]"
 	vmware_server2_log "        $0 post_vm_list <-u username> <-p password>"
+	vmware_server2_log "        $0 fence <-m mac-address>"
 	exit 1
 }
 
@@ -95,7 +96,7 @@ function vmware_server2_get_vmid() {
 		return 1
 	else
 		echo $VMID
-	fi	
+	fi
 }
 
 # returns the full path the the vmx file of a vm
@@ -108,22 +109,22 @@ function vmware_server2_get_vmx() {
 		return 1
 	else
 		echo $VMX
-	fi	
+	fi
 }
 
 
 VMWARE_SERVER_COMMAND=$1
 # re-run in background via screen
 if [ "$RUN_IN_BACKGROUND" != "true" ]; then
-    if [ -x /usr/bin/screen.real ]; then
-        RUNSCREEN="/usr/bin/screen.real"
-    else
-        RUNSCREEN=`which screen`
-    fi
-    export RUN_IN_BACKGROUND=true
-    SCREEN_NAME=`date +%T%x | sed -e "s/://g" | sed -e "s#/##g"`
-    $RUNSCREEN -dmS $SCREEN_NAME $0 $@
-    exit
+	if [ -x /usr/bin/screen.real ]; then
+		RUNSCREEN="/usr/bin/screen.real"
+	else
+		RUNSCREEN=`which screen`
+	fi
+	export RUN_IN_BACKGROUND=true
+	SCREEN_NAME=`date +%T%x | sed -e "s/://g" | sed -e "s#/##g"`
+	$RUNSCREEN -dmS $SCREEN_NAME $0 $@
+	exit
 fi
 shift
 
@@ -215,7 +216,7 @@ if [ "$VMWARE_SERVER_COMMAND" == "post_vm_list" ]; then
 		fi
 else
 
-	if [ "$VMWARE_SERVER_COMMAND" != "list" ] && [ "$VMWARE_SERVER_COMMAND" != "setboot" ]; then
+	if [ "$VMWARE_SERVER_COMMAND" != "list" ] && [ "$VMWARE_SERVER_COMMAND" != "setboot" ]  && [ "$VMWARE_SERVER_COMMAND" != "fence" ]; then
 		if [ "$VMWARE_SERVER_VM_NAME" == "" ]; then
 			vmware-server2_usage
 		fi
@@ -235,12 +236,12 @@ case "$VMWARE_SERVER_COMMAND" in
 		vmware_server2_lock aquire
 		vmware_server2_log "Creating VMware vm $VMWARE_SERVER_VM_NAME -> $OPENQRM_VM_DIR/$VMWARE_SERVER_VM_NAME/$VMWARE_SERVER_VM_NAME.vmx"
 		# creating the vmx
-        # some defaults
-        if [ "$VMWARE_SERVER_VM_CPU" == "" ]; then
-            VMWARE_SERVER_VM_CPU=1
-        fi
+		# some defaults
+		if [ "$VMWARE_SERVER_VM_CPU" == "" ]; then
+			VMWARE_SERVER_VM_CPU=1
+		fi
 		mkdir -p $OPENQRM_VM_DIR/$VMWARE_SERVER_VM_NAME/
-        echo '#!/usr/bin/vmware' > $OPENQRM_VM_DIR/$VMWARE_SERVER_VM_NAME/$VMWARE_SERVER_VM_NAME.vmx
+		echo '#!/usr/bin/vmware' > $OPENQRM_VM_DIR/$VMWARE_SERVER_VM_NAME/$VMWARE_SERVER_VM_NAME.vmx
 		cat $OPENQRM_VMWARE_SERVER_VM_TEMPLATE |	\
 			sed -e "s/@@VMWARE_SERVER_VM_NAME@@/$VMWARE_SERVER_VM_NAME/g" |	\
 			sed -e "s/@@OPENQRM_RESOURCE_RAM@@/$VMWARE_SERVER_VM_RAM/g"	| \
@@ -276,7 +277,7 @@ ethernet3.address = "$VMWARE_SERVER_VM_MAC4"
 ethernet3.networkName = "$OPENQRM_VMWARE_SERVER_EXTERNAL_BRIDGE"
 EOF
 		fi
-        # disk
+		# disk
 		if [ "$VMWARE_SERVER_VM_DISK" != "" ]; then
 			vmware_server2_log "-> Creating disk"
 			mkdir -p $OPENQRM_VM_DIR/$VMWARE_SERVER_VM_NAME
@@ -289,7 +290,7 @@ scsi0:0.deviceType = "scsi-hardDisk"
 scsi0:0.redo = ""
 EOF
 		fi
-        # swap
+		# swap
 		if [ "$VMWARE_SERVER_VM_SWAP" != "" ]; then
 			vmware_server2_log "-> Creating swap"
 			mkdir -p $OPENQRM_VM_DIR/$VMWARE_SERVER_VM_NAME
@@ -302,24 +303,24 @@ scsi0:1.deviceType = "scsi-hardDisk"
 scsi0:1.redo = ""
 EOF
 		fi
-        # vnc ?
-        if [ "$VMWARE_SERVER_VM_VNC_AUTH" != "" ] && [ "$VMWARE_SERVER_VM_VNC_PORT" != "" ]; then
+		# vnc ?
+		if [ "$VMWARE_SERVER_VM_VNC_AUTH" != "" ] && [ "$VMWARE_SERVER_VM_VNC_PORT" != "" ]; then
 			cat >> $OPENQRM_VM_DIR/$VMWARE_SERVER_VM_NAME/$VMWARE_SERVER_VM_NAME.vmx << EOF
 RemoteDisplay.vnc.enabled = TRUE
 RemoteDisplay.vnc.port = "$VMWARE_SERVER_VM_VNC_PORT"
 RemoteDisplay.vnc.password = "$VMWARE_SERVER_VM_VNC_AUTH"
 EOF
-        fi
-	
+		fi
+
 		# register
 		chmod +x $OPENQRM_VM_DIR/$VMWARE_SERVER_VM_NAME/$VMWARE_SERVER_VM_NAME.vmx
 		$VMWARE_VIM_CMD solo/registervm $OPENQRM_VM_DIR/$VMWARE_SERVER_VM_NAME/$VMWARE_SERVER_VM_NAME.vmx
 		# start
-		VMID=`vmware_server2_get_vmid $VMWARE_SERVER_VM_NAME`		
+		VMID=`vmware_server2_get_vmid $VMWARE_SERVER_VM_NAME`
 
 		$VMWARE_VIM_CMD vmsvc/power.on $VMID | logger
-        # restart once to apply the changes to the vmx file
-        $VMWARE_VIM_CMD vmsvc/power.off $VMID | logger
+		# restart once to apply the changes to the vmx file
+		$VMWARE_VIM_CMD vmsvc/power.off $VMID | logger
 		$VMWARE_VIM_CMD vmsvc/power.on $VMID | logger
 		$OPENQRM_VMWARE_SERVER_CMD_CHECK_DELAY
 
@@ -330,7 +331,7 @@ EOF
 		else
 			vmware_server2_log openqrm-vmware-server2 "ERROR: VMware-server2 vm $VMID failed to start."
 			openqrm_post_event 0 "openqrm-vmware-server2" 3 "openqrm-vmware-server2" "VMware-server2 vm $VMID failed to start!"
-		fi		
+		fi
 		# in case we have a username + password post the updated list to the openQRM-server
 		if [ "$VMWARE_SERVER_OPENQRM_USERNAME" != "" ] && [ "$VMWARE_SERVER_OPENQRM_PASSWORD" != "" ]; then
 			$0 post_vm_list -u $VMWARE_SERVER_OPENQRM_USERNAME -p $VMWARE_SERVER_OPENQRM_PASSWORD
@@ -392,7 +393,7 @@ EOF
 		else
 			vmware_server2_log openqrm-vmware-server2 "ERROR: VMware-server2 vm $VMID failed to stop"
 			openqrm_post_event 0 "openqrm-vmware-server2" 3 "openqrm-vmware-server2" "VMware-server2 vm $VMID failed to stop!"
-		fi		
+		fi
 		# in case we have a username + password post the updated list to the openQRM-server
 		if [ "$VMWARE_SERVER_OPENQRM_USERNAME" != "" ] && [ "$VMWARE_SERVER_OPENQRM_PASSWORD" != "" ]; then
 			$0 post_vm_list -u $VMWARE_SERVER_OPENQRM_USERNAME -p $VMWARE_SERVER_OPENQRM_PASSWORD
@@ -456,21 +457,21 @@ EOF
 		done
 		if [ "$FOUND_VMID" == "true" ]; then
 			VMID=`vmware_server2_get_vmid $VMWARE_SERVER_VM_NAME`
-            # make sure it is stopped
-            $VMWARE_VIM_CMD vmsvc/power.off $VMID | logger
-            # unregister
-            $VMWARE_VIM_CMD vmsvc/unregister $VMID | logger
-            # destroy
+			# make sure it is stopped
+			$VMWARE_VIM_CMD vmsvc/power.off $VMID | logger
+			# unregister
+			$VMWARE_VIM_CMD vmsvc/unregister $VMID | logger
+			# destroy
 			$VMWARE_VIM_CMD vmsvc/destroy $VMID | logger
-            $OPENQRM_VMWARE_SERVER_CMD_CHECK_DELAY
-            # remove hard
-            rm -rf $OPENQRM_VM_DIR/$VMWARE_SERVER_VM_NAME
-            vmware_server2_log openqrm-vmware-server2 "NOTICE: Removed $VMWARE_SERVER_VM_NAME/$VMID from VMware-server2-host."
-            openqrm_post_event 0 "openqrm-vmware-server2" 5 "openqrm-vmware-server2" "Removed $VMWARE_SERVER_VM_NAME/$VMID from VMware-server2-host."
-        else
-            vmware_server2_log openqrm-vmware-server2 "ERROR: Could not remove $VMWARE_SERVER_VM_NAME/$VMID from VMware-server2-host."
-            openqrm_post_event 0 "openqrm-vmware-server2" 2 "openqrm-vmware-server2" "Could not remove $VMWARE_SERVER_VM_NAME/$VMID from VMware-server2-host."
-        fi
+			$OPENQRM_VMWARE_SERVER_CMD_CHECK_DELAY
+			# remove hard
+			rm -rf $OPENQRM_VM_DIR/$VMWARE_SERVER_VM_NAME
+			vmware_server2_log openqrm-vmware-server2 "NOTICE: Removed $VMWARE_SERVER_VM_NAME/$VMID from VMware-server2-host."
+			openqrm_post_event 0 "openqrm-vmware-server2" 5 "openqrm-vmware-server2" "Removed $VMWARE_SERVER_VM_NAME/$VMID from VMware-server2-host."
+		else
+			vmware_server2_log openqrm-vmware-server2 "ERROR: Could not remove $VMWARE_SERVER_VM_NAME/$VMID from VMware-server2-host."
+			openqrm_post_event 0 "openqrm-vmware-server2" 2 "openqrm-vmware-server2" "Could not remove $VMWARE_SERVER_VM_NAME/$VMID from VMware-server2-host."
+		fi
 
 		# in case we have a username + password post the updated list to the openQRM-server
 		if [ "$VMWARE_SERVER_OPENQRM_USERNAME" != "" ] && [ "$VMWARE_SERVER_OPENQRM_PASSWORD" != "" ]; then
@@ -485,27 +486,27 @@ EOF
 	post_vm_list)
 		vmware_server2_log "Posting vm list to the openQRM-server"
 		VM_LIST_TMP=$resource_id.vm_list
-        > $VM_LIST_TMP
-        for VMID in `$VMWARE_VIM_CMD vmsvc/getallvms | grep -v Vmid | awk {' print $1 '}`; do
-            VM_TMPFILE=`mktemp /tmp/oq-vm.XXXXXX` || exit 1
-            $VMWARE_VIM_CMD vmsvc/get.summary $VMID > $VM_TMPFILE
-            # name
-            VM_NAME=`grep "name =" $VM_TMPFILE | cut -d '"' -f2`
-            # state
-            VM_STATE=`grep "powerState =" $VM_TMPFILE | cut -d '"' -f2`
-            # mem
-            VM_MEM=`grep "memorySizeMB =" $VM_TMPFILE | cut -d '=' -f2 | sed -e "s/,//g" | awk {' print $1 '}`
-            # cpu
-            VM_CPU=`grep "numCpu =" $VM_TMPFILE | cut -d '=' -f2 | sed -e "s/,//g" | awk {' print $1 '}`
-            # nics
-            VM_NET=`grep "numEthernetCards =" $VM_TMPFILE | cut -d '=' -f2 | sed -e "s/,//g" | awk {' print $1 '}`
-            # disks
-            VM_DISK=`grep "numVirtualDisks =" $VM_TMPFILE | cut -d '=' -f2 | sed -e "s/,//g" | awk {' print $1 '}`
-            # mac
-            VM_MAC=`grep "ethernet0.address =" $OPENQRM_VM_DIR/$VM_NAME/$VM_NAME.vmx | cut -d'"' -f2`
-            echo "$VMID""@""$VM_NAME""@""$VM_MAC""@""$VM_STATE""@""$VM_MEM""@""$VM_CPU""@""$VM_NET""@""$VM_DISK" >> $VM_LIST_TMP
-            rm -f $VM_TMPFILE
-        done
+		> $VM_LIST_TMP
+		for VMID in `$VMWARE_VIM_CMD vmsvc/getallvms | grep -v Vmid | awk {' print $1 '}`; do
+			VM_TMPFILE=`mktemp /tmp/oq-vm.XXXXXX` || exit 1
+			$VMWARE_VIM_CMD vmsvc/get.summary $VMID > $VM_TMPFILE
+			# name
+			VM_NAME=`grep "name =" $VM_TMPFILE | cut -d '"' -f2`
+			# state
+			VM_STATE=`grep "powerState =" $VM_TMPFILE | cut -d '"' -f2`
+			# mem
+			VM_MEM=`grep "memorySizeMB =" $VM_TMPFILE | cut -d '=' -f2 | sed -e "s/,//g" | awk {' print $1 '}`
+			# cpu
+			VM_CPU=`grep "numCpu =" $VM_TMPFILE | cut -d '=' -f2 | sed -e "s/,//g" | awk {' print $1 '}`
+			# nics
+			VM_NET=`grep "numEthernetCards =" $VM_TMPFILE | cut -d '=' -f2 | sed -e "s/,//g" | awk {' print $1 '}`
+			# disks
+			VM_DISK=`grep "numVirtualDisks =" $VM_TMPFILE | cut -d '=' -f2 | sed -e "s/,//g" | awk {' print $1 '}`
+			# mac
+			VM_MAC=`grep "ethernet0.address =" $OPENQRM_VM_DIR/$VM_NAME/$VM_NAME.vmx | cut -d'"' -f2`
+			echo "$VMID""@""$VM_NAME""@""$VM_MAC""@""$VM_STATE""@""$VM_MEM""@""$VM_CPU""@""$VM_NET""@""$VM_DISK" >> $VM_LIST_TMP
+			rm -f $VM_TMPFILE
+		done
 #		$VMWARE_VIM_CMD vmsvc/getallvms | grep -v Vmid > $VM_LIST_TMP
 #        sed -i -e "s/ \{1,\}/@/g" $VM_LIST_TMP
 		if ! wget -q $WGET_NO_CERT_CHECK -O /dev/null --http-user=$VMWARE_SERVER_OPENQRM_USERNAME --http-password=$VMWARE_SERVER_OPENQRM_PASSWORD  --post-file=`$OPENQRM_POSTENCODE $VM_LIST_TMP` $openqrm_web_protocol://$OPENQRM_SERVER_IP/openqrm/base/plugins/vmware-server2/vmware-server2-action.php?vmware_server_command=get_vmware_server; then
@@ -516,7 +517,7 @@ EOF
 		rm -f $VM_LIST_TMP.post
 		;;
 	setboot)
-        unset VMWARE_SERVER_VM_NAME
+		unset VMWARE_SERVER_VM_NAME
 		if [ "$VMWARE_SERVER_VM_MAC" == "" ]; then
 			vmware-server2_usage
 		fi
@@ -524,34 +525,34 @@ EOF
 			vmware-server2_usage
 		fi
 		vmware_server2_lock aquire
-		vmware_server2_log "Setting vm with mac $VMWARE_SERVER_VM_MAC to boot from $VMWARE_SERVER_VM_BOOT"
-        # this command is is running from the openQRM engine which does
-        # not know about the vm-name
-        for VMWARE_SERVER_VM_NET_CONF in `find $OPENQRM_VM_DIR -name *.vmx`; do
-            if grep -i $VMWARE_SERVER_VM_MAC $VMWARE_SERVER_VM_NET_CONF; then
-                VMWARE_SERVER_VM_NAME=`dirname $VMWARE_SERVER_VM_NET_CONF`
-                VMWARE_SERVER_VM_NAME=`basename $VMWARE_SERVER_VM_NAME`
-                vmware_server2_log "found $VMWARE_SERVER_VM_MAC"
-                break
-            fi
-        done
-        if [ "$VMWARE_SERVER_VM_NAME" == "" ]; then
-    		vmware_server2_log "Cloud not find VMWARE_SERVER vm with mac $VMWARE_SERVER_VM_MAC on this host"
-            vmware_server2_lock release
-            exit 1
-        fi
-        case "$VMWARE_SERVER_VM_BOOT" in
-            local)
-        		vmware_server2_log "Setting VMware-Server 2 vm $VMWARE_SERVER_VM_NAME with mac $VMWARE_SERVER_VM_MAC to local-boot"
-                ;;
-            net)
-        		vmware_server2_log "Setting VMware-Server 2 vm $VMWARE_SERVER_VM_NAME with mac $VMWARE_SERVER_VM_MAC to net-boot"
-                ;;
-        esac
+		vmware_server2_log "Setting VMWare Server2 vm with mac $VMWARE_SERVER_VM_MAC to boot from $VMWARE_SERVER_VM_BOOT"
+		# this command is is running from the openQRM engine which does
+		# not know about the vm-name
+		for VMWARE_SERVER_VM_NET_CONF in `find $OPENQRM_VM_DIR -name *.vmx`; do
+			if grep -i $VMWARE_SERVER_VM_MAC $VMWARE_SERVER_VM_NET_CONF; then
+				VMWARE_SERVER_VM_NAME=`dirname $VMWARE_SERVER_VM_NET_CONF`
+				VMWARE_SERVER_VM_NAME=`basename $VMWARE_SERVER_VM_NAME`
+				vmware_server2_log "found $VMWARE_SERVER_VM_MAC"
+				break
+			fi
+		done
+		if [ "$VMWARE_SERVER_VM_NAME" == "" ]; then
+			vmware_server2_log "Cloud not find VMWare Server2 vm with mac $VMWARE_SERVER_VM_MAC on this host"
+			vmware_server2_lock release
+			exit 1
+		fi
+		case "$VMWARE_SERVER_VM_BOOT" in
+			local)
+				vmware_server2_log "Setting VMware-Server 2 vm $VMWARE_SERVER_VM_NAME with mac $VMWARE_SERVER_VM_MAC to local-boot"
+				;;
+			net)
+				vmware_server2_log "Setting VMware-Server 2 vm $VMWARE_SERVER_VM_NAME with mac $VMWARE_SERVER_VM_MAC to net-boot"
+				;;
+		esac
 		# hard restart it to apply its configuration
-        # we do it here because the openQRM server engine does not
-        # know anything about the vm name to restart it later
-		vmware_server2_log "Rebooting VMware vm $VMWARE_SERVER_VM_NAME"
+		# we do it here because the openQRM server engine does not
+		# know anything about the vm name to restart it later
+		vmware_server2_log "Rebooting VMWare Server2 vm $VMWARE_SERVER_VM_NAME"
 		VMID=`vmware_server2_get_vmid $VMWARE_SERVER_VM_NAME`
 		$VMWARE_VIM_CMD vmsvc/power.off $VMID | logger
 		$OPENQRM_VMWARE_SERVER_CMD_CHECK_DELAY
@@ -561,20 +562,20 @@ EOF
 		;;
 
 	post_vm_config)
-        VMID=`vmware_server2_get_vmid $VMWARE_SERVER_VM_NAME`
-        VMX_CONFIG=`vmware_server2_get_vmx $VMWARE_SERVER_VM_NAME`
-		vmware_server2_log "Posting vm config for $VMWARE_SERVER_VM_NAME (vm-id $VMID)"
+		VMID=`vmware_server2_get_vmid $VMWARE_SERVER_VM_NAME`
+		VMX_CONFIG=`vmware_server2_get_vmx $VMWARE_SERVER_VM_NAME`
+		vmware_server2_log "Posting VMWare Server2 vm config for $VMWARE_SERVER_VM_NAME (vm-id $VMID)"
 		VM_LIST_TMP=$resource_id.$VMWARE_SERVER_VM_NAME.vm_config
-        > $VM_LIST_TMP
-        # cpus
-        VMWARE_VM_CPUS=`grep numvcpu $VMX_CONFIG | cut -d'=' -f2 | cut -d'"' -f2`
-        VMWARE_VM_MAC=`grep "ethernet0.address =" $VMX_CONFIG | cut -d'=' -f2 | cut -d'"' -f2`
-        VMWARE_VM_MAC2=`grep "ethernet1.address =" $VMX_CONFIG | cut -d'=' -f2 | cut -d'"' -f2`
-        VMWARE_VM_MAC3=`grep "ethernet2.address =" $VMX_CONFIG | cut -d'=' -f2 | cut -d'"' -f2`
-        VMWARE_VM_MAC4=`grep "ethernet3.address =" $VMX_CONFIG | cut -d'=' -f2 | cut -d'"' -f2`
-        VMWARE_VM_MEM=`grep memsize $VMX_CONFIG | cut -d'=' -f2 | cut -d'"' -f2`
-        VMWARE_VM_VNC_PORT=`grep RemoteDisplay.vnc.port $VMX_CONFIG | cut -d'=' -f2 | cut -d'"' -f2`
-        VMWARE_VM_VNC_PASS=`grep RemoteDisplay.vnc.password $VMX_CONFIG | cut -d'=' -f2 | cut -d'"' -f2`
+		> $VM_LIST_TMP
+		# cpus
+		VMWARE_VM_CPUS=`grep numvcpu $VMX_CONFIG | cut -d'=' -f2 | cut -d'"' -f2`
+		VMWARE_VM_MAC=`grep "ethernet0.address =" $VMX_CONFIG | cut -d'=' -f2 | cut -d'"' -f2`
+		VMWARE_VM_MAC2=`grep "ethernet1.address =" $VMX_CONFIG | cut -d'=' -f2 | cut -d'"' -f2`
+		VMWARE_VM_MAC3=`grep "ethernet2.address =" $VMX_CONFIG | cut -d'=' -f2 | cut -d'"' -f2`
+		VMWARE_VM_MAC4=`grep "ethernet3.address =" $VMX_CONFIG | cut -d'=' -f2 | cut -d'"' -f2`
+		VMWARE_VM_MEM=`grep memsize $VMX_CONFIG | cut -d'=' -f2 | cut -d'"' -f2`
+		VMWARE_VM_VNC_PORT=`grep RemoteDisplay.vnc.port $VMX_CONFIG | cut -d'=' -f2 | cut -d'"' -f2`
+		VMWARE_VM_VNC_PASS=`grep RemoteDisplay.vnc.password $VMX_CONFIG | cut -d'=' -f2 | cut -d'"' -f2`
 
 		echo "OPENQRM_VMWARE_VM_CPUS=\"$VMWARE_VM_CPUS\"" > $VM_LIST_TMP
 		echo "OPENQRM_VMWARE_VM_RAM=\"$VMWARE_VM_MEM\"" >> $VM_LIST_TMP
@@ -584,7 +585,7 @@ EOF
 		echo "OPENQRM_VMWARE_VM_MAC_4=\"$VMWARE_VM_MAC4\"" >> $VM_LIST_TMP
 		echo "OPENQRM_VMWARE_VM_VNC=\"$VMWARE_VM_VNC_PORT\"" >> $VM_LIST_TMP
 		echo "OPENQRM_VMWARE_VM_VNC_PASS=\"$VMWARE_VM_VNC_PASS\"" >> $VM_LIST_TMP
-        # post the file
+		# post the file
 		if ! wget -q $WGET_NO_CERT_CHECK -O /dev/null --http-user=$VMWARE_SERVER_OPENQRM_USERNAME --http-password=$VMWARE_SERVER_OPENQRM_PASSWORD  --post-file=`$OPENQRM_POSTENCODE $VM_LIST_TMP` $openqrm_web_protocol://$OPENQRM_SERVER_IP/openqrm/base/plugins/vmware-server2/vmware-server2-action.php?vmware_server_command=get_vm_config; then
 			vmware_server2_log "ERROR: Could not post vm list to the openQRM-server at $OPENQRM_SERVER_IP!"
 			vmware_server2_log "ERROR: Could not post vm list to the openQRM-server at $OPENQRM_SERVER_IP!" | logger
@@ -594,11 +595,11 @@ EOF
 		;;
 
 	update_vm_ram)
-        VMID=`vmware_server2_get_vmid $VMWARE_SERVER_VM_NAME`
-        VMX_CONFIG=`vmware_server2_get_vmx $VMWARE_SERVER_VM_NAME`
+		VMID=`vmware_server2_get_vmid $VMWARE_SERVER_VM_NAME`
+		VMX_CONFIG=`vmware_server2_get_vmx $VMWARE_SERVER_VM_NAME`
 		vmware_server2_log "Updating RAM on vm $VMWARE_SERVER_VM_NAME (vm-id $VMID)"
 		vmware_server2_lock aquire
-        sed -i -e "s/^memsize.*/memsize = \"$VMWARE_SERVER_VM_RAM\"/g" $VMX_CONFIG
+		sed -i -e "s/^memsize.*/memsize = \"$VMWARE_SERVER_VM_RAM\"/g" $VMX_CONFIG
 		# in case we have a username + password post the updated list to the openQRM-server
 		if [ "$VMWARE_SERVER_OPENQRM_USERNAME" != "" ] && [ "$VMWARE_SERVER_OPENQRM_PASSWORD" != "" ]; then
 			$0 post_vm_config -n $VMWARE_SERVER_VM_NAME -u $VMWARE_SERVER_OPENQRM_USERNAME -p $VMWARE_SERVER_OPENQRM_PASSWORD
@@ -607,11 +608,11 @@ EOF
 		;;
 
 	update_vm_cpus)
-        VMID=`vmware_server2_get_vmid $VMWARE_SERVER_VM_NAME`
-        VMX_CONFIG=`vmware_server2_get_vmx $VMWARE_SERVER_VM_NAME`
+		VMID=`vmware_server2_get_vmid $VMWARE_SERVER_VM_NAME`
+		VMX_CONFIG=`vmware_server2_get_vmx $VMWARE_SERVER_VM_NAME`
 		vmware_server2_log "Updating CPUs on vm $VMWARE_SERVER_VM_NAME (vm-id $VMID)"
 		vmware_server2_lock aquire
-        sed -i -e "s/^numvcpus.*/numvcpus = \"$VMWARE_SERVER_VM_CPU\"/g" $VMX_CONFIG
+		sed -i -e "s/^numvcpus.*/numvcpus = \"$VMWARE_SERVER_VM_CPU\"/g" $VMX_CONFIG
 		# in case we have a username + password post the updated list to the openQRM-server
 		if [ "$VMWARE_SERVER_OPENQRM_USERNAME" != "" ] && [ "$VMWARE_SERVER_OPENQRM_PASSWORD" != "" ]; then
 			$0 post_vm_config -n $VMWARE_SERVER_VM_NAME -u $VMWARE_SERVER_OPENQRM_USERNAME -p $VMWARE_SERVER_OPENQRM_PASSWORD
@@ -630,11 +631,11 @@ EOF
 			vmware_esx_usage
 		fi
 		vmware_server2_lock aquire
-        VMID=`vmware_server2_get_vmid $VMWARE_SERVER_VM_NAME`
-        VMX_CONFIG=`vmware_server2_get_vmx $VMWARE_SERVER_VM_NAME`
+		VMID=`vmware_server2_get_vmid $VMWARE_SERVER_VM_NAME`
+		VMX_CONFIG=`vmware_server2_get_vmx $VMWARE_SERVER_VM_NAME`
 		vmware_server2_log "Adding nic $VMWARE_SERVER_VM_COMPONENT_NUMBER mac $VMWARE_SERVER_VM_MAC to VMWare Server2 vm $VMWARE_SERVER_VM_NAME (vm-id $VMID)"
-        # adjust local config
-        cat >> $VMX_CONFIG << EOF
+		# adjust local config
+		cat >> $VMX_CONFIG << EOF
 Ethernet$VMWARE_SERVER_VM_COMPONENT_NUMBER.present = "TRUE"
 ethernet$VMWARE_SERVER_VM_COMPONENT_NUMBER.address = "$VMWARE_SERVER_VM_MAC"
 ethernet$VMWARE_SERVER_VM_COMPONENT_NUMBER.networkName = "$OPENQRM_VMWARE_SERVER_EXTERNAL_BRIDGE"
@@ -653,13 +654,13 @@ EOF
 			vmware_esx_usage
 		fi
 		vmware_server2_lock aquire
-        VMID=`vmware_server2_get_vmid $VMWARE_SERVER_VM_NAME`
-        VMX_CONFIG=`vmware_server2_get_vmx $VMWARE_SERVER_VM_NAME`
+		VMID=`vmware_server2_get_vmid $VMWARE_SERVER_VM_NAME`
+		VMX_CONFIG=`vmware_server2_get_vmx $VMWARE_SERVER_VM_NAME`
 		echo "Removing nic $VMWARE_SERVER_VM_COMPONENT_NUMBER from VMWare Server2 vm $VMWARE_SERVER_VM_NAME (vm-id $VMID)"
-        # adjust local config
-        sed -i -e "s/Ethernet$VMWARE_SERVER_VM_COMPONENT_NUMBER.*//g" $VMX_CONFIG
-        sed -i -e "s/ethernet$VMWARE_SERVER_VM_COMPONENT_NUMBER.*//g" $VMX_CONFIG
-        sed -i '/^$/d' $VMX_CONFIG
+		# adjust local config
+		sed -i -e "s/Ethernet$VMWARE_SERVER_VM_COMPONENT_NUMBER.*//g" $VMX_CONFIG
+		sed -i -e "s/ethernet$VMWARE_SERVER_VM_COMPONENT_NUMBER.*//g" $VMX_CONFIG
+		sed -i '/^$/d' $VMX_CONFIG
 		# in case we have a username + password post the updated list to the openQRM-server
 		if [ "$VMWARE_SERVER_OPENQRM_USERNAME" != "" ] && [ "$VMWARE_SERVER_OPENQRM_PASSWORD" != "" ]; then
 			$0 post_vm_config -n $VMWARE_SERVER_VM_NAME -u $VMWARE_SERVER_OPENQRM_USERNAME -p $VMWARE_SERVER_OPENQRM_PASSWORD
@@ -678,17 +679,17 @@ EOF
 			vmware_esx_usage
 		fi
 		vmware_server2_lock aquire
-        VMID=`vmware_server2_get_vmid $VMWARE_SERVER_VM_NAME`
-        VMX_CONFIG=`vmware_server2_get_vmx $VMWARE_SERVER_VM_NAME`
+		VMID=`vmware_server2_get_vmid $VMWARE_SERVER_VM_NAME`
+		VMX_CONFIG=`vmware_server2_get_vmx $VMWARE_SERVER_VM_NAME`
 		echo "Setting VNC parameter for VMWare Server2 vm $VMWARE_SERVER_VM_NAME (vm-id $VMID)"
-        # adjust local config
-        sed -i -e "s/RemoteDisplay.vnc.*//g" $VMX_CONFIG
-        cat >> $VMX_CONFIG << EOF
+		# adjust local config
+		sed -i -e "s/RemoteDisplay.vnc.*//g" $VMX_CONFIG
+		cat >> $VMX_CONFIG << EOF
 RemoteDisplay.vnc.enabled = TRUE
 RemoteDisplay.vnc.port = "$VMWARE_SERVER_VM_VNC_PORT"
 RemoteDisplay.vnc.password = "$VMWARE_SERVER_VM_VNC_AUTH"
 EOF
-        sed -i '/^$/d' $VMX_CONFIG
+		sed -i '/^$/d' $VMX_CONFIG
 		# in case we have a username + password post the updated list to the openQRM-server
 		if [ "$VMWARE_SERVER_OPENQRM_USERNAME" != "" ] && [ "$VMWARE_SERVER_OPENQRM_PASSWORD" != "" ]; then
 			$0 post_vm_config -n $VMWARE_SERVER_VM_NAME -u $VMWARE_SERVER_OPENQRM_USERNAME -p $VMWARE_SERVER_OPENQRM_PASSWORD
@@ -701,16 +702,45 @@ EOF
 			vmware_esx_usage
 		fi
 		vmware_server2_lock aquire
-        VMID=`vmware_server2_get_vmid $VMWARE_SERVER_VM_NAME`
-        VMX_CONFIG=`vmware_server2_get_vmx $VMWARE_SERVER_VM_NAME`
+		VMID=`vmware_server2_get_vmid $VMWARE_SERVER_VM_NAME`
+		VMX_CONFIG=`vmware_server2_get_vmx $VMWARE_SERVER_VM_NAME`
 		echo "Removing VNC config for VMWare Server2 vm $VMWARE_SERVER_VM_NAME (vm-id $VMID)"
-        # adjust local config
-        sed -i -e "s/RemoteDisplay.vnc.*//g" $VMX_CONFIG
-        sed -i '/^$/d' $VMX_CONFIG
+		# adjust local config
+		sed -i -e "s/RemoteDisplay.vnc.*//g" $VMX_CONFIG
+		sed -i '/^$/d' $VMX_CONFIG
 		# in case we have a username + password post the updated list to the openQRM-server
 		if [ "$VMWARE_SERVER_OPENQRM_USERNAME" != "" ] && [ "$VMWARE_SERVER_OPENQRM_PASSWORD" != "" ]; then
 			$0 post_vm_config -n $VMWARE_SERVER_VM_NAME -u $VMWARE_SERVER_OPENQRM_USERNAME -p $VMWARE_SERVER_OPENQRM_PASSWORD
 		fi
+		vmware_server2_lock release
+		;;
+
+	fence)
+		unset VMWARE_SERVER_VM_NAME
+		if [ "$VMWARE_SERVER_VM_MAC" == "" ]; then
+			vmware-server2_usage
+		fi
+		vmware_server2_lock aquire
+		vmware_server2_log "Fencing VMWare Server2 vm with mac $VMWARE_SERVER_VM_MAC"
+		# this command is is running from the openQRM engine which does
+		# not know about the vm-name
+		for VMWARE_SERVER_VM_NET_CONF in `find $OPENQRM_VM_DIR -name *.vmx`; do
+			if grep -i $VMWARE_SERVER_VM_MAC $VMWARE_SERVER_VM_NET_CONF; then
+				VMWARE_SERVER_VM_NAME=`dirname $VMWARE_SERVER_VM_NET_CONF`
+				VMWARE_SERVER_VM_NAME=`basename $VMWARE_SERVER_VM_NAME`
+				vmware_server2_log "found $VMWARE_SERVER_VM_MAC"
+				break
+			fi
+		done
+		if [ "$VMWARE_SERVER_VM_NAME" == "" ]; then
+			vmware_server2_log "Cloud not find VMWare Server2 vm with mac $VMWARE_SERVER_VM_MAC on this host"
+			vmware_server2_lock release
+			exit 1
+		fi
+		# stop hard
+		vmware_server2_log "Fencing VMWare Server2 vm $VMWARE_SERVER_VM_NAME"
+		VMID=`vmware_server2_get_vmid $VMWARE_SERVER_VM_NAME`
+		$VMWARE_VIM_CMD vmsvc/power.off $VMID | logger
 		vmware_server2_lock release
 		;;
 

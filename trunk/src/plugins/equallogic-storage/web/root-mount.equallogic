@@ -77,9 +77,9 @@ IMAGE_LUN=`echo $image_rootdevice | cut -d'/' -f4`
 
 # define wget to use with https
 if [ "$openqrm_web_protocol" == "https" ]; then
-    export WGET="wget --no-check-certificate -q"
+	export WGET="wget --no-check-certificate -q"
 else
-    export WGET="wget -q"
+	export WGET="wget -q"
 fi
 #######################################################################
 # required functions ##################################################
@@ -87,39 +87,39 @@ fi
 
 function mount_rootfs() {
 
-    # setup the bonded network here
-    OPENQRM_RESOURCE_OTHER_INTERFACES=`ifconfig -a | grep -i hwaddr | grep -v $OPENQRM_RESOURCE_MAC_ADDRESS | awk {' print $1 '}`
-    # set up extra nics in case they are needed for root_fs
-    # note that we just assume dhcp runs on these networks
-    for interface in $OPENQRM_RESOURCE_OTHER_INTERFACES; do
-        ifconfig $interface up
-        udhcpc -i $interface -q
-    done
+	# setup the bonded network here
+	OPENQRM_RESOURCE_OTHER_INTERFACES=`ifconfig -a | grep -i hwaddr | grep -v $OPENQRM_RESOURCE_MAC_ADDRESS | awk {' print $1 '}`
+	# set up extra nics in case they are needed for root_fs
+	# note that we just assume dhcp runs on these networks
+	for interface in $OPENQRM_RESOURCE_OTHER_INTERFACES; do
+		ifconfig $interface up
+		udhcpc -i $interface -q
+	done
 
-    # check to find the right binaries fitting to kernel + rootfs
-    if [ "$kernel_name" == "default" ]; then
-        # we get the default binaries
-        # get iscsid via wget from the openQRM-servers boot-service dir
-        $WGET -O /sbin/iscsid $openqrm_web_protocol://$resource_openqrmserver/openqrm/boot-service/iscsid
-        $WGET -O /sbin/iscsiadm $openqrm_web_protocol://$resource_openqrmserver/openqrm/boot-service/iscsiadm
-    else
-        # we try to get the binaries fitting to the kernel name
-        # -> if a special version is not available we go with the default
-        if ! $WGET -O /sbin/iscsid $openqrm_web_protocol://$resource_openqrmserver/openqrm/boot-service/iscsid.$kernel_name; then
-            $WGET -O /sbin/iscsid $openqrm_web_protocol://$resource_openqrmserver/openqrm/boot-service/iscsid
-        fi
-        if ! $WGET -O /sbin/iscsiadm $openqrm_web_protocol://$resource_openqrmserver/openqrm/boot-service/iscsiadm.$kernel_name; then
-            $WGET -O /sbin/iscsiadm $openqrm_web_protocol://$resource_openqrmserver/openqrm/boot-service/iscsiadm
-        fi
+	# check to find the right binaries fitting to kernel + rootfs
+	if [ "$kernel_name" == "default" ]; then
+		# we get the default binaries
+		# get iscsid via wget from the openQRM-servers boot-service dir
+		$WGET -O /sbin/iscsid $openqrm_web_protocol://$resource_openqrmserver/openqrm/boot-service/iscsid
+		$WGET -O /sbin/iscsiadm $openqrm_web_protocol://$resource_openqrmserver/openqrm/boot-service/iscsiadm
+	else
+		# we try to get the binaries fitting to the kernel name
+		# -> if a special version is not available we go with the default
+		if ! $WGET -O /sbin/iscsid $openqrm_web_protocol://$resource_openqrmserver/openqrm/boot-service/iscsid.$kernel_name; then
+			$WGET -O /sbin/iscsid $openqrm_web_protocol://$resource_openqrmserver/openqrm/boot-service/iscsid
+		fi
+		if ! $WGET -O /sbin/iscsiadm $openqrm_web_protocol://$resource_openqrmserver/openqrm/boot-service/iscsiadm.$kernel_name; then
+			$WGET -O /sbin/iscsiadm $openqrm_web_protocol://$resource_openqrmserver/openqrm/boot-service/iscsiadm
+		fi
 
-    fi
-    chmod +x /sbin/iscsi*
+	fi
+	chmod +x /sbin/iscsi*
 
-    # get the resize components
-    $WGET -O /eq-resize.$kernel_name.tgz /sbin/iscsiadm $openqrm_web_protocol://$resource_openqrmserver/openqrm/boot-service/eq-resize.$kernel_name.tgz
-    cd /
-    tar -xzf eq-resize.$kernel_name.tgz
-    rm -f eq-resize.$kernel_name.tgz
+	# get the resize components
+	$WGET -O /eq-resize.$kernel_name.tgz /sbin/iscsiadm $openqrm_web_protocol://$resource_openqrmserver/openqrm/boot-service/eq-resize.$kernel_name.tgz
+	cd /
+	tar -xzf eq-resize.$kernel_name.tgz
+	rm -f eq-resize.$kernel_name.tgz
 	mkdir -p /tmp
 
 	# load iscsi related modules
@@ -178,21 +178,21 @@ EOF
 	/sbin/iscsid &
 	sleep 2
 
-	# 
+	#
 
 	# discover
 	echo "equallogic-storage: Discoverying Iscsi-target $image_storage_server_ip:3260"
 	iscsiadm -m discovery -t sendtargets -p $image_storage_server_ip:3260
 
-    # get targetname
+	# get targetname
 	IMAGE_TARGET=`iscsiadm -m discovery -t sendtargets -p $image_storage_server_ip:3260 | grep -i $IMAGE_LUN | awk {' print $2 '}`
-    if [ "$IMAGE_TARGET" == "" ]; then
+	if [ "$IMAGE_TARGET" == "" ]; then
 		echo "ERROR: Could not find the iscsi-target name in discovery results"
 		# give a shell for the admin
 		/bin/bash
-    else
-        echo "NOTICE: Found target $IMAGE_TARGET"
-    fi
+	else
+		echo "NOTICE: Found target $IMAGE_TARGET"
+	fi
 
 	# login
 	iscsiadm -m node -T $IMAGE_TARGET -p $image_storage_server_ip:3260 --login
@@ -200,75 +200,75 @@ EOF
 	# let udev settle
 	sleep 4
 
-    # check that udev found the new device
-    FIND_ISCSI_BLOCK_DEVICE=`find /sys/class/iscsi_session/session*/device/target*/*/ -name block | head -n1`
-    if [ "$FIND_ISCSI_BLOCK_DEVICE" == "" ]; then
-        FIND_ISCSI_BLOCK_DEVICE=`find /sys/class/iscsi_session/session*/device/target*/*/ -name block:s* | head -n1`
-        if [ "$FIND_ISCSI_BLOCK_DEVICE" == "" ]; then
-            echo "ERROR: Udev did not detect the new device"
-            echo "ERROR: Could not look-up the Iscsi device in the sys-fs dir"
-            # give a shell for the admin
-            /bin/bash
-        fi
-    fi
-    # check for different sysfs styles
-    if [ -h $FIND_ISCSI_BLOCK_DEVICE ]; then
-        ISCSI_BLOCK_DEVICE_NAME=`readlink $FIND_ISCSI_BLOCK_DEVICE`
-        ISCSI_BLOCK_DEVICE_NAME=`basename $ISCSI_BLOCK_DEVICE_NAME`
-        echo "SUCCESS: Found $ISCSI_BLOCK_DEVICE_NAME in sys-fs (as symlink)"
-    elif [ -d $FIND_ISCSI_BLOCK_DEVICE ]; then
-        ISCSI_BLOCK_DEVICE_NAME=`ls $FIND_ISCSI_BLOCK_DEVICE`
-        echo "SUCCESS: Found $ISCSI_BLOCK_DEVICE_NAME in sys-fs (as dir)"
-    else
-        echo "ERROR: Udev did not detect the new device"
-        echo "ERROR: Could not look-up the Iscsi device in the sys-fs dir"
-        # give a shell for the admin
-        /bin/bash
-    fi
-    # export the blockdevice name for the further functions
-    export ISCSI_BLOCK_DEVICE="/dev/$ISCSI_BLOCK_DEVICE_NAME"
+	# check that udev found the new device
+	FIND_ISCSI_BLOCK_DEVICE=`find /sys/class/iscsi_session/session*/device/target*/*/ -name block | head -n1`
+	if [ "$FIND_ISCSI_BLOCK_DEVICE" == "" ]; then
+		FIND_ISCSI_BLOCK_DEVICE=`find /sys/class/iscsi_session/session*/device/target*/*/ -name block:s* | head -n1`
+		if [ "$FIND_ISCSI_BLOCK_DEVICE" == "" ]; then
+			echo "ERROR: Udev did not detect the new device"
+			echo "ERROR: Could not look-up the Iscsi device in the sys-fs dir"
+			# give a shell for the admin
+			/bin/bash
+		fi
+	fi
+	# check for different sysfs styles
+	if [ -h $FIND_ISCSI_BLOCK_DEVICE ]; then
+		ISCSI_BLOCK_DEVICE_NAME=`readlink $FIND_ISCSI_BLOCK_DEVICE`
+		ISCSI_BLOCK_DEVICE_NAME=`basename $ISCSI_BLOCK_DEVICE_NAME`
+		echo "SUCCESS: Found $ISCSI_BLOCK_DEVICE_NAME in sys-fs (as symlink)"
+	elif [ -d $FIND_ISCSI_BLOCK_DEVICE ]; then
+		ISCSI_BLOCK_DEVICE_NAME=`ls $FIND_ISCSI_BLOCK_DEVICE`
+		echo "SUCCESS: Found $ISCSI_BLOCK_DEVICE_NAME in sys-fs (as dir)"
+	else
+		echo "ERROR: Udev did not detect the new device"
+		echo "ERROR: Could not look-up the Iscsi device in the sys-fs dir"
+		# give a shell for the admin
+		/bin/bash
+	fi
+	# export the blockdevice name for the further functions
+	export ISCSI_BLOCK_DEVICE="/dev/$ISCSI_BLOCK_DEVICE_NAME"
 
-      # If CREATE_FS=TRUE, this is the first time we access the Equallogic LUN so we force filesystem creation.
-      if [ "$CREATE_FS" == "TRUE" ]; then
+	  # If CREATE_FS=TRUE, this is the first time we access the Equallogic LUN so we force filesystem creation.
+	  if [ "$CREATE_FS" == "TRUE" ]; then
 
-              # forcibly create filesystem
-              echo "NOTICE: CREATE_FS parameter found, forcibly creating $image_rootfstype filesystem on $ISCSI_BLOCK_DEVICE"
-              mke2fs -F -j $ISCSI_BLOCK_DEVICE
+			  # forcibly create filesystem
+			  echo "NOTICE: CREATE_FS parameter found, forcibly creating $image_rootfstype filesystem on $ISCSI_BLOCK_DEVICE"
+			  mke2fs -F -j $ISCSI_BLOCK_DEVICE
 
-              # Remove the CREATE_FS deployment parameter
-              if ! $WGET -O /dev/null "$openqrm_web_protocol://${resource_openqrmserver}/openqrm/boot-service/root-mount.equallogic.action.php?equallogic_root_mount_command=create_fs_finished&equallogic_root_mount_image_id=$image_id"; then
- 	               echo "ERROR: Could not post create_fs_finished for image $image_id to the openQRM-server at ${resource_openqrmserver}!"
-              else
-      	         echo "Posted create_fs_finished for image $image_id to the openQRM-server at $resource_openqrmserver!"
-          		fi
-      else
-              # Check if we need to resize the FS
-              if [ "$RESIZE_FS" == "TRUE"  ]; then
+			  # Remove the CREATE_FS deployment parameter
+			  if ! $WGET -O /dev/null "$openqrm_web_protocol://${resource_openqrmserver}/openqrm/boot-service/root-mount.equallogic.action.php?equallogic_root_mount_command=create_fs_finished&equallogic_root_mount_image_id=$image_id"; then
+				   echo "ERROR: Could not post create_fs_finished for image $image_id to the openQRM-server at ${resource_openqrmserver}!"
+			  else
+				 echo "Posted create_fs_finished for image $image_id to the openQRM-server at $resource_openqrmserver!"
+				fi
+	  else
+			  # Check if we need to resize the FS
+			  if [ "$RESIZE_FS" == "TRUE"  ]; then
 
-                  echo "NOTICE: Resize FS request found, resizing $image_rootfstype filesystem on $ISCSI_BLOCK_DEVICE"
-                  # here we resize the disk if needed, if not needed this won't hurt
-                  /sbin/e2fsck -f -y $ISCSI_BLOCK_DEVICE
-                  /sbin/resize2fs -fp $ISCSI_BLOCK_DEVICE
+				  echo "NOTICE: Resize FS request found, resizing $image_rootfstype filesystem on $ISCSI_BLOCK_DEVICE"
+				  # here we resize the disk if needed, if not needed this won't hurt
+				  /sbin/e2fsck -f -y $ISCSI_BLOCK_DEVICE
+				  /sbin/resize2fs -fp $ISCSI_BLOCK_DEVICE
 
-                  # post it to openqrm
-                  if ! $WGET -O /dev/null "$openqrm_web_protocol://${resource_openqrmserver}/openqrm/boot-service/root-mount.equallogic.action.php?equallogic_root_mount_command=resize_fs_finished&equallogic_root_mount_image_id=$image_id"; then
-     	               echo "ERROR: Could not post resize fs finished status for image $image_id to the openQRM-server at ${resource_openqrmserver}!"
-                  else
-          	         echo "Posted resize fs finished status for image $image_id to the openQRM-server at $resource_openqrmserver!"
-              		fi
-              else
- 	               echo "No resize_fs parameter found, not resizing"
-              fi
-      fi
+				  # post it to openqrm
+				  if ! $WGET -O /dev/null "$openqrm_web_protocol://${resource_openqrmserver}/openqrm/boot-service/root-mount.equallogic.action.php?equallogic_root_mount_command=resize_fs_finished&equallogic_root_mount_image_id=$image_id"; then
+					   echo "ERROR: Could not post resize fs finished status for image $image_id to the openQRM-server at ${resource_openqrmserver}!"
+				  else
+					 echo "Posted resize fs finished status for image $image_id to the openQRM-server at $resource_openqrmserver!"
+					fi
+			  else
+				   echo "No resize_fs parameter found, not resizing"
+			  fi
+	  fi
 
-      # finallly mount
-      if ! mount -t $image_rootfstype $ISCSI_BLOCK_DEVICE /mnt; then
-              echo "ERROR: Could not mount $ISCSI_BLOCK_DEVICE via iscsi"
-              # give a shell for the admin
-              /bin/bash
-      else
-              echo "equallogic-storage: Mounted $ISCSI_BLOCK_DEVICE rw"
-      fi
+	  # finallly mount
+	  if ! mount -t $image_rootfstype $ISCSI_BLOCK_DEVICE /mnt; then
+			  echo "ERROR: Could not mount $ISCSI_BLOCK_DEVICE via iscsi"
+			  # give a shell for the admin
+			  /bin/bash
+	  else
+			  echo "equallogic-storage: Mounted $ISCSI_BLOCK_DEVICE rw"
+	  fi
 
 	if  [ "$IMAGE_INSTALL_FROM_NFS" != "" ]; then
 		install_rootfs_from_nfs
@@ -295,6 +295,18 @@ EOF
 
 function remount_rootfs() {
 
+	# fix for ubuntu lucid + maverick
+	if [ -f /mnt/etc/apt/sources.list ]; then
+		if grep lucid /mnt/etc/apt/sources.list >/remountlog; then
+			echo "equallogic-storage: Skipping Re-mount $ISCSI_BLOCK_DEVICE ro"
+			return
+		fi
+		if grep maverick /mnt/etc/apt/sources.list >/remountlog; then
+			echo "equallogic-storage: Skipping Re-mount $ISCSI_BLOCK_DEVICE ro"
+			return
+		fi
+		rm -f /remountlog
+	fi
 	REMOUNT_LOOP=0
 	# remont /mnt ro
 	while ! mount -t $image_rootfstype -o ro,remount $ISCSI_BLOCK_DEVICE /mnt; do
@@ -307,7 +319,7 @@ function remount_rootfs() {
 		fi
 	done
 	echo "equallogic-storage: Re-mounted $ISCSI_BLOCK_DEVICE ro"
-	
+
 }
 
 

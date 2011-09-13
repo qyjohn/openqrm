@@ -2,19 +2,19 @@
 /*
   This file is part of openQRM.
 
-    openQRM is free software: you can redistribute it and/or modify
-    it under the terms of the GNU General Public License version 2
-    as published by the Free Software Foundation.
+	openQRM is free software: you can redistribute it and/or modify
+	it under the terms of the GNU General Public License version 2
+	as published by the Free Software Foundation.
 
-    openQRM is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    GNU General Public License for more details.
+	openQRM is distributed in the hope that it will be useful,
+	but WITHOUT ANY WARRANTY; without even the implied warranty of
+	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+	GNU General Public License for more details.
 
-    You should have received a copy of the GNU General Public License
-    along with openQRM.  If not, see <http://www.gnu.org/licenses/>.
+	You should have received a copy of the GNU General Public License
+	along with openQRM.  If not, see <http://www.gnu.org/licenses/>.
 
-    Copyright 2009, Matthias Rechenburg <matt@openqrm.com>
+	Copyright 2009, Matthias Rechenburg <matt@openqrm.com>
 */
 
 
@@ -54,14 +54,14 @@ $event->log("$equallogic_root_mount_command", $_SERVER['REQUEST_TIME'], 5, "equa
 			$image = new image();
 			$image->get_instance_by_id($equallogic_root_mount_image_id);
 			$image->set_deployment_parameters("CREATE_FS", "FALSE");
-		        break;
+			break;
 
 		case 'resize_fs_finished':
 			$event->log("$equallogic_root_mount_command", $_SERVER['REQUEST_TIME'], 5, "equallogic-root-mount-action", "Removing RESIZE_FS parameter for image_id $equallogic_root_mount_image_id", "", "", 0, 0, 0);
 			$image = new image();
 			$image->get_instance_by_id($equallogic_root_mount_image_id);
 			$image->set_deployment_parameters("RESIZE_FS", "FALSE");
-		        break;
+			break;
 
 
 		default:

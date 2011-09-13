@@ -2,19 +2,19 @@
 /*
   This file is part of openQRM.
 
-    openQRM is free software: you can redistribute it and/or modify
-    it under the terms of the GNU General Public License version 2
-    as published by the Free Software Foundation.
+	openQRM is free software: you can redistribute it and/or modify
+	it under the terms of the GNU General Public License version 2
+	as published by the Free Software Foundation.
 
-    openQRM is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    GNU General Public License for more details.
+	openQRM is distributed in the hope that it will be useful,
+	but WITHOUT ANY WARRANTY; without even the implied warranty of
+	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+	GNU General Public License for more details.
 
-    You should have received a copy of the GNU General Public License
-    along with openQRM.  If not, see <http://www.gnu.org/licenses/>.
+	You should have received a copy of the GNU General Public License
+	along with openQRM.  If not, see <http://www.gnu.org/licenses/>.
 
-    Copyright 2009, Matthias Rechenburg <matt@openqrm.com>
+	Copyright 2009, Matthias Rechenburg <matt@openqrm.com>
 */
 
 
@@ -45,47 +45,46 @@ function openqrm_xen_storage_appliance($cmd, $appliance_fields) {
 	$resource = new resource();
 	$resource->get_instance_by_id($appliance_fields["appliance_resources"]);
 	$appliance_ip=$resource->ip;
-    $appliance = new appliance();
-    $appliance->get_instance_by_id($appliance_id);
+	$appliance = new appliance();
+	$appliance->get_instance_by_id($appliance_id);
 
 	$event->log("openqrm_xen_storage_appliance", $_SERVER['REQUEST_TIME'], 5, "openqrm-xen-storage-appliance-hook.php", "Handling $cmd event $appliance_id/$appliance_name/$appliance_ip", "", "", 0, 0, $appliance_id);
 
-    // check resource type -> xen-strorage-vm
-    $virtualization = new virtualization();
-    $virtualization->get_instance_by_type("xen-storage-vm");
-    if ($resource->vtype != $virtualization->id) {
-    	$event->log("openqrm_xen_storage_appliance", $_SERVER['REQUEST_TIME'], 5, "openqrm-xen-storage-appliance-hook.php", "$appliance_id is not from type xen-storage-vm, skipping .. $appliance_name/$appliance_ip", "", "", 0, 0, $appliance_id);
-        return;
-    }
+	// check resource type -> xen-strorage-vm
+	$virtualization = new virtualization();
+	$virtualization->get_instance_by_type("xen-storage-vm");
+	if ($resource->vtype != $virtualization->id) {
+		$event->log("openqrm_xen_storage_appliance", $_SERVER['REQUEST_TIME'], 5, "openqrm-xen-storage-appliance-hook.php", "$appliance_id is not from type xen-storage-vm, skipping .. $appliance_name/$appliance_ip", "", "", 0, 0, $appliance_id);
+		return;
+	}
 
-    // check image is on the same storage server
-    // get the xen host resource
-    $xen_storage_host_resource = new resource();
-    $xen_storage_host_resource->get_instance_by_id($resource->vhostid);
-    // get the xen-storage resource
-    $image = new image();
-    $image->get_instance_by_id($appliance->imageid);
-    $storage = new storage();
-    $storage->get_instance_by_id($image->storageid);
-    $xen_storage_resource = new resource();
-    $xen_storage_resource->get_instance_by_id($storage->resource_id);
-    if ($xen_storage_host_resource->id != $xen_storage_resource->id) {
-        $event->log("openqrm_xen_storage_appliance", $_SERVER['REQUEST_TIME'], 5, "openqrm-xen-storage-appliance-hook.php", "Appliance $appliance_id image is not available on this xen-storage host, $xen_storage_host_resource->id != $xen_storage_resource->idskipping .. $appliance_name/$appliance_ip", "", "", 0, 0, $appliance_id);
-        return;
-    }
+	// check image is on the same storage server
+	// get the xen host resource
+	$xen_storage_host_resource = new resource();
+	$xen_storage_host_resource->get_instance_by_id($resource->vhostid);
+	// get the xen-storage resource
+	$image = new image();
+	$image->get_instance_by_id($appliance->imageid);
+	$storage = new storage();
+	$storage->get_instance_by_id($image->storageid);
+	$xen_storage_resource = new resource();
+	$xen_storage_resource->get_instance_by_id($storage->resource_id);
+	if ($xen_storage_host_resource->id != $xen_storage_resource->id) {
+		$event->log("openqrm_xen_storage_appliance", $_SERVER['REQUEST_TIME'], 5, "openqrm-xen-storage-appliance-hook.php", "Appliance $appliance_id image is not available on this xen-storage host. Assuming SAN-Backend", "", "", 0, 0, $appliance_id);
+	}
 
 	switch($cmd) {
 		case "start":
-            // send command to assign image and start vm
-            $xen_storage_command="$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/xen-storage/bin/openqrm-xen-storage-vm start_by_mac -m $resource->mac -d $image->rootdevice";
-            $xen_storage_host_resource->send_command($xen_storage_host_resource->ip, $xen_storage_command);
+			// send command to assign image and start vm
+			$xen_storage_command="$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/xen-storage/bin/openqrm-xen-storage-vm start_by_mac -m $resource->mac -d $image->rootdevice";
+			$xen_storage_host_resource->send_command($xen_storage_host_resource->ip, $xen_storage_command);
 			break;
 		case "stop":
 
-            // send command to stop the vm and deassign image
-            // send command to assign image and start vm
-            $xen_storage_command="$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/xen-storage/bin/openqrm-xen-storage-vm restart_by_mac -m $resource->mac";
-            $xen_storage_host_resource->send_command($xen_storage_host_resource->ip, $xen_storage_command);
+			// send command to stop the vm and deassign image
+			// send command to assign image and start vm
+			$xen_storage_command="$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/xen-storage/bin/openqrm-xen-storage-vm restart_by_mac -m $resource->mac";
+			$xen_storage_host_resource->send_command($xen_storage_host_resource->ip, $xen_storage_command);
 			break;
 
 	}

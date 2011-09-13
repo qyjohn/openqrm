@@ -25,7 +25,7 @@ OPENQRM_SERVER_BASE_DIR=$(pushd $OPENQRM_SERVER_BASE_DIR > /dev/null && echo $PW
 if [ -f $OPENQRM_RESOURCE_PARAMETER_FILE ]; then
 	. $OPENQRM_RESOURCE_PARAMETER_FILE
 	OPENQRM_SERVER_IP=$resource_openqrmserver
-    export SERVER_PROTOCOL=$openqrm_web_protocol
+	export SERVER_PROTOCOL=$openqrm_web_protocol
 elif [ -f $OPENQRM_SERVER_BASE_DIR/openqrm/etc/openqrm-server.conf ]; then
 	. $OPENQRM_SERVER_BASE_DIR/openqrm/etc/openqrm-server.conf
 	. $OPENQRM_SERVER_BASE_DIR/openqrm/include/openqrm-server-functions
@@ -33,8 +33,8 @@ elif [ -f $OPENQRM_SERVER_BASE_DIR/openqrm/etc/openqrm-server.conf ]; then
 	OPENQRM_SERVER_IP=$OPENQRM_SERVER_IP_ADDRESS
 	resource_id=0
 	export resource_openqrmserver=$OPENQRM_SERVER_IP_ADDRESS
-    export SERVER_PROTOCOL=$OPENQRM_WEB_PROTOCOL
-    export resource_senddelay=10
+	export SERVER_PROTOCOL=$OPENQRM_WEB_PROTOCOL
+	export resource_senddelay=10
 fi
 OPENQRM_POSTENCODE="$OPENQRM_SERVER_BASE_DIR/openqrm/sbin/openqrm-postencode"
 OPENQRM_VM_DIR="/var/lib/xen-storage/openqrm/"
@@ -45,7 +45,7 @@ OPENQRM_STARTING_STATE="starting"
 
 # define wget to use with https
 if [ "$SERVER_PROTOCOL" == "https" ]; then
-    WGET_NO_CERT_CHECK="--no-check-certificate --random-file=/dev/random"
+	WGET_NO_CERT_CHECK="--no-check-certificate --random-file=/dev/random"
 fi
 
 # let only root run this script
@@ -66,14 +66,14 @@ XEN_VM_NAME=`grep -rHi $XEN_VM_MAC $OPENQRM_VM_DIR/*/mac1 2>/dev/null | cut -d':
 XEN_VM_NAME=`dirname $XEN_VM_NAME` 2>/dev/null
 XEN_VM_NAME=`basename $XEN_VM_NAME` 2>/dev/null
 if [ "$XEN_VM_NAME" == "" ]; then
-    echo "NOTICE: Cloud not find XEN-storage vm $XEN_VM_MAC on this host" | logger
-    exit 1
+	echo "NOTICE: Cloud not find XEN-storage vm $XEN_VM_MAC on this host" | logger
+	exit 1
 fi
 
 
 # local used functions
 function send_info() {
-    current_state=`urlencodestring $OPENQRM_ACTIVE_STATE`
+	current_state=`urlencodestring $OPENQRM_ACTIVE_STATE`
 	current_event=`urlencodestring $OPENQRM_EVENT`
 	MESSAGEDATA="resource_id=$resource_id&resource_uptime=$current_uptime&resource_cpunumber=$current_cpu_number&resource_cpuspeed=$current_cpu_speed&resource_cpumodel=$current_cpu_model&resource_memtotal=$current_mem_total&resource_memused=$current_mem_used&resource_swaptotal=$current_swap_total&resource_swapused=$current_swap_used&resource_hostname=$current_hostname&resource_load=$current_cpu_load&resource_nics=$current_nic_count&resource_state=$current_state&resource_event=$current_event";
 	OPENQRM_RESOURCE_INFO_URL="$SERVER_PROTOCOL://$resource_openqrmserver/openqrm/action/resource-monitor.php?resource_command=update_info&$MESSAGEDATA"
@@ -109,20 +109,20 @@ XEN_VM_RESOURCE_PARAMETER="$OPENQRM_VM_DIR/$XEN_VM_NAME/resource-parameter.conf"
 NETWORKCARD_LOOP=0
 # send id -1 if resource parameters are not existing
 if [ ! -f $XEN_VM_RESOURCE_PARAMETER ]; then
-    NEW_RES_ID="&resource_id=-1"
+	NEW_RES_ID="&resource_id=-1"
 fi
 
 while (true); do
 	if wget $WGET_NO_CERT_CHECK -q -O $XEN_VM_RESOURCE_PARAMETER "$SERVER_PROTOCOL://$resource_openqrmserver/openqrm/action/resource-monitor.php?resource_command=get_parameter&resource_mac=$XEN_VM_MAC$NEW_RES_ID"; then
-        if grep resource_id $XEN_VM_RESOURCE_PARAMETER 1>/dev/null 2>&1; then
-            echo "-> got parameters via $SERVER_PROTOCOL"
-            break
-        fi
+		if grep resource_id $XEN_VM_RESOURCE_PARAMETER 1>/dev/null 2>&1; then
+			echo "-> got parameters via $SERVER_PROTOCOL"
+			break
+		fi
 	fi
-    # no chance ?
+	# no chance ?
 	if [ "$NETWORKCARD_LOOP" == "10" ]; then
 		echo "ERROR: Could not reach the openQRM-Server at $OPENQRM_SERVER_IP_ADDRESS!"
-        exit 1
+		exit 1
 	fi
 	NETWORKCARD_LOOP=$(( NETWORKCARD_LOOP + 1 ))
 	sleep 5
@@ -146,19 +146,19 @@ export current_cpu_number=$XEN_VM_CPUS
 export current_mem_total=$XEN_VM_RAM
 # nic count
 if [ "$XEN_VM_MAC_1" != "" ]; then
-    export current_nic_count=1
+	export current_nic_count=1
 fi
 if [ "$XEN_VM_MAC_2" != "" ]; then
-    export current_nic_count=2
+	export current_nic_count=2
 fi
 if [ "$XEN_VM_MAC_3" != "" ]; then
-    export current_nic_count=3
+	export current_nic_count=3
 fi
 if [ "$XEN_VM_MAC_4" != "" ]; then
-    export current_nic_count=4
+	export current_nic_count=4
 fi
 if [ "$XEN_VM_MAC_5" != "" ]; then
-    export current_nic_count=5
+	export current_nic_count=5
 fi
 
 
@@ -166,6 +166,13 @@ fi
 find_cpu_speed
 # main loop
 while (true); do
+	# if we have a disk, check that the vm is still running
+	XEN_VM_DISK_1=`cat $OPENQRM_VM_DIR/$XEN_VM_NAME/disk1 2>/dev/null`
+	if [ "$XEN_VM_DISK_1" != "" ]; then
+		if ! ps ax | grep qemu-dm | grep -v grep | grep -i "macaddr=$XEN_VM_MAC_1" 1>/dev/null; then
+			exit 1
+		fi
+	fi
 	# uptime
 	find_uptime
 	# sending statistics

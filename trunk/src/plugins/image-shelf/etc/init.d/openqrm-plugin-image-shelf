@@ -30,7 +30,7 @@ export resource_openqrmserver=$OPENQRM_SERVER_IP_ADDRESS
 export LANG=C
 # define wget to use with https
 if [ "$OPENQRM_WEB_PROTOCOL" == "https" ]; then
-    WGET_NO_CERT_CHECK="--no-check-certificate"
+	WGET_NO_CERT_CHECK="--no-check-certificate"
 fi
 
 function openqrm_plugin_image_shelf_start() {
@@ -50,7 +50,7 @@ function openqrm_plugin_image_shelf_uninstall() {
 	if [ "$USERNAME" == "" ] && [ "$PASSWORD" == "" ]; then
 		echo -n "image-shelf: Please give a username to uninstall the plugin : "
 		read USERNAME
-		echo	
+		echo
 		echo -n "image-shelf: Please give the password for user $USERNAME : "
 		read PASSWORD
 		echo
@@ -76,7 +76,7 @@ function openqrm_plugin_image_shelf_init() {
 	if [ "$USERNAME" == "" ] && [ "$PASSWORD" == "" ]; then
 		echo -n "image-shelf: Please give a username to init the plugin : "
 		read USERNAME
-		echo	
+		echo
 		echo -n "image-shelf: Please give the password for user $USERNAME : "
 		read PASSWORD
 		echo
@@ -92,7 +92,7 @@ function openqrm_plugin_image_shelf_init() {
 		image_shelf_log init "ERROR: Could not create the image-shelf-plugin tables in the database!"
 		exit 1
 	fi
-	
+
 }
 
 USER=$2

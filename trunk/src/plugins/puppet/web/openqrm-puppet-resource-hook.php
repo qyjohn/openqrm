@@ -2,19 +2,19 @@
 /*
   This file is part of openQRM.
 
-    openQRM is free software: you can redistribute it and/or modify
-    it under the terms of the GNU General Public License version 2
-    as published by the Free Software Foundation.
+	openQRM is free software: you can redistribute it and/or modify
+	it under the terms of the GNU General Public License version 2
+	as published by the Free Software Foundation.
 
-    openQRM is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    GNU General Public License for more details.
+	openQRM is distributed in the hope that it will be useful,
+	but WITHOUT ANY WARRANTY; without even the implied warranty of
+	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+	GNU General Public License for more details.
 
-    You should have received a copy of the GNU General Public License
-    along with openQRM.  If not, see <http://www.gnu.org/licenses/>.
+	You should have received a copy of the GNU General Public License
+	along with openQRM.  If not, see <http://www.gnu.org/licenses/>.
 
-    Copyright 2009, Matthias Rechenburg <matt@openqrm.com>
+	Copyright 2009, Matthias Rechenburg <matt@openqrm.com>
 */
 
 
@@ -41,10 +41,10 @@ function openqrm_puppet_resource($cmd, $resource_fields) {
 	global $OPENQRM_SERVER_IP_ADDRESS;
 	global $OPENQRM_EXEC_PORT;
 	$resource_id=$resource_fields["resource_id"];
-	$resource_name=$resource_fields["resource_name"];
 	$resource = new resource();
 	$resource->get_instance_by_id($resource_id);
 	$resource_ip=$resource->ip;
+	$resource_name=$resource->hostname;
 
 	$event->log("openqrm_puppet_resource", $_SERVER['REQUEST_TIME'], 5, "openqrm-puppet-resource-hook.php", "Handling $cmd event $resource_id/$resource_name/$resource_ip", "", "", 0, 0, $resource_id);
 
@@ -71,11 +71,11 @@ function openqrm_puppet_resource($cmd, $resource_fields) {
 					switch($cmd) {
 						case "start":
 							$openqrm_server = new openqrm_server();
-							$openqrm_server->send_command("$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/puppet/bin/openqrm-puppet-manager start $resource_id $appliance_name $resource_ip");
+							$openqrm_server->send_command("$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/puppet/bin/openqrm-puppet-manager start $id $appliance_name $resource_ip");
 							break;
 						case "stop":
 							$openqrm_server = new openqrm_server();
-							$openqrm_server->send_command("$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/puppet/bin/openqrm-puppet-manager stop $resource_id $appliance_name $resource_ip");
+							$openqrm_server->send_command("$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/puppet/bin/openqrm-puppet-manager stop $id $appliance_name $resource_ip");
 							break;
 					}
 				}

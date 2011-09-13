@@ -40,8 +40,6 @@ require_once "$RootDir/plugins/cloud/class/clouduserslimits.class.php";
 require_once "$RootDir/plugins/cloud/class/cloudrequest.class.php";
 require_once "$RootDir/plugins/cloud/class/cloudconfig.class.php";
 require_once "$RootDir/plugins/cloud/class/cloudmailer.class.php";
-require_once "$RootDir/plugins/cloud/class/cloudipgroup.class.php";
-require_once "$RootDir/plugins/cloud/class/cloudiptables.class.php";
 require_once "$RootDir/plugins/cloud/class/cloudvm.class.php";
 require_once "$RootDir/plugins/cloud/class/cloudimage.class.php";
 require_once "$RootDir/plugins/cloud/class/cloudappliance.class.php";

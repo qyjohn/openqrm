@@ -8,19 +8,19 @@
 /*
   This file is part of openQRM.
 
-    openQRM is free software: you can redistribute it and/or modify
-    it under the terms of the GNU General Public License version 2
-    as published by the Free Software Foundation.
+	openQRM is free software: you can redistribute it and/or modify
+	it under the terms of the GNU General Public License version 2
+	as published by the Free Software Foundation.
 
-    openQRM is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    GNU General Public License for more details.
+	openQRM is distributed in the hope that it will be useful,
+	but WITHOUT ANY WARRANTY; without even the implied warranty of
+	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+	GNU General Public License for more details.
 
-    You should have received a copy of the GNU General Public License
-    along with openQRM.  If not, see <http://www.gnu.org/licenses/>.
+	You should have received a copy of the GNU General Public License
+	along with openQRM.  If not, see <http://www.gnu.org/licenses/>.
 
-    Copyright 2009, Matthias Rechenburg <matt@openqrm.com>
+	Copyright 2009, Matthias Rechenburg <matt@openqrm.com>
 */
 
 
@@ -62,7 +62,7 @@ global $OPENQRM_SERVER_IP_ADDRESS;
 	switch ($solx86_command) {
 
 		case 'integrate':
-		
+
 			// create storage server
 			$storage_fields["storage_name"] = "resource$solx86_id";
 			$storage_fields["storage_resource_id"] = "$solx86_id";
@@ -74,7 +74,7 @@ global $OPENQRM_SERVER_IP_ADDRESS;
 			$storage = new storage();
 			$storage_fields["storage_id"]=openqrm_db_get_free_id('storage_id', $STORAGE_INFO_TABLE);
 			$storage->add($storage_fields);
-			
+
 			// create image
 			$image_fields["image_id"]=openqrm_db_get_free_id('image_id', $IMAGE_INFO_TABLE);
 			$image_fields["image_name"] = "resource$solx86_id";
@@ -94,7 +94,7 @@ global $OPENQRM_SERVER_IP_ADDRESS;
 			$kernel_fields["kernel_capabilities"]='solx86';
 			$kernel = new kernel();
 			$kernel->add($kernel_fields);
-		
+
 			// create appliance
 			$next_appliance_id=openqrm_db_get_free_id('appliance_id', $APPLIANCE_INFO_TABLE);
 			$appliance_fields["appliance_id"]=$next_appliance_id;
@@ -142,7 +142,7 @@ global $OPENQRM_SERVER_IP_ADDRESS;
 			$kernel = new kernel();
 			$kernel->remove_by_name("resource$solx86_id");
 			// remove image
-			$image = new image();			
+			$image = new image();
 			$image->remove_by_name("resource$solx86_id");
 			// remove storage serveer
 			$storage = new storage();

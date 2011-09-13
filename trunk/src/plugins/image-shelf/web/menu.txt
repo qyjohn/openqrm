@@ -21,6 +21,6 @@
 #	IMG
 #	Target
 ..|Image-shelf
-...|About|plugins/image-shelf/image-shelf-about.php|How to use|image-shelf/plugin.png
-...|Create|plugins/image-shelf/image-shelf-new.php?currenttab=tab1|Create a new Image-Shelf|image-shelf/add.png
-...|Import|plugins/image-shelf/image-shelf-manager.php|Import Server Image from an Image-Shelf|image-shelf/import.png
+...|插件介绍|plugins/image-shelf/image-shelf-about.php|How to use|image-shelf/plugin.png
+...|创建服务|plugins/image-shelf/image-shelf-new.php?currenttab=tab1|Create a new Image-Shelf|image-shelf/add.png
+...|导入映像|plugins/image-shelf/image-shelf-manager.php|Import Server Image from an Image-Shelf|image-shelf/import.png

@@ -2,19 +2,19 @@
 /*
   This file is part of openQRM.
 
-    openQRM is free software: you can redistribute it and/or modify
-    it under the terms of the GNU General Public License version 2
-    as published by the Free Software Foundation.
+	openQRM is free software: you can redistribute it and/or modify
+	it under the terms of the GNU General Public License version 2
+	as published by the Free Software Foundation.
 
-    openQRM is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    GNU General Public License for more details.
+	openQRM is distributed in the hope that it will be useful,
+	but WITHOUT ANY WARRANTY; without even the implied warranty of
+	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+	GNU General Public License for more details.
 
-    You should have received a copy of the GNU General Public License
-    along with openQRM.  If not, see <http://www.gnu.org/licenses/>.
+	You should have received a copy of the GNU General Public License
+	along with openQRM.  If not, see <http://www.gnu.org/licenses/>.
 
-    Copyright 2009, Matthias Rechenburg <matt@openqrm.com>
+	Copyright 2009, Matthias Rechenburg <matt@openqrm.com>
 */
 
 
@@ -40,7 +40,7 @@ function redirect($strMsg, $currenttab = 'tab0', $url = '') {
 	if($url == '') {
 		$url = $thisfile.'?strMsg='.urlencode($strMsg).'&currenttab='.$currenttab;
 	}
-	// using meta refresh because of the java-script in the header	
+	// using meta refresh because of the java-script in the header
 	echo "<meta http-equiv=\"refresh\" content=\"0; URL=$url\">";
 	exit;
 }
@@ -55,10 +55,10 @@ $error = 0;
 
 			// check passed values
 			if(htmlobject_request('imageshelf_name') != '') {
-				if (ereg("^[A-Za-z0-9_-]*$", htmlobject_request('imageshelf_name')) === false) {
+				if (!preg_match('#^[A-Za-z0-9_-]*$#', htmlobject_request('imageshelf_name'))) {
 					$strMsg .= 'imageshelf name must be [A-Za-z0-9_-]<br/>';
 					$error = 1;
-				} 
+				}
 			} else {
 				$strMsg .= "imageshelf name can not be empty<br/>";
 				$error = 1;
@@ -97,7 +97,7 @@ $error = 0;
 				$args = '?strMsg='.$strMsg;
 				$args .= '&currentab=tab0';
 				$url = 'image-shelf-manager.php'.$args;
-			} 
+			}
 			// if something went wrong
 			else {
 				$url = error_redirect($strMsg);
@@ -149,7 +149,7 @@ function imageshelf_form() {
 					'currentab' => htmlobject_input('currenttab', array("value" => 'tab1', "label" => ''), 'hidden'),
 					'new_image_step_2' => htmlobject_input('new_image_step_2', array("value" => true, "label" => ''), 'hidden'),
 					'imageshelf_protocol' => htmlobject_input('imageshelf_protocol', array("value" => $ident, "label" => ''), 'hidden'),
-			
+
 					'imageshelf_name' => htmlobject_input('imageshelf_name', array("value" => htmlobject_request('imageshelf_name'), "label" => 'Name'), 'text', 20),
 					'imageshelf_uri' => htmlobject_input('imageshelf_uri', array("value" => "HTTP-server/image-shelf-dir/", "label" => 'http://'), 'text', 255),
 					'imageshelf_user' => htmlobject_input('imageshelf_user', array("value" => htmlobject_request('imageshelf_user'), "label" => 'Username'), 'text', 20),
@@ -164,7 +164,7 @@ function imageshelf_form() {
 					'currentab' => htmlobject_input('currenttab', array("value" => 'tab1', "label" => ''), 'hidden'),
 					'new_image_step_2' => htmlobject_input('new_image_step_2', array("value" => true, "label" => ''), 'hidden'),
 					'imageshelf_protocol' => htmlobject_input('imageshelf_protocol', array("value" => $ident, "label" => ''), 'hidden'),
-			
+
 					'imageshelf_name' => htmlobject_input('imageshelf_name', array("value" => htmlobject_request('imageshelf_name'), "label" => 'Name'), 'text', 20),
 					'imageshelf_uri' => htmlobject_input('imageshelf_uri', array("value" => "HTTPS-server/image-shelf-dir/", "label" => 'https://'), 'text', 255),
 					'imageshelf_user' => htmlobject_input('imageshelf_user', array("value" => htmlobject_request('imageshelf_user'), "label" => 'Username'), 'text', 20),
@@ -179,7 +179,7 @@ function imageshelf_form() {
 					'currentab' => htmlobject_input('currenttab', array("value" => 'tab1', "label" => ''), 'hidden'),
 					'new_image_step_2' => htmlobject_input('new_image_step_2', array("value" => true, "label" => ''), 'hidden'),
 					'imageshelf_protocol' => htmlobject_input('imageshelf_protocol', array("value" => $ident, "label" => ''), 'hidden'),
-			
+
 					'imageshelf_name' => htmlobject_input('imageshelf_name', array("value" => htmlobject_request('imageshelf_name'), "label" => 'Name'), 'text', 20),
 					'imageshelf_uri' => htmlobject_input('imageshelf_uri', array("value" => "FTP-server/image-shelf-dir/", "label" => 'ftp://'), 'text', 255),
 					'imageshelf_user' => htmlobject_input('imageshelf_user', array("value" => htmlobject_request('imageshelf_user'), "label" => 'Username'), 'text', 20),
@@ -194,7 +194,7 @@ function imageshelf_form() {
 					'currentab' => htmlobject_input('currenttab', array("value" => 'tab1', "label" => ''), 'hidden'),
 					'new_image_step_2' => htmlobject_input('new_image_step_2', array("value" => true, "label" => ''), 'hidden'),
 					'imageshelf_protocol' => htmlobject_input('imageshelf_protocol', array("value" => $ident, "label" => ''), 'hidden'),
-			
+
 					'imageshelf_name' => htmlobject_input('imageshelf_name', array("value" => htmlobject_request('imageshelf_name'), "label" => 'Name'), 'text', 20),
 					'imageshelf_uri' => htmlobject_input('imageshelf_uri', array("value" => "NFS-server:/image-shelf-dir/", "label" => 'nfs://'), 'text', 255),
 					'imageshelf_user' => "",
@@ -218,10 +218,10 @@ function imageshelf_form() {
 		$arHead['protocol_name'] = array();
 		$arHead['protocol_name']['title'] ='Name';
 		$arBody = array();
-		
+
 		$table = new htmlobject_db_table('protocol_name');
 		$table->add_headrow('<input type="hidden" name="currenttab" value="tab1">');
-		
+
 		$arBody[] = array(
 			'protocol_id' => "1",
 			'protocol_name' => "local",
@@ -258,7 +258,7 @@ function imageshelf_form() {
 			$table->identifier_type = 'radio';
 		}
 		$disp = '<h3>Select Image-Shelf protocol</h3>'.$table->get_string();
-	
+
 	}
 
 	return $disp;

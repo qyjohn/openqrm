@@ -2,23 +2,23 @@
 <head>
 
 <style type="text/css">
-  <!--
-   -->
-  </style>
-  <script type="text/javascript" language="javascript" src="js/datetimepicker.js"></script>
-  <script language="JavaScript">
+	<!--
+	-->
+	</style>
+	<script type="text/javascript" language="javascript" src="js/datetimepicker.js"></script>
+	<script language="JavaScript">
 	<!--
 		if (document.images)
 		{
-		calimg= new Image(16,16); 
-		calimg.src="img/cal.gif"; 
+		calimg= new Image(16,16);
+		calimg.src="img/cal.gif";
 		}
 
-        function statusMsg(msg) {
-            window.status=msg;
-            return true;
-        }
-        
+		function statusMsg(msg) {
+			window.status=msg;
+			return true;
+		}
+
 	//-->
 </script>
 <link type="text/css" rel="stylesheet" href="css/calendar.css">
@@ -91,196 +91,197 @@ function redirect($strMsg, $currenttab = 'tab0', $url = '') {
 
 
 // check if we got some actions to do
+$strMsg = '';
 if(htmlobject_request('action') != '') {
 	switch (htmlobject_request('action')) {
 		case 'delete':
-            if (isset($_REQUEST['identifier'])) {
-                foreach($_REQUEST['identifier'] as $id) {
-                    $cr_request = new cloudrequest();
-                    $cr_request->get_instance_by_id($id);
-                    $remove_cr=false;
-                    $cr_status="unknown";
-                    switch ($cr_request->status) {
-                        case 1:
-                            $cr_status="new";
-                            $remove_cr=true;
-                            break;
-                        case 2:
-                            $cr_status="approve";
-                            break;
-                        case 3:
-                            $cr_status="active";
-                            break;
-                        case 4:
-                            // deny
-                            $cr_status="deny";
-                            $remove_cr=true;
-                            break;
-                        case 6:
-                            // done
-                            $cr_status="done";
-                            $remove_cr=true;
-                            break;
-                        case 7:
-                            // no-res
-                            $cr_status="no-res";
-                            $remove_cr=true;
-                            break;
-                    }
-                    // do we remove ?
-                    if ($remove_cr) {
-                        // mail user before removing
-                        $cr_cu_id = $cr_request->cu_id;
-                        $cl_user = new clouduser();
-                        $cl_user->get_instance_by_id($cr_cu_id);
-                        $cu_name = $cl_user->name;
-                        $cu_email = $cl_user->email;
-                        $cu_forename = $cl_user->forename;
-                        $cu_lastname = $cl_user->lastname;
-                        $rmail = new cloudmailer();
-                        $rmail->to = "$cu_email";
-                        $rmail->from = "$cc_admin_email";
-                        $rmail->subject = "openQRM Cloud: Your request $id has been removed";
-                        $rmail->template = "$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/cloud/etc/mail/delete_cloud_request.mail.tmpl";
-                        $arr = array('@@ID@@'=>"$id", '@@FORENAME@@'=>"$cu_forename", '@@LASTNAME@@'=>"$cu_lastname");
-                        $rmail->var_array = $arr;
-                        $rmail->send();
-                        // remove
-                        $cr_request->remove($id);
-                        $strMsg .= "Removed Cloudrequest $id<br>";
-                    } else {
-                        $strMsg .= "Not revoming Cloudrequest $id in status $cr_status<br>";
-                    }
-                }
-                redirect($strMsg, tab0);
-            }
+			if (isset($_REQUEST['identifier'])) {
+				foreach($_REQUEST['identifier'] as $id) {
+					$cr_request = new cloudrequest();
+					$cr_request->get_instance_by_id($id);
+					$remove_cr=false;
+					$cr_status="unknown";
+					switch ($cr_request->status) {
+						case 1:
+							$cr_status="new";
+							$remove_cr=true;
+							break;
+						case 2:
+							$cr_status="approve";
+							break;
+						case 3:
+							$cr_status="active";
+							break;
+						case 4:
+							// deny
+							$cr_status="deny";
+							$remove_cr=true;
+							break;
+						case 6:
+							// done
+							$cr_status="done";
+							$remove_cr=true;
+							break;
+						case 7:
+							// no-res
+							$cr_status="no-res";
+							$remove_cr=true;
+							break;
+					}
+					// do we remove ?
+					if ($remove_cr) {
+						// mail user before removing
+						$cr_cu_id = $cr_request->cu_id;
+						$cl_user = new clouduser();
+						$cl_user->get_instance_by_id($cr_cu_id);
+						$cu_name = $cl_user->name;
+						$cu_email = $cl_user->email;
+						$cu_forename = $cl_user->forename;
+						$cu_lastname = $cl_user->lastname;
+						$rmail = new cloudmailer();
+						$rmail->to = "$cu_email";
+						$rmail->from = "$cc_admin_email";
+						$rmail->subject = "openQRM Cloud: Your request $id has been removed";
+						$rmail->template = "$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/cloud/etc/mail/delete_cloud_request.mail.tmpl";
+						$arr = array('@@ID@@'=>"$id", '@@FORENAME@@'=>"$cu_forename", '@@LASTNAME@@'=>"$cu_lastname");
+						$rmail->var_array = $arr;
+						$rmail->send();
+						// remove
+						$cr_request->remove($id);
+						$strMsg .= "Removed Cloudrequest $id<br>";
+					} else {
+						$strMsg .= "Not revoming Cloudrequest $id in status $cr_status<br>";
+					}
+				}
+				redirect($strMsg, 'tab0');
+			}
 			break;
 
 		case 'approve':
-            if (isset($_REQUEST['identifier'])) {
-                foreach($_REQUEST['identifier'] as $id) {
-                    $cr_request = new cloudrequest();
-                    $cr_request->setstatus($id, 'approve');
-                    // mail user after aprove
-                    $cr_request->get_instance_by_id($id);
-                    $cr_cu_id = $cr_request->cu_id;
-                    $cl_user = new clouduser();
-                    $cl_user->get_instance_by_id($cr_cu_id);
-                    $cu_name = $cl_user->name;
-                    $cu_email = $cl_user->email;
-                    $cu_forename = $cl_user->forename;
-                    $cu_lastname = $cl_user->lastname;
-                    $cr_start = $cr_request->start;
-                    $start = date("d-m-Y H-i", $cr_start);
-                    $cr_stop = $cr_request->stop;
-                    $stop = date("d-m-Y H-i", $cr_stop);
-                    $rmail = new cloudmailer();
-                    $rmail->to = "$cu_email";
-                    $rmail->from = "$cc_admin_email";
-                    $rmail->subject = "openQRM Cloud: Your request $id has been approved";
-                    $rmail->template = "$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/cloud/etc/mail/approve_cloud_request.mail.tmpl";
-                    $arr = array('@@ID@@'=>"$id", '@@FORENAME@@'=>"$cu_forename", '@@LASTNAME@@'=>"$cu_lastname", '@@START@@'=>"$start", '@@STOP@@'=>"$stop");
-                    $rmail->var_array = $arr;
-                    $rmail->send();
-                    $strMsg .= "Approved Cloudrequest $id<br>";
+			if (isset($_REQUEST['identifier'])) {
+				foreach($_REQUEST['identifier'] as $id) {
+					$cr_request = new cloudrequest();
+					$cr_request->setstatus($id, 'approve');
+					// mail user after aprove
+					$cr_request->get_instance_by_id($id);
+					$cr_cu_id = $cr_request->cu_id;
+					$cl_user = new clouduser();
+					$cl_user->get_instance_by_id($cr_cu_id);
+					$cu_name = $cl_user->name;
+					$cu_email = $cl_user->email;
+					$cu_forename = $cl_user->forename;
+					$cu_lastname = $cl_user->lastname;
+					$cr_start = $cr_request->start;
+					$start = date("d-m-Y H-i", $cr_start);
+					$cr_stop = $cr_request->stop;
+					$stop = date("d-m-Y H-i", $cr_stop);
+					$rmail = new cloudmailer();
+					$rmail->to = "$cu_email";
+					$rmail->from = "$cc_admin_email";
+					$rmail->subject = "openQRM Cloud: Your request $id has been approved";
+					$rmail->template = "$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/cloud/etc/mail/approve_cloud_request.mail.tmpl";
+					$arr = array('@@ID@@'=>"$id", '@@FORENAME@@'=>"$cu_forename", '@@LASTNAME@@'=>"$cu_lastname", '@@START@@'=>"$start", '@@STOP@@'=>"$stop");
+					$rmail->var_array = $arr;
+					$rmail->send();
+					$strMsg .= "Approved Cloudrequest $id<br>";
 
-                }
-                redirect($strMsg, tab0);
-            }
+				}
+				redirect($strMsg, 'tab0');
+			}
 			break;
 
 		case 'cancel':
-            if (isset($_REQUEST['identifier'])) {
-                foreach($_REQUEST['identifier'] as $id) {
-                    $cr_request = new cloudrequest();
-                    $cr_request->setstatus($id, 'new');
+			if (isset($_REQUEST['identifier'])) {
+				foreach($_REQUEST['identifier'] as $id) {
+					$cr_request = new cloudrequest();
+					$cr_request->setstatus($id, 'new');
 
-                    // mail user after cancel
-                    $cr_request->get_instance_by_id($id);
-                    $cr_cu_id = $cr_request->cu_id;
-                    $cl_user = new clouduser();
-                    $cl_user->get_instance_by_id($cr_cu_id);
-                    $cu_name = $cl_user->name;
-                    $cu_email = $cl_user->email;
-                    $cu_forename = $cl_user->forename;
-                    $cu_lastname = $cl_user->lastname;
-                    $rmail = new cloudmailer();
-                    $rmail->to = "$cu_email";
-                    $rmail->from = "$cc_admin_email";
-                    $rmail->subject = "openQRM Cloud: Your request $id has been canceled";
-                    $rmail->template = "$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/cloud/etc/mail/cancel_cloud_request.mail.tmpl";
-                    $arr = array('@@ID@@'=>"$id", '@@FORENAME@@'=>"$cu_forename", '@@LASTNAME@@'=>"$cu_lastname");
-                    $rmail->var_array = $arr;
-                    $rmail->send();
-                    $strMsg .= "Canceled Cloudrequest $id<br>";
-                }
-                redirect($strMsg, tab0);
-            }
+					// mail user after cancel
+					$cr_request->get_instance_by_id($id);
+					$cr_cu_id = $cr_request->cu_id;
+					$cl_user = new clouduser();
+					$cl_user->get_instance_by_id($cr_cu_id);
+					$cu_name = $cl_user->name;
+					$cu_email = $cl_user->email;
+					$cu_forename = $cl_user->forename;
+					$cu_lastname = $cl_user->lastname;
+					$rmail = new cloudmailer();
+					$rmail->to = "$cu_email";
+					$rmail->from = "$cc_admin_email";
+					$rmail->subject = "openQRM Cloud: Your request $id has been canceled";
+					$rmail->template = "$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/cloud/etc/mail/cancel_cloud_request.mail.tmpl";
+					$arr = array('@@ID@@'=>"$id", '@@FORENAME@@'=>"$cu_forename", '@@LASTNAME@@'=>"$cu_lastname");
+					$rmail->var_array = $arr;
+					$rmail->send();
+					$strMsg .= "Canceled Cloudrequest $id<br>";
+				}
+				redirect($strMsg, 'tab0');
+			}
 			break;
 
 		case 'deny':
-            if (isset($_REQUEST['identifier'])) {
-                foreach($_REQUEST['identifier'] as $id) {
-                    $cr_request = new cloudrequest();
-                    $cr_request->setstatus($id, 'deny');
+			if (isset($_REQUEST['identifier'])) {
+				foreach($_REQUEST['identifier'] as $id) {
+					$cr_request = new cloudrequest();
+					$cr_request->setstatus($id, 'deny');
 
-                    // mail user after deny
-                    $cr_request->get_instance_by_id($id);
-                    $cr_cu_id = $cr_request->cu_id;
-                    $cl_user = new clouduser();
-                    $cl_user->get_instance_by_id($cr_cu_id);
-                    $cu_name = $cl_user->name;
-                    $cu_email = $cl_user->email;
-                    $cu_forename = $cl_user->forename;
-                    $cu_lastname = $cl_user->lastname;
-                    $rmail = new cloudmailer();
-                    $rmail->to = "$cu_email";
-                    $rmail->from = "$cc_admin_email";
-                    $rmail->subject = "openQRM Cloud: Your request $id has been denied";
-                    $rmail->template = "$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/cloud/etc/mail/deny_cloud_request.mail.tmpl";
-                    $arr = array('@@ID@@'=>"$id", '@@FORENAME@@'=>"$cu_forename", '@@LASTNAME@@'=>"$cu_lastname");
-                    $rmail->var_array = $arr;
-                    $rmail->send();
-                    $strMsg .= "Denied Cloudrequest $id<br>";
+					// mail user after deny
+					$cr_request->get_instance_by_id($id);
+					$cr_cu_id = $cr_request->cu_id;
+					$cl_user = new clouduser();
+					$cl_user->get_instance_by_id($cr_cu_id);
+					$cu_name = $cl_user->name;
+					$cu_email = $cl_user->email;
+					$cu_forename = $cl_user->forename;
+					$cu_lastname = $cl_user->lastname;
+					$rmail = new cloudmailer();
+					$rmail->to = "$cu_email";
+					$rmail->from = "$cc_admin_email";
+					$rmail->subject = "openQRM Cloud: Your request $id has been denied";
+					$rmail->template = "$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/cloud/etc/mail/deny_cloud_request.mail.tmpl";
+					$arr = array('@@ID@@'=>"$id", '@@FORENAME@@'=>"$cu_forename", '@@LASTNAME@@'=>"$cu_lastname");
+					$rmail->var_array = $arr;
+					$rmail->send();
+					$strMsg .= "Denied Cloudrequest $id<br>";
 
-                }
-                redirect($strMsg, tab0);
-            }
+				}
+				redirect($strMsg, 'tab0');
+			}
 			break;
 
 		case 'deprovision':
-            if (isset($_REQUEST['identifier'])) {
-                foreach($_REQUEST['identifier'] as $id) {
-                    $cr_request = new cloudrequest();
+			if (isset($_REQUEST['identifier'])) {
+				foreach($_REQUEST['identifier'] as $id) {
+					$cr_request = new cloudrequest();
 
-                    // mail user before deprovisioning
-                    $cr_request->get_instance_by_id($id);
-                    $cr_cu_id = $cr_request->cu_id;
-                    $cl_user = new clouduser();
-                    $cl_user->get_instance_by_id($cr_cu_id);
-                    $cu_name = $cl_user->name;
-                    $cu_email = $cl_user->email;
-                    $cu_forename = $cl_user->forename;
-                    $cu_lastname = $cl_user->lastname;
-                    $cr_start = $cr_request->start;
-                    $start = date("d-m-Y H-i", $cr_start);
-                    $cr_stop = $cr_request->stop;
-                    $stop = date("d-m-Y H-i", $cr_stop);
-                    $nowstmp = $_SERVER['REQUEST_TIME'];
-                    $now = date("d-m-Y H-i", $nowstmp);
-                    $rmail = new cloudmailer();
-                    $rmail->to = "$cu_email";
-                    $rmail->from = "$cc_admin_email";
-                    $rmail->subject = "openQRM Cloud: Your request $id is going to be deprovisioned now !";
-                    $rmail->template = "$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/cloud/etc/mail/deprovision_cloud_request.mail.tmpl";
-                    $arr = array('@@ID@@'=>"$id", '@@FORENAME@@'=>"$cu_forename", '@@LASTNAME@@'=>"$cu_lastname", '@@START@@'=>"$start", '@@STOP@@'=>"$now");
-                    $rmail->var_array = $arr;
-                    $rmail->send();
-                    $cr_request->setstatus($id, 'deprovision');
-                    $strMsg .= "Deprovisioned Cloudrequest $id<br>";
-                }
-                redirect($strMsg, tab0);
-            }
+					// mail user before deprovisioning
+					$cr_request->get_instance_by_id($id);
+					$cr_cu_id = $cr_request->cu_id;
+					$cl_user = new clouduser();
+					$cl_user->get_instance_by_id($cr_cu_id);
+					$cu_name = $cl_user->name;
+					$cu_email = $cl_user->email;
+					$cu_forename = $cl_user->forename;
+					$cu_lastname = $cl_user->lastname;
+					$cr_start = $cr_request->start;
+					$start = date("d-m-Y H-i", $cr_start);
+					$cr_stop = $cr_request->stop;
+					$stop = date("d-m-Y H-i", $cr_stop);
+					$nowstmp = $_SERVER['REQUEST_TIME'];
+					$now = date("d-m-Y H-i", $nowstmp);
+					$rmail = new cloudmailer();
+					$rmail->to = "$cu_email";
+					$rmail->from = "$cc_admin_email";
+					$rmail->subject = "openQRM Cloud: Your request $id is going to be deprovisioned now !";
+					$rmail->template = "$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/cloud/etc/mail/deprovision_cloud_request.mail.tmpl";
+					$arr = array('@@ID@@'=>"$id", '@@FORENAME@@'=>"$cu_forename", '@@LASTNAME@@'=>"$cu_lastname", '@@START@@'=>"$start", '@@STOP@@'=>"$now");
+					$rmail->var_array = $arr;
+					$rmail->send();
+					$cr_request->setstatus($id, 'deprovision');
+					$strMsg .= "Deprovisioned Cloudrequest $id<br>";
+				}
+				redirect($strMsg, 'tab0');
+			}
 			break;
 
 	}
@@ -292,7 +293,7 @@ function cloud_manager() {
 
 	global $OPENQRM_USER;
 	global $OPENQRM_SERVER_IP_ADDRESS;
-    global $OPENQRM_WEB_PROTOCOL;
+	global $OPENQRM_WEB_PROTOCOL;
 	global $thisfile;
 	$table = new htmlobject_db_table('cr_id', 'DESC');
 
@@ -332,16 +333,16 @@ function cloud_manager() {
 	$arBody = array();
 
 	// db select
-    $request_count=0;
+	$request_count=0;
 	$cl_request = new cloudrequest();
 	$request_array = $cl_request->display_overview($table->offset, $table->limit, $table->sort, $table->order);
 	foreach ($request_array as $index => $cr) {
-        $request_count++;
+		$request_count++;
 		// user name
 		$cu_tmp = new clouduser();
 		$cu_tmp_id = $cr["cr_cu_id"];
 		$cu_tmp->get_instance_by_id($cu_tmp_id);
-		
+
 		// status
 		$cr_status = $cr["cr_status"];
 		switch ($cr_status) {
@@ -366,7 +367,7 @@ function cloud_manager() {
 			case '7':
 				$cr_status_disp="NoResource";
 				break;
-		}	
+		}
 		// format time
 		$timestamp=$cr["cr_request_time"];
 		$cr_request_time = date("d-m-Y H-i", $timestamp);
@@ -376,10 +377,10 @@ function cloud_manager() {
 		$cr_stop = date("d-m-Y H-i", $timestamp);
 		$cr_resource_quantity = $cr["cr_resource_quantity"];
 
-        // user login link
-        $user_auth_str = "://".$cu_tmp->name.":".$cu_tmp->password."@";
-        $external_portal_user_auth = str_replace("://", $user_auth_str, $external_portal_name);
-        $user_login_link = "<a href=\"".$external_portal_user_auth."/user/mycloud.php\" title=\"Login\" target=\"_BLANK\" onmouseover=\"return statusMsg('')\">".$cu_tmp->name."</a>";
+		// user login link
+		$user_auth_str = "://".$cu_tmp->name.":".$cu_tmp->password."@";
+		$external_portal_user_auth = str_replace("://", $user_auth_str, $external_portal_name);
+		$user_login_link = "<a href=\"".$external_portal_user_auth."/user/mycloud.php\" title=\"Login\" target=\"_BLANK\" onmouseover=\"return statusMsg('')\">".$cu_tmp->name."</a>";
 
 		// fill the array for the table
 		$arBody[] = array(
@@ -407,14 +408,14 @@ function cloud_manager() {
 		$table->bottom = array('reload', 'details', 'approve', 'cancel', 'deny', 'delete', 'deprovision');
 		$table->identifier = 'cr_id';
 	}
-    $table->max = $cl_request->get_count();
+	$table->max = $cl_request->get_count();
 	// set template
 	$t = new Template_PHPLIB();
 	$t->debug = false;
 	$t->setFile('tplfile', './tpl/' . 'cloud-manager-tpl.php');
 	$t->setVar(array(
-        'cloud_request_table' => $table->get_string(),
-        'external_portal_name' => $external_portal_name,
+		'cloud_request_table' => $table->get_string(),
+		'external_portal_name' => $external_portal_name,
 	));
 	$disp =  $t->parse('out', 'tplfile');
 	return $disp;
@@ -452,7 +453,7 @@ function cloud_request_details($cloud_request_id) {
 	$cr_kernel = new kernel();
 	$cr_kernel->get_instance_by_id($kernel_id);
 	$kernel = $cr_kernel->name;
-	
+
 	// image with real name
 	$image_id = $cr_request->image_id;
 	$cr_image = new image();
@@ -467,6 +468,8 @@ function cloud_request_details($cloud_request_id) {
 	$ha_req = $cr_request->ha_req;
 	$shared_req = $cr_request->shared_req;
 	$puppet_groups = $cr_request->puppet_groups;
+	$ip_mgmt = $cr_request->ip_mgmt;
+
 	// get resource type as name
 	$resource_type_req = $cr_request->resource_type_req;
 	$resource_quantity = $cr_request->resource_quantity;
@@ -562,10 +565,13 @@ function cloud_request_details($cloud_request_id) {
 		'cr_key' => "Clone on deploy",
 		'cr_value' => "$shared_req",
 	);
-	
 	$arBody[] = array(
 		'cr_key' => "Puppet groups",
 		'cr_value' => "$puppet_groups",
+	);
+	$arBody[] = array(
+		'cr_key' => "IP-Mgmt",
+		'cr_value' => "$ip_mgmt",
 	);
 
 	$table->id = 'Tabelle';
@@ -576,7 +582,7 @@ function cloud_request_details($cloud_request_id) {
 	$table->form_action = $thisfile;
 	$table->head = $arHead;
 	$table->body = $arBody;
-    $table->max = 1000;
+	$table->max = 1000;
 	return $disp.$table->get_string();
 
 }

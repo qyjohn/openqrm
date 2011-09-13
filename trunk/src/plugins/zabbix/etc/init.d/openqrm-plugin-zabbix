@@ -30,28 +30,28 @@ export LANG=C
 function openqrm_plugin_zabbix_start() {
 	echo "Starting the openQRM zabbix-plugin"
 	openqrm_plugin_zabbix_stop 1>/dev/null 2>&1
-    # start server
+	# start server
 
-    if [ -x "/etc/init.d/zabbix-server" ]; then
-        if [ -x "`which invoke-rc.d 2>/dev/null`" ]; then
-            invoke-rc.d zabbix-server start || exit $?
-        else
-            /etc/init.d/zabbix-server start || exit $?
-        fi
-    elif [ -x /etc/init.d/zabbix ]; then
-        if [ -x "`which invoke-rc.d 2>/dev/null`" ]; then
-            invoke-rc.d zabbix start || exit $?
-        else
-            /etc/init.d/zabbix start || exit $?
-        fi
+	if [ -x "/etc/init.d/zabbix-server" ]; then
+		if [ -x "`which invoke-rc.d 2>/dev/null`" ]; then
+			invoke-rc.d zabbix-server start || exit $?
+		else
+			/etc/init.d/zabbix-server start || exit $?
+		fi
+	elif [ -x /etc/init.d/zabbix ]; then
+		if [ -x "`which invoke-rc.d 2>/dev/null`" ]; then
+			invoke-rc.d zabbix start || exit $?
+		else
+			/etc/init.d/zabbix start || exit $?
+		fi
 	fi
-    # start agent
-    if [ -x "/etc/init.d/zabbix-agent" ]; then
-        if [ -x "`which invoke-rc.d 2>/dev/null`" ]; then
-            invoke-rc.d zabbix-agent start || exit $?
-        else
-            /etc/init.d/zabbix-agent start || exit $?
-        fi
+	# start agent
+	if [ -x "/etc/init.d/zabbix-agent" ]; then
+		if [ -x "`which invoke-rc.d 2>/dev/null`" ]; then
+			invoke-rc.d zabbix-agent start || exit $?
+		else
+			/etc/init.d/zabbix-agent start || exit $?
+		fi
 	fi
 
 	touch $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/base/plugins/zabbix/.running
@@ -61,25 +61,25 @@ function openqrm_plugin_zabbix_start() {
 
 function openqrm_plugin_zabbix_stop() {
 	echo "Stopping the openQRM zabbix-plugin"
-    if [ -x "/etc/init.d/zabbix-agent" ]; then
-        if [ -x "`which invoke-rc.d 2>/dev/null`" ]; then
-            invoke-rc.d zabbix-agent stop || exit $?
-        else
-            /etc/init.d/zabbix-agent stop || exit $?
-        fi
+	if [ -x "/etc/init.d/zabbix-agent" ]; then
+		if [ -x "`which invoke-rc.d 2>/dev/null`" ]; then
+			invoke-rc.d zabbix-agent stop || exit $?
+		else
+			/etc/init.d/zabbix-agent stop || exit $?
+		fi
 	fi
-    if [ -x "/etc/init.d/zabbix-server" ]; then
-        if [ -x "`which invoke-rc.d 2>/dev/null`" ]; then
-            invoke-rc.d zabbix-server stop || exit $?
-        else
-            /etc/init.d/zabbix-server stop || exit $?
-        fi
-    elif [ -x /etc/init.d/zabbix ]; then
-        if [ -x "`which invoke-rc.d 2>/dev/null`" ]; then
-            invoke-rc.d zabbix stop || exit $?
-        else
-            /etc/init.d/zabbix stop || exit $?
-        fi
+	if [ -x "/etc/init.d/zabbix-server" ]; then
+		if [ -x "`which invoke-rc.d 2>/dev/null`" ]; then
+			invoke-rc.d zabbix-server stop || exit $?
+		else
+			/etc/init.d/zabbix-server stop || exit $?
+		fi
+	elif [ -x /etc/init.d/zabbix ]; then
+		if [ -x "`which invoke-rc.d 2>/dev/null`" ]; then
+			invoke-rc.d zabbix stop || exit $?
+		else
+			/etc/init.d/zabbix stop || exit $?
+		fi
 	fi
 	rm -f $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/base/plugins/zabbix/.running
 	return 0
@@ -89,10 +89,10 @@ function openqrm_plugin_zabbix_stop() {
 function openqrm_plugin_zabbix_init() {
 	echo "Initializing the openQRM zabbix-plugin"
 
-    # linking the web dir
-    ln -sf $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/zabbix/web $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/base/plugins/zabbix
-    # link the boot-service
-    ln -sf $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/zabbix/web/boot-service-zabbix.tgz $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/boot-service/boot-service-zabbix.tgz
+	# linking the web dir
+	ln -sf $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/zabbix/web $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/base/plugins/zabbix
+	# link the boot-service
+	ln -sf $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/zabbix/web/boot-service-zabbix.tgz $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/boot-service/boot-service-zabbix.tgz
 	return 0
 }
 

@@ -41,7 +41,7 @@ function tmpfs_storage_log() {
 function tmpfs_storage_lock() {
 	local COMMAND=$1
 	local RET=1
-	
+
 	if [ ! -d `dirname $TMPFS_MGMT_LOCK_FILE` ]; then
 		mkdir -p `dirname $TMPFS_MGMT_LOCK_FILE`
 	fi

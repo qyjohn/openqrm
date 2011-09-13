@@ -30,27 +30,108 @@ LINE_IFS='
 '
 
 function openqrm_plugin_lvm-storage_start() {
-    # make sure vbladed is stopped, not using the init script here because this may exit 1
-    for VPID in `ps ax | grep vblade | grep -v grep | awk {' print $1 '}`; do
-        kill $VPID
-    done
-    killall vblade 1>/dev/null 2>&1
-	#openqrm_plugin_lvm-storage_stop 1>/dev/null 2>&1
 	echo "Starting the openQRM lvm-storage-plugin"
 	touch $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/base/plugins/lvm-storage/.running
 
-	# aoe
-	mkdir -p /var/run/vblade/
-    if [ -x "/etc/init.d/vblade" ]; then
-        if [ -x "`which invoke-rc.d 2>/dev/null`" ]; then
-            invoke-rc.d vblade start
-        else
-            /etc/init.d/vblade start
-        fi
-	else
-		if [ -f $VBLADECONF ]; then
-			if which vbladed 1>/dev/null; then
-				echo "Starting vblades ..."
+	if [ "$LVM_AOE_STORAGE_AUTO_START" == "yes" ]; then
+	   # make sure vbladed is stopped, not using the init script here because this may exit 1
+		for VPID in `ps ax | grep vblade | grep -v grep | awk {' print $1 '}`; do
+			kill $VPID
+		done
+		killall vblade 1>/dev/null 2>&1
+		#openqrm_plugin_lvm-storage_stop 1>/dev/null 2>&1
+
+		# aoe
+		mkdir -p /var/run/vblade/
+		if [ -x "/etc/init.d/vblade" ]; then
+			if [ -x "`which invoke-rc.d 2>/dev/null`" ]; then
+				invoke-rc.d vblade start
+			else
+				/etc/init.d/vblade start
+			fi
+		else
+			if [ -f $VBLADECONF ]; then
+				if which vbladed 1>/dev/null; then
+					echo "Starting vblades ..."
+					OLD_IFS=$IFS
+					IFS=$LINE_IFS
+					for VBLADE_L in `cat $VBLADECONF | grep -v '#' | sed '/^$/d'`; do
+						V_INTERFACE=`echo $VBLADE_L | awk {' print $1 '}`
+						V_SHELF=`echo $VBLADE_L | awk {' print $2 '}`
+						V_SLOT=`echo $VBLADE_L | awk {' print $3 '}`
+						V_IMAGE=`echo $VBLADE_L | awk {' print $4 '}`
+						V_ALLOWED_MAC=`echo $VBLADE_L | awk {' print $5 '}`
+						vbladed $V_SHELF $V_SLOT $V_INTERFACE $V_IMAGE
+					done
+					IFS=$OLD_IFS
+				fi
+			fi
+		fi
+	fi
+	if [ "$LVM_NFS_STORAGE_AUTO_START" == "yes" ]; then
+		if [ -x "/etc/init.d/nfs-kernel-server" ]; then
+			if [ -x "`which invoke-rc.d 2>/dev/null`" ]; then
+				invoke-rc.d nfs-kernel-server start
+			else
+				/etc/init.d/nfs-kernel-server start
+			fi
+		fi
+		if [ -x "/etc/init.d/nfs" ]; then
+			if [ -x "`which invoke-rc.d 2>/dev/null`" ]; then
+				invoke-rc.d nfs start
+			else
+				/etc/init.d/nfs start
+			fi
+		fi
+		if [ -x "/etc/init.d/nfslock" ]; then
+			if [ -x "`which invoke-rc.d 2>/dev/null`" ]; then
+				invoke-rc.d nfslock start
+			else
+				/etc/init.d/nfslock start
+			fi
+		fi
+		# for Suse
+		if [ -x /etc/init.d/nfsserver ]; then
+			/etc/init.d/nfsserver start
+		fi
+	fi
+	if [ "$LVM_ISCSI_STORAGE_AUTO_START" == "yes" ]; then
+		if [ -x "/etc/init.d/iscsi-target" ]; then
+			if [ -x "`which invoke-rc.d 2>/dev/null`" ]; then
+				invoke-rc.d iscsi-target start
+			else
+				/etc/init.d/iscsi-target start
+			fi
+		elif [ -x /etc/init.d/iscsitarget ]; then
+			if [ -x "`which invoke-rc.d 2>/dev/null`" ]; then
+				invoke-rc.d iscsitarget start
+			else
+				/etc/init.d/iscsitarget start
+			fi
+		fi
+	fi
+
+}
+
+
+function openqrm_plugin_lvm-storage_stop() {
+	echo "Stopping the openQRM lvm-storage-plugin"
+	rm -f $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/base/plugins/lvm-storage/.running
+
+	if [ "$LVM_AOE_STORAGE_AUTO_START" == "yes" ]; then
+		# aoe
+		if [ -x "/etc/init.d/vblade" ]; then
+			if [ -x "`which invoke-rc.d 2>/dev/null`" ]; then
+				invoke-rc.d vblade stop
+			else
+				/etc/init.d/vblade stop
+				for VPID in `ps ax | grep vblade | grep -v grep | awk {' print $1 '}`; do
+					kill $VPID
+				done
+			fi
+		else
+			if [ -f $VBLADECONF ]; then
+				echo "Stopping vblades ..."
 				OLD_IFS=$IFS
 				IFS=$LINE_IFS
 				for VBLADE_L in `cat $VBLADECONF | grep -v '#' | sed '/^$/d'`; do
@@ -59,122 +140,60 @@ function openqrm_plugin_lvm-storage_start() {
 					V_SLOT=`echo $VBLADE_L | awk {' print $3 '}`
 					V_IMAGE=`echo $VBLADE_L | awk {' print $4 '}`
 					V_ALLOWED_MAC=`echo $VBLADE_L | awk {' print $5 '}`
-					vbladed $V_SHELF $V_SLOT $V_INTERFACE $V_IMAGE
+					for VBLADE_PID in `ps ax | grep vblade | grep -w $V_IMAGE | awk {' print $1 '}`; do
+						kill $VBLADE_PID
+					done
 				done
 				IFS=$OLD_IFS
 			fi
+			killall vblade 1>/dev/null 2>&1
 		fi
 	fi
-	
-    if [ -x "/etc/init.d/nfs-kernel-server" ]; then
-        if [ -x "`which invoke-rc.d 2>/dev/null`" ]; then
-            invoke-rc.d nfs-kernel-server start
-        else
-            /etc/init.d/nfs-kernel-server start
-        fi
-    fi
-    if [ -x "/etc/init.d/nfs" ]; then
-        if [ -x "`which invoke-rc.d 2>/dev/null`" ]; then
-            invoke-rc.d nfs start
-        else
-            /etc/init.d/nfs start
-        fi
-    fi
-    if [ -x "/etc/init.d/nfslock" ]; then
-        if [ -x "`which invoke-rc.d 2>/dev/null`" ]; then
-            invoke-rc.d nfslock start
-        else
-            /etc/init.d/nfslock start
-        fi
-    fi
-    if [ -x "/etc/init.d/iscsi-target" ]; then
-        if [ -x "`which invoke-rc.d 2>/dev/null`" ]; then
-            invoke-rc.d iscsi-target start
-        else
-            /etc/init.d/iscsi-target start
-        fi
-    elif [ -x /etc/init.d/iscsitarget ]; then
-        if [ -x "`which invoke-rc.d 2>/dev/null`" ]; then
-            invoke-rc.d iscsitarget start
-        else
-            /etc/init.d/iscsitarget start
-        fi
-    fi
 
-	
-}
-
-
-function openqrm_plugin_lvm-storage_stop() {
-	echo "Stopping the openQRM lvm-storage-plugin"
-	rm -f $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/base/plugins/lvm-storage/.running
-
-	# aoe
-    if [ -x "/etc/init.d/vblade" ]; then
-        if [ -x "`which invoke-rc.d 2>/dev/null`" ]; then
-            invoke-rc.d vblade stop
-        else
-            /etc/init.d/vblade stop
-            for VPID in `ps ax | grep vblade | grep -v grep | awk {' print $1 '}`; do
-                kill $VPID
-            done
-        fi
-	else
-		if [ -f $VBLADECONF ]; then
-			echo "Stopping vblades ..."
-			OLD_IFS=$IFS
-			IFS=$LINE_IFS
-			for VBLADE_L in `cat $VBLADECONF | grep -v '#' | sed '/^$/d'`; do
-				V_INTERFACE=`echo $VBLADE_L | awk {' print $1 '}`
-				V_SHELF=`echo $VBLADE_L | awk {' print $2 '}`
-				V_SLOT=`echo $VBLADE_L | awk {' print $3 '}`
-				V_IMAGE=`echo $VBLADE_L | awk {' print $4 '}`
-				V_ALLOWED_MAC=`echo $VBLADE_L | awk {' print $5 '}`
-				for VBLADE_PID in `ps ax | grep vblade | grep -w $V_IMAGE | awk {' print $1 '}`; do
-					kill $VBLADE_PID
-				done
-			done
-			IFS=$OLD_IFS
+	if [ "$LVM_NFS_STORAGE_AUTO_START" == "yes" ]; then
+		if [ -x "/etc/init.d/nfs-kernel-server" ]; then
+			if [ -x "`which invoke-rc.d 2>/dev/null`" ]; then
+				invoke-rc.d nfs-kernel-server stop
+			else
+				/etc/init.d/nfs-kernel-server stop
+			fi
 		fi
-		killall vblade 1>/dev/null 2>&1
+		if [ -x "/etc/init.d/nfs" ]; then
+			if [ -x "`which invoke-rc.d 2>/dev/null`" ]; then
+				invoke-rc.d nfs stop
+			else
+				/etc/init.d/nfs stop
+			fi
+		fi
+		if [ -x "/etc/init.d/nfslock" ]; then
+			if [ -x "`which invoke-rc.d 2>/dev/null`" ]; then
+				invoke-rc.d nfslock stop
+			else
+				/etc/init.d/nfslock stop
+			fi
+		fi
+		# for Suse
+		if [ -x /etc/init.d/nfsserver ]; then
+			/etc/init.d/nfsserver stop
+		fi
 	fi
-
-    if [ -x "/etc/init.d/nfs-kernel-server" ]; then
-        if [ -x "`which invoke-rc.d 2>/dev/null`" ]; then
-            invoke-rc.d nfs-kernel-server stop
-        else
-            /etc/init.d/nfs-kernel-server stop
-        fi
-    fi
-    if [ -x "/etc/init.d/nfs" ]; then
-        if [ -x "`which invoke-rc.d 2>/dev/null`" ]; then
-            invoke-rc.d nfs stop
-        else
-            /etc/init.d/nfs stop
-        fi
-    fi
-    if [ -x "/etc/init.d/nfslock" ]; then
-        if [ -x "`which invoke-rc.d 2>/dev/null`" ]; then
-            invoke-rc.d nfslock stop
-        else
-            /etc/init.d/nfslock stop
-        fi
-    fi
-    if [ -x "/etc/init.d/iscsi-target" ]; then
-        if [ -x "`which invoke-rc.d 2>/dev/null`" ]; then
-            invoke-rc.d iscsi-target stop
-        else
-            /etc/init.d/iscsi-target stop
-        fi
-    elif [ -x /etc/init.d/iscsitarget ]; then
-        if [ -x "`which invoke-rc.d 2>/dev/null`" ]; then
-            invoke-rc.d iscsitarget stop
-        else
-            /etc/init.d/iscsitarget stop
-        fi
-    fi
-
+	if [ "$LVM_ISCSI_STORAGE_AUTO_START" == "yes" ]; then
+		if [ -x "/etc/init.d/iscsi-target" ]; then
+			if [ -x "`which invoke-rc.d 2>/dev/null`" ]; then
+				invoke-rc.d iscsi-target stop
+			else
+				/etc/init.d/iscsi-target stop
+			fi
+		elif [ -x /etc/init.d/iscsitarget ]; then
+			if [ -x "`which invoke-rc.d 2>/dev/null`" ]; then
+				invoke-rc.d iscsitarget stop
+			else
+				/etc/init.d/iscsitarget stop
+			fi
+		fi
+	fi
 }
+
 
 function openqrm_plugin_lvm-storage_uninstall() {
 	local USERNAME=$1
@@ -182,7 +201,7 @@ function openqrm_plugin_lvm-storage_uninstall() {
 	if [ "$USERNAME" == "" ] && [ "$PASSWORD" == "" ]; then
 		echo -n "lvm-storage: Please give a username to uninstall the plugin : "
 		read USERNAME
-		echo	
+		echo
 		echo -n "lvm-storage: Please give the password for user $USERNAME : "
 		read PASSWORD
 		echo
@@ -196,7 +215,7 @@ function openqrm_plugin_lvm-storage_uninstall() {
 	rm -f $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/boot-service/boot-service-lvm-storage.tgz
 
 	rm -f $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/boot-service/root-mount.lvm-aoe-deployment
-	rm -f $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/boot-service/root-mount.lvm-iscsi-deployment 
+	rm -f $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/boot-service/root-mount.lvm-iscsi-deployment
 	rm -f $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/boot-service/root-mount.lvm-nfs-deployment
 	rm -f $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/boot-service/image.lvm-aoe-deployment.php
 	rm -f $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/boot-service/image.lvm-iscsi-deployment.php
@@ -225,7 +244,7 @@ function openqrm_plugin_lvm-storage_init() {
 	if [ "$USERNAME" == "" ] && [ "$PASSWORD" == "" ]; then
 		echo -n "lvm-storage: Please give a username to init the plugin : "
 		read USERNAME
-		echo	
+		echo
 		echo -n "lvm-storage: Please give the password for user $USERNAME : "
 		read PASSWORD
 		echo
@@ -281,10 +300,10 @@ function openqrm_plugin_lvm-storage_init() {
 		# remove the axwwww from the ps cmd in aoe-mkshelf
 		sed -i -e "s/axwwww//g" $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/boot-service/aoe-mkshelf
 	fi
-    # create storage dir for stat files
-    mkdir -p $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/lvm-storage/web/storage
-    chmod 777 $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/lvm-storage/web/storage
-	
+	# create storage dir for stat files
+	mkdir -p $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/lvm-storage/web/storage
+	chmod 777 $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/lvm-storage/web/storage
+
 }
 
 USER=$2

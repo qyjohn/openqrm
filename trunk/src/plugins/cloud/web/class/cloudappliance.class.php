@@ -29,6 +29,7 @@ require_once "$RootDir/class/kernel.class.php";
 require_once "$RootDir/class/plugin.class.php";
 require_once "$RootDir/class/event.class.php";
 require_once "$RootDir/class/openqrm_server.class.php";
+require_once "$RootDir/plugins/cloud/class/cloudicon.class.php";
 
 $CLOUD_APPLIANCE_TABLE="cloud_appliance";
 global $CLOUD_APPLIANCE_TABLE;
@@ -142,8 +143,18 @@ function add($cloudappliance_fields) {
 // removes cloudappliance from the database
 function remove($cloudappliance_id) {
 	global $CLOUD_APPLIANCE_TABLE;
+	global $event;
 	$db=openqrm_get_db_connection();
 	$rs = $db->Execute("delete from $CLOUD_APPLIANCE_TABLE where ca_id=$cloudappliance_id");
+	// check if there is an icon to remove
+	$IconDir = $_SERVER["DOCUMENT_ROOT"].'/cloud-portal/web/user/custom-icons/';
+	$ca_icon = new cloudicon();
+	$ca_icon->get_instance('', '', 2, $cloudappliance_id);
+	if (strlen($ca_icon->filename)) {
+		$ca_icon_file = $IconDir.$ca_icon->filename;
+		unlink($ca_icon_file);
+		$ca_icon->remove($ca_icon->id);
+	}
 }
 
 
@@ -261,7 +272,7 @@ function display_overview($offset, $limit, $sort, $order) {
 			$recordSet->MoveNext();
 		}
 		$recordSet->Close();
-	}		
+	}
 	return $cloudappliance_array;
 }
 

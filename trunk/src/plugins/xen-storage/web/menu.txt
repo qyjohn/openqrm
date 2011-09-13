@@ -21,6 +21,6 @@
 #	IMG
 #	Target
 ..|Xen-storage
-...|About|plugins/xen-storage/xen-storage-about.php|How to use|xen-storage/plugin.png
-...|Xen Volumes|plugins/xen-storage/xen-storage-manager.php|Xen LVM Storage Manager|xen-storage/volumes.png
-...|Xen VMs|plugins/xen-storage/xen-storage-vm-manager.php|Xen Storage VM Manager|xen-storage/manager.png
+...|插件介绍|plugins/xen-storage/xen-storage-about.php|How to use|xen-storage/plugin.png
+...|Xen 卷管理|plugins/xen-storage/xen-storage-manager.php|Xen LVM Storage Manager|xen-storage/volumes.png
+...|Xen 虚拟机|plugins/xen-storage/xen-storage-vm-manager.php|Xen Storage VM Manager|xen-storage/manager.png

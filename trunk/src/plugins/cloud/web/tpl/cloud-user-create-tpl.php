@@ -29,6 +29,8 @@
 
 {cu_name}
 {generate_pass}
+<br>
+{cu_cg}
 {cu_forename}
 {cu_lastname}
 {cu_email}

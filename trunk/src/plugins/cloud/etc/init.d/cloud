@@ -26,7 +26,7 @@ OPENQRM_SERVER_IP=$resource_openqrmserver
 NETWORK_CONF="/tmp/cloud-net.conf"
 # define wget to use with https
 if [ "$openqrm_web_protocol" == "https" ]; then
-    WGET_NO_CERT_CHECK="--no-check-certificate"
+	WGET_NO_CERT_CHECK="--no-check-certificate"
 fi
 
 
@@ -42,50 +42,6 @@ fi
 
 function cloud_start() {
 	echo "Starting the openQRM cloud-plugin"
-	cloud_stop 1>/dev/null 2>&1
-
-	# get the ip-config from the cloud-network-config provider
-	rm -f $NETWORK_CONF
-	if ! wget -q $WGET_NO_CERT_CHECK -O $NETWORK_CONF "$openqrm_web_protocol://$resource_openqrmserver/openqrm/action/cloud-conf/cloud-net.conf.$appliance_id"; then
-		return 1
-	fi
-	OPENQRM_INTERFACE=`ifconfig | grep -i $resource_mac | grep :oq | cut -d':' -f1`
-	EXTERNAL_INTERFACES_LIST=`ifconfig -a | grep eth | awk {' print $1 '} | grep -v $OPENQRM_INTERFACE`
-
-	# assign the network conf
-	for CONFIG in `cat $NETWORK_CONF`; do
-		IP=`echo $CONFIG | cut -d':' -f1`
-		SUBNET=`echo $CONFIG | cut -d':' -f2`
-		GATEWAY=`echo $CONFIG | cut -d':' -f3`
-		DNS1=`echo $CONFIG | cut -d':' -f4`
-		DNS2=`echo $CONFIG | cut -d':' -f5`
-		DOMAIN=`echo $CONFIG | cut -d':' -f6`
-		for INTERFACE in $EXTERNAL_INTERFACES_LIST; do
-			# here we set the interface
-			ifconfig $INTERFACE $IP netmask $SUBNET up
-			# configure the route, make sure there is just one default route
-			for CURRENT_DEFAULT_ROUTE in `route -n | grep ^0.0.0.0 | awk {' print $2 '}`; do
-				CURRENT_DEFAULT_ROUTE_INTERFACE=`route -n | grep ^0.0.0.0 | grep $CURRENT_DEFAULT_ROUTE | awk {' print $8 '}`
-				route del default gw $CURRENT_DEFAULT_ROUTE 1>/dev/null 2>&1
-				route del default gw $CURRENT_DEFAULT_ROUTE $CURRENT_DEFAULT_ROUTE_INTERFACE 1>/dev/null 2>&1
-			done
-			route add default gw $GATEWAY
-			# configure /etc/resolv.conf
-			> /etc/resolv.conf
-			echo "domain $DOMAIN" >> /etc/resolv.conf
-			echo "search $DOMAIN" >> /etc/resolv.conf
-			echo "nameserver $DNS1" >> /etc/resolv.conf
-			echo "nameserver $DNS2" >> /etc/resolv.conf
-			# remove interface from the list
-			EXTERNAL_INTERFACES_LIST=`echo $EXTERNAL_INTERFACES_LIST | sed -e "s/$INTERFACE//g"`
-			export EXTERNAL_INTERFACES_LIST
-			break
-		done
-	done
-	rm -f $NETWORK_CONF
-
-
-
 }
 
 

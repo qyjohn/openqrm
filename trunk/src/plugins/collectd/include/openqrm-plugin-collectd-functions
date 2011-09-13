@@ -36,7 +36,7 @@ function collectd_log() {
 function collectd_lock() {
 	local COMMAND=$1
 	local RET=1
-	
+
 	if [ ! -d `dirname $COLLECTD_MANAGER_LOCK_FILE` ]; then
 		mkdir -p `dirname $COLLECTD_MANAGER_LOCK_FILE`
 	fi
@@ -56,7 +56,7 @@ function collectd_lock() {
 		*)
 			collectd_log collectd_manager_lock "No such command. Try 'aquire' or 'release'"
 			return 1
-			;;	
+			;;
 	esac
 }
 

@@ -21,6 +21,7 @@
 OPENQRM_SERVER_BASE_DIR=$(pushd $(dirname $0)/../../../../.. > /dev/null; echo $PWD; popd > /dev/null)
 . $OPENQRM_SERVER_BASE_DIR/openqrm/include/openqrm-functions
 . $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/sanboot-storage/include/openqrm-plugin-sanboot-storage-functions
+. $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/sanboot-storage/etc/openqrm-plugin-sanboot-storage.conf
 LINE_IFS='
 '
 
@@ -31,18 +32,68 @@ fi
 
 function sanboot_storage_start() {
 	echo "Starting the openQRM sanboot-storage-plugin"
-	# aoe
-	mkdir -p /var/run/vblade/
-    if [ -x "/etc/init.d/vblade" ]; then
-        if [ -x "`which invoke-rc.d 2>/dev/null`" ]; then
-            invoke-rc.d vblade start
-        else
-            /etc/init.d/vblade start
-        fi
-	else
-		if [ -f $VBLADECONF ]; then
-			if which vbladed 1>/dev/null; then
-				echo "Starting vblades ..."
+	if [ "$SANBOOT_AOE_STORAGE_AUTO_START" == "yes" ]; then
+		# aoe
+		mkdir -p /var/run/vblade/
+		if [ -x "/etc/init.d/vblade" ]; then
+			if [ -x "`which invoke-rc.d 2>/dev/null`" ]; then
+				invoke-rc.d vblade start
+			else
+				/etc/init.d/vblade start
+			fi
+		else
+			if [ -f $VBLADECONF ]; then
+				if which vbladed 1>/dev/null; then
+					echo "Starting vblades ..."
+					OLD_IFS=$IFS
+					IFS=$LINE_IFS
+					for VBLADE_L in `cat $VBLADECONF | grep -v '#' | sed '/^$/d'`; do
+						V_INTERFACE=`echo $VBLADE_L | awk {' print $1 '}`
+						V_SHELF=`echo $VBLADE_L | awk {' print $2 '}`
+						V_SLOT=`echo $VBLADE_L | awk {' print $3 '}`
+						V_IMAGE=`echo $VBLADE_L | awk {' print $4 '}`
+						V_ALLOWED_MAC=`echo $VBLADE_L | awk {' print $5 '}`
+						vbladed $V_SHELF $V_SLOT $V_INTERFACE $V_IMAGE
+					done
+					IFS=$OLD_IFS
+				fi
+			fi
+		fi
+	fi
+	if [ "$SANBOOT_ISCSI_STORAGE_AUTO_START" == "yes" ]; then
+		if [ -x "/etc/init.d/iscsi-target" ]; then
+			if [ -x "`which invoke-rc.d 2>/dev/null`" ]; then
+				invoke-rc.d iscsi-target start
+			else
+				/etc/init.d/iscsi-target start
+			fi
+		elif [ -x /etc/init.d/iscsitarget ]; then
+			if [ -x "`which invoke-rc.d 2>/dev/null`" ]; then
+				invoke-rc.d iscsitarget start
+			else
+				/etc/init.d/iscsitarget start
+			fi
+		fi
+	fi
+}
+
+
+function sanboot_storage_stop() {
+	echo "Stopping the openQRM sanboot-storage-plugin"
+	if [ "$SANBOOT_AOE_STORAGE_AUTO_START" == "yes" ]; then
+		# aoe
+		if [ -x "/etc/init.d/vblade" ]; then
+			if [ -x "`which invoke-rc.d 2>/dev/null`" ]; then
+				invoke-rc.d vblade stop
+			else
+				/etc/init.d/vblade stop
+				for VPID in `ps ax | grep vblade | grep -v grep | awk {' print $1 '}`; do
+					kill $VPID
+				done
+			fi
+		else
+			if [ -f $VBLADECONF ]; then
+				echo "Stopping vblades ..."
 				OLD_IFS=$IFS
 				IFS=$LINE_IFS
 				for VBLADE_L in `cat $VBLADECONF | grep -v '#' | sed '/^$/d'`; do
@@ -51,74 +102,30 @@ function sanboot_storage_start() {
 					V_SLOT=`echo $VBLADE_L | awk {' print $3 '}`
 					V_IMAGE=`echo $VBLADE_L | awk {' print $4 '}`
 					V_ALLOWED_MAC=`echo $VBLADE_L | awk {' print $5 '}`
-					vbladed $V_SHELF $V_SLOT $V_INTERFACE $V_IMAGE
+					for VBLADE_PID in `ps ax | grep vblade | grep -w $V_IMAGE | awk {' print $1 '}`; do
+						kill $VBLADE_PID
+					done
 				done
 				IFS=$OLD_IFS
 			fi
+			killall vblade 1>/dev/null 2>&1
 		fi
 	fi
-
-    if [ -x "/etc/init.d/iscsi-target" ]; then
-        if [ -x "`which invoke-rc.d 2>/dev/null`" ]; then
-            invoke-rc.d iscsi-target start
-        else
-            /etc/init.d/iscsi-target start
-        fi
-    elif [ -x /etc/init.d/iscsitarget ]; then
-        if [ -x "`which invoke-rc.d 2>/dev/null`" ]; then
-            invoke-rc.d iscsitarget start
-        else
-            /etc/init.d/iscsitarget start
-        fi
-    fi
-}
-
-
-function sanboot_storage_stop() {
-	echo "Stopping the openQRM sanboot-storage-plugin"
-	# aoe
-    if [ -x "/etc/init.d/vblade" ]; then
-        if [ -x "`which invoke-rc.d 2>/dev/null`" ]; then
-            invoke-rc.d vblade stop
-        else
-            /etc/init.d/vblade stop
-            for VPID in `ps ax | grep vblade | grep -v grep | awk {' print $1 '}`; do
-                kill $VPID
-            done
-        fi
-	else
-		if [ -f $VBLADECONF ]; then
-			echo "Stopping vblades ..."
-			OLD_IFS=$IFS
-			IFS=$LINE_IFS
-			for VBLADE_L in `cat $VBLADECONF | grep -v '#' | sed '/^$/d'`; do
-				V_INTERFACE=`echo $VBLADE_L | awk {' print $1 '}`
-				V_SHELF=`echo $VBLADE_L | awk {' print $2 '}`
-				V_SLOT=`echo $VBLADE_L | awk {' print $3 '}`
-				V_IMAGE=`echo $VBLADE_L | awk {' print $4 '}`
-				V_ALLOWED_MAC=`echo $VBLADE_L | awk {' print $5 '}`
-				for VBLADE_PID in `ps ax | grep vblade | grep -w $V_IMAGE | awk {' print $1 '}`; do
-					kill $VBLADE_PID
-				done
-			done
-			IFS=$OLD_IFS
+	if [ "$SANBOOT_ISCSI_STORAGE_AUTO_START" == "yes" ]; then
+		if [ -x "/etc/init.d/iscsi-target" ]; then
+			if [ -x "`which invoke-rc.d 2>/dev/null`" ]; then
+				invoke-rc.d iscsi-target stop
+			else
+				/etc/init.d/iscsi-target stop
+			fi
+		elif [ -x /etc/init.d/iscsitarget ]; then
+			if [ -x "`which invoke-rc.d 2>/dev/null`" ]; then
+				invoke-rc.d iscsitarget stop
+			else
+				/etc/init.d/iscsitarget stop
+			fi
 		fi
-		killall vblade 1>/dev/null 2>&1
 	fi
-
-    if [ -x "/etc/init.d/iscsi-target" ]; then
-        if [ -x "`which invoke-rc.d 2>/dev/null`" ]; then
-            invoke-rc.d iscsi-target stop
-        else
-            /etc/init.d/iscsi-target stop
-        fi
-    elif [ -x /etc/init.d/iscsitarget ]; then
-        if [ -x "`which invoke-rc.d 2>/dev/null`" ]; then
-            invoke-rc.d iscsitarget stop
-        else
-            /etc/init.d/iscsitarget stop
-        fi
-    fi
 
 }
 

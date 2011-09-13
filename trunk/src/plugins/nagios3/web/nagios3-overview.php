@@ -2,19 +2,19 @@
 /*
   This file is part of openQRM.
 
-    openQRM is free software: you can redistribute it and/or modify
-    it under the terms of the GNU General Public License version 2
-    as published by the Free Software Foundation.
+	openQRM is free software: you can redistribute it and/or modify
+	it under the terms of the GNU General Public License version 2
+	as published by the Free Software Foundation.
 
-    openQRM is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    GNU General Public License for more details.
+	openQRM is distributed in the hope that it will be useful,
+	but WITHOUT ANY WARRANTY; without even the implied warranty of
+	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+	GNU General Public License for more details.
 
-    You should have received a copy of the GNU General Public License
-    along with openQRM.  If not, see <http://www.gnu.org/licenses/>.
+	You should have received a copy of the GNU General Public License
+	along with openQRM.  If not, see <http://www.gnu.org/licenses/>.
 
-    Copyright 2009, Matthias Rechenburg <matt@openqrm.com>
+	Copyright 2009, Matthias Rechenburg <matt@openqrm.com>
 */
 
 
@@ -54,13 +54,13 @@ $strMsg = '';
 		case 'enable_automap':
 			$openqrm->send_command("$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/nagios3/bin/openqrm-nagios-manager automap on");
 			$strMsg .= "Enabled automatic mapping of the openQRM Network";
-            sleep(4);
+			sleep(4);
 			redirect($strMsg);
 			break;
 		case 'disable_automap':
 			$openqrm->send_command("$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/nagios3/bin/openqrm-nagios-manager automap off");
 			$strMsg .= "Disabled automatic mapping of the openQRM Network";
-            sleep(4);
+			sleep(4);
 			redirect($strMsg);
 			break;
 	}
@@ -71,11 +71,11 @@ $strMsg = '';
 function nagios_display() {
 	global $OPENQRM_USER;
 	global $thisfile;
-    if (file_exists(".automap")) {
-        $automap = "<input type=\"image\" name=\"action\" value=\"disable_automap\" src=\"/openqrm/base/plugins/aa_plugins/img/start.png\" alt=\"disable_automap\"> Disable automatic mapping of the openQRM Network";
-    } else {
-        $automap = "<input type=\"image\" name=\"action\" value=\"enable_automap\" src=\"/openqrm/base/plugins/aa_plugins/img/stop.png\" alt=\"enable_automap\"> Enable automatic mapping of the openQRM Network";
-    }
+	if (file_exists(".automap")) {
+		$automap = "<input type=\"image\" name=\"action\" value=\"disable_automap\" src=\"/openqrm/base/plugins/aa_plugins/img/start.png\" alt=\"disable_automap\"> Disable automatic mapping of the openQRM Network";
+	} else {
+		$automap = "<input type=\"image\" name=\"action\" value=\"enable_automap\" src=\"/openqrm/base/plugins/aa_plugins/img/stop.png\" alt=\"enable_automap\"> Enable automatic mapping of the openQRM Network";
+	}
 	//------------------------------------------------------------ set template
 	$t = new Template_PHPLIB();
 	$t->debug = false;

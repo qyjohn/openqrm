@@ -42,7 +42,7 @@ function openqrm_plugin_vmware_esx_uninstall() {
 	if [ "$USERNAME" == "" ] && [ "$PASSWORD" == "" ]; then
 		echo -n "vmware-esx: Please give a username to uninstall the plugin : "
 		read USERNAME
-		echo	
+		echo
 		echo -n "vmware-esx: Please give the password for user $USERNAME : "
 		read PASSWORD
 		echo
@@ -61,19 +61,19 @@ function openqrm_plugin_vmware_esx_init() {
 	if [ "$USERNAME" == "" ] && [ "$PASSWORD" == "" ]; then
 		echo -n "vmware-esx: Please give a username to init the plugin : "
 		read USERNAME
-		echo	
+		echo
 		echo -n "vmware-esx: Please give the password for user $USERNAME : "
 		read PASSWORD
 		echo
 	fi
 	echo "Initializing the openQRM vmware-esx-plugin"
-	# adding virtualization type	
+	# adding virtualization type
 	openqrm_server_add_virtualization_type $USERNAME $PASSWORD vmware-esx "VMware-ESX Host"
 	openqrm_server_add_virtualization_type $USERNAME $PASSWORD vmware-esx-vm "VMware-ESX VM"
 	# linking the web dir
 	ln -sf $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/vmware-esx/web $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/base/plugins/vmware-esx
 	ln -sf $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/vmware-esx/web/vmware-esx-integrate.php $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/action/
-	
+
 }
 
 USER=$2

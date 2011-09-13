@@ -1,9 +1,19 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+
+<head>
+<title>CloudPro云计算门户</title>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8"></meta>
 <link rel="stylesheet" type="text/css" href="css/mycloud.css" />
 <style>
 .htmlobject_tab_box {
 	width:600px;
 }
 </style>
+
+</head>
+<body>
 
 <?php
 /*
@@ -182,6 +192,8 @@ if(htmlobject_request('action') != '') {
 				$user_fields['cu_token'] = $user_token;
 				// prepare more defaults
 				$user_fields['cu_status'] = 0;
+				// default user group
+				$user_fields['cu_cg_id'] = 0;
 				$user_fields['cu_id'] = openqrm_db_get_free_id('cu_id', $CLOUD_USER_TABLE);
 				// check how many ccunits to give for a new user
 				$cc_conf = new cloudconfig();
@@ -312,7 +324,7 @@ if(htmlobject_request('action') != '') {
 			if ($cloud_user->is_name_free($fusername)) {
 				$strMsg = "No such user on the openQRM Cloud";
 				redirect($strMsg, tab0);
-				break;			
+				break;
 			}
 
 			$cloud_user->get_instance_by_name($fusername);
@@ -369,28 +381,28 @@ function portal_home() {
 	global $thisfile;
 	global $cloud_portal_howto;
 
-	$disp = "<h1>openQRM Cloud Portal</h1>";
-	$disp = $disp."This is the openQRM Cloud Portal providing computing power on-demand.";
+	$disp = "<h1>OpenQRM 云计算门户</h1>";
+	$disp = $disp."OpenQRM云计算门户，随时满足您对计算资源的需求。";
 	$disp = $disp."<br>";
 	$disp = $disp."<br>";
-	$disp = $disp."Here how it works :";
+	$disp = $disp."使用流程：";
 	$disp = $disp."<br>";
 	$disp = $disp."<br>";
-	$disp = $disp."- First <a href=\"$thisfile?currenttab=tab1\">register</a> yourself to the openQRM Cloud portal";
+	$disp = $disp."- 首先，<a href=\"$thisfile?currenttab=tab1\">注册</a>一个账号";
 	$disp = $disp."<br>";
-	$disp = $disp."- You will receive a mail how to activate</a> your account";
+	$disp = $disp."- 您会收到一封电子邮件要求您激活帐号";
 	$disp = $disp."<br>";
-	$disp = $disp."- <a href=\"$thisfile?activate=yes\">Activate</a> your account";
+	$disp = $disp."- <a href=\"$thisfile?activate=yes\">激活</a>您的帐号";
 	$disp = $disp."<br>";
-	$disp = $disp."- Get some Cloud Computing Units (CCU's), the virtual currency in the Cloud";
+	$disp = $disp."- 获得一些云计算币（CCU, Cloud Computing Units）";
 	$disp = $disp."<br>";
-	$disp = $disp."- Request your systems from the openQRM Cloud";
-	$disp = $disp."<br>";
-	$disp = $disp."<br>";
-	$disp = $disp."Enjoy !";
+	$disp = $disp."- 通过云计算门户请求计算资源";
 	$disp = $disp."<br>";
 	$disp = $disp."<br>";
-	$disp = $disp."Please find a detailed Howto about this Cloud <a href=\"$cloud_portal_howto\" target=\"_BLANK\">here</a>.";
+	$disp = $disp."开始使用！";
+	$disp = $disp."<br>";
+	$disp = $disp."<br>";
+	$disp = $disp."更多使用方面的问题，请参考我们提供的 <a href=\"$cloud_portal_howto\" target=\"_BLANK\">实战教程</a>。";
 	$disp = $disp."<br>";
 
 	return $disp;
@@ -407,58 +419,58 @@ function register_user() {
 	$public_register_enabled = $cc_conf->get_value(14);  // 14 is public_register_enabled
 	$cc_admin_email = $cc_conf->get_value(1);  // 1 is admin_email
 
-	if ($public_register_enabled == 'true') {	
-		$disp = "<h1>Register to the openQRM Cloud</h1>";
+	if ($public_register_enabled == 'true') {
+		$disp = "<h1>用户注册</h1>";
 		$disp = $disp."<br>";
 		$disp = $disp."<form action=$thisfile method=post>";
-		$disp = $disp.htmlobject_input('cu_name', array("value" => '[Username]', "label" => 'User name'), 'text', 20);
-		$disp = $disp.htmlobject_input('cu_password', array("value" => '', "label" => 'Password'), 'password', 20);
-		$disp = $disp.htmlobject_input('cu_password_check', array("value" => '', "label" => '(retype)'), 'password', 20);
-		$disp = $disp.htmlobject_input('cu_forename', array("value" => '[Firstname]', "label" => 'First name'), 'text', 50);
-		$disp = $disp.htmlobject_input('cu_lastname', array("value" => '[Lastname]', "label" => 'Last name'), 'text', 50);
-		$disp = $disp.htmlobject_input('cu_email', array("value" => '[Email]', "label" => 'Email'), 'text', 50);
-		$disp = $disp.htmlobject_input('cu_street', array("value" => '[Street]', "label" => 'Street+number'), 'text', 100);
-		$disp = $disp.htmlobject_input('cu_city', array("value" => '[City]', "label" => 'City'), 'text', 100);
-		$disp = $disp.htmlobject_input('cu_country', array("value" => '[Country]', "label" => 'Country'), 'text', 100);
-		$disp = $disp.htmlobject_input('cu_phone', array("value" => '[Phone-number]', "label" => 'Phone'), 'text', 100);
+		$disp = $disp.htmlobject_input('cu_name', array("value" => '[Username]', "label" => '注册帐号：'), 'text', 20);
+		$disp = $disp.htmlobject_input('cu_password', array("value" => '', "label" => '设置密码：'), 'password', 20);
+		$disp = $disp.htmlobject_input('cu_password_check', array("value" => '', "label" => '重输密码：'), 'password', 20);
+		$disp = $disp.htmlobject_input('cu_forename', array("value" => '[Firstname]', "label" => '名：'), 'text', 50);
+		$disp = $disp.htmlobject_input('cu_lastname', array("value" => '[Lastname]', "label" => '姓：'), 'text', 50);
+		$disp = $disp.htmlobject_input('cu_email', array("value" => '[Email]', "label" => '电子邮件：'), 'text', 50);
+		$disp = $disp.htmlobject_input('cu_street', array("value" => '[Street]', "label" => '街道地址：'), 'text', 100);
+		$disp = $disp.htmlobject_input('cu_city', array("value" => '[City]', "label" => '所在城市：'), 'text', 100);
+		$disp = $disp.htmlobject_input('cu_country', array("value" => '[Country]', "label" => '所在国家：'), 'text', 100);
+		$disp = $disp.htmlobject_input('cu_phone', array("value" => '[Phone-number]', "label" => '电话号码：'), 'text', 100);
 		$disp = $disp."<input type=hidden name='action' value='create_user'>";
-		$disp = $disp."<b><i>All values are mandatory. Please do not use any special characters.</i></b>";
+		$disp = $disp."<b><i>所有字段都是必须的。请勿输入任何特殊字符。</i></b>";
 		$disp = $disp."<br>";
 		$disp = $disp."<br>";
-		$disp = $disp."<input type=submit value='Register'>";
+		$disp = $disp."<input type=submit value='注册'>";
 		$disp = $disp."<br>";
-		$disp = $disp."By registering I accept the <a href=\"/cloud-portal/web/conditions.php\" target=\"_BLANK\">general terms and conditions of this Cloud portal</a>";
+		$disp = $disp."我接受<a href=\"/cloud-portal/web/conditions.php\" target=\"_BLANK\">CloudPro云计算服务条款</a>的相关规定。";
 		$disp = $disp."<br>";
 		$disp = $disp."<br>";
 		$disp = $disp."</form>";
 	} else {
-		$disp = "<h1>Public registration disabled !</h1>";
+		$disp = "<h1>不提供公开注册服务!</h1>";
 		$disp = $disp."<br>";
-		$disp = $disp."This openQRM Cloud does not allow public registration.";
+		$disp = $disp."本CloudPro云计算服务门户不提供公开注册服务。";
 		$disp = $disp."<br>";
-		$disp = $disp."Please contact <a href=\"mailto:$cc_admin_email?subject=openQRM Cloud: Account request\">$cc_admin_email</a> to ask for an account.";
+		$disp = $disp."请联系管理员<a href=\"mailto:$cc_admin_email?subject=openQRM Cloud: Account request\">$cc_admin_email</a>咨询创建帐号事宜。";
 		$disp = $disp."<br>";
 	}
 
 	$disp = $disp."<form action=$thisfile method=post>";
-    $disp = $disp."<br>";
+	$disp = $disp."<br>";
 	$disp = $disp."<hr>";
-	$disp = $disp."<h4>Forgot the password ?</h4>";
-	$disp = $disp."You already have an existing account on the openQRM Cloud but forgot your password ?";
+	$disp = $disp."<h4>忘记密码?</h4>";
+	$disp = $disp."您已经注册了CloudPro云计算服务的帐号，但是忘记了您的密码？";
 	$disp = $disp."<br>";
 	$disp = $disp."<br>";
-	$disp = $disp."Then please just put your username in the box below and click on 'Forgot-Password' to";
-	$disp = $disp." let the Cloud sent you a new password.";
+	$disp = $disp."请输入您的用户名，然后点击'取回密码'按钮。";
+	$disp = $disp."CloudPro云计算服务会为您提供一个新的密码。";
 	$disp = $disp."<br>";
 	$disp = $disp."<br>";
-	$disp = $disp.htmlobject_input('fusername', array("value" => '[Username]', "label" => 'Username'), 'text', 20);
+	$disp = $disp.htmlobject_input('fusername', array("value" => '[Username]', "label" => '注册帐号：'), 'text', 20);
 	$disp = $disp."<input type=hidden name='action' value='forgotpass'>";
 	$disp = $disp."<br>";
 	$disp = $disp."<br>";
-	$disp = $disp."<input type=submit value='Forgot-Password'>";
+	$disp = $disp."<input type=submit value='取回密码'>";
 	$disp = $disp."</form>";
 
-    return $disp;
+	return $disp;
 }
 
 
@@ -467,8 +479,8 @@ function activate_user() {
 
 	global $OPENQRM_USER;
 	global $thisfile;
-	
-	$disp = "<h1>Activate your openQRM Cloud account</h1>";
+
+	$disp = "<h1>激活帐号</h1>";
 	$disp = $disp."<br>";
 	$disp = $disp."<form action=$thisfile method=post>";
 	$disp = $disp.htmlobject_input('cu_id', array("value" => '[Your-User-ID]', "label" => 'User ID'), 'text', 20);
@@ -476,7 +488,7 @@ function activate_user() {
 	$disp = $disp."<input type=hidden name='action' value='activate'>";
 	$disp = $disp."<br>";
 	$disp = $disp."<br>";
-	$disp = $disp."<input type=submit value='Activate'>";
+	$disp = $disp."<input type=submit value='激活帐号'>";
 	$disp = $disp."<br>";
 	$disp = $disp."<br>";
 	$disp = $disp."</form>";
@@ -492,7 +504,7 @@ function login_user() {
 	global $thisfile;
 
 	$disp = "<a href=\"/cloud-portal/user/mycloud.php\"><img src='img/forward.gif' width='36' height='32' border='0' alt='' align='left'>";
-	$disp = $disp."<h1><b>Click here to login to the openQRM Cloud</b></h1></a>";
+	$disp = $disp."<h1><b>登录进入CloudPro云计算门户</b></h1></a>";
 	$disp = $disp."<br>";
 	$disp = $disp."<br>";
 	$disp = $disp."<hr>";
@@ -515,11 +527,11 @@ if ($cloud_enabled != 'true') {
 
 $activate = htmlobject_request('activate');
 if (!strcmp($activate, "yes")) {
-    $output[] = array('label' => "<a href=\"$thisfile?currenttab=tab0\">Activate your Account</a>", 'value' => activate_user());
+	$output[] = array('label' => "<a href=\"$thisfile?currenttab=tab0\">激活帐号</a>", 'value' => activate_user());
 } else {
-    $output[] = array('label' => "<a href=\"$thisfile?currenttab=tab0\">Welcome to the openQRM Cloud</a>", 'value' => portal_home());
-    $output[] = array('label' => "<a href=\"$thisfile?currenttab=tab1\">Register</a>", 'value' => register_user());
-    $output[] = array('label' => "<a href=\"/cloud-portal/user/mycloud.php\">Login</a>", 'value' => login_user());
+	$output[] = array('label' => "<a href=\"$thisfile?currenttab=tab0\">欢迎使用CloudPro云计算服务</a>", 'value' => portal_home());
+	$output[] = array('label' => "<a href=\"$thisfile?currenttab=tab1\">注册</a>", 'value' => register_user());
+	$output[] = array('label' => "<a href=\"/cloud-portal/user/mycloud.php\">登录</a>", 'value' => login_user());
 }
 echo htmlobject_tabmenu($output);
 
@@ -528,7 +540,6 @@ include "$DocRoot/cloud-portal/mycloud-bottom.php";
 
 ?>
 
-</html>
 
 
 

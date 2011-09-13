@@ -32,8 +32,8 @@ function getPassword(length, extraChars, firstNumber, firstLower, firstUpper, fi
 }
 
 function statusMsg(msg) {
-    window.status=msg;
-    return true;
+	window.status=msg;
+	return true;
 }
 
 
@@ -76,6 +76,7 @@ require_once "$RootDir/class/openqrm_server.class.php";
 require_once "$RootDir/include/htmlobject.inc.php";
 // special clouduser class
 require_once "$RootDir/plugins/cloud/class/clouduser.class.php";
+require_once "$RootDir/plugins/cloud/class/cloudusergroup.class.php";
 require_once "$RootDir/plugins/cloud/class/clouduserslimits.class.php";
 require_once "$RootDir/plugins/cloud/class/cloudconfig.class.php";
 
@@ -87,47 +88,61 @@ $OPENQRM_SERVER_IP_ADDRESS=$openqrm_server->get_ip_address();
 global $OPENQRM_SERVER_IP_ADDRESS;
 global $OPENQRM_WEB_PROTOCOL;
 
+// if ldap is enabled do not allow access the the openQRM cloud user administration
+$central_user_management = false;
+if (file_exists("$RootDir/plugins/ldap/.running")) {
+	$central_user_management = true;
+}
+
 // check if we got some actions to do
 if(htmlobject_request('action') != '') {
 	switch (htmlobject_request('action')) {
 		case 'delete':
-			foreach($_REQUEST['identifier'] as $id) {
-				$cl_user = new clouduser();
-				$cl_user->get_instance_by_id($id);
-				// remove user from htpasswd
-				$username = $cl_user->name;
-				$openqrm_server_command="htpasswd -D $CloudDir/user/.htpasswd $username";
-				$output = shell_exec($openqrm_server_command);
-				// remove permissions and limits
-				$cloud_user_limit = new clouduserlimits();
-				$cloud_user_limit->remove_by_cu_id($id);
-				// remove from db
-				$cl_user->remove($id);
+			if(isset($_REQUEST['identifier'])) {
+				foreach($_REQUEST['identifier'] as $id) {
+					$cl_user = new clouduser();
+					$cl_user->get_instance_by_id($id);
+					// remove user from htpasswd
+					$username = $cl_user->name;
+					$openqrm_server_command="htpasswd -D $CloudDir/user/.htpasswd $username";
+					$output = shell_exec($openqrm_server_command);
+					// remove permissions and limits
+					$cloud_user_limit = new clouduserlimits();
+					$cloud_user_limit->remove_by_cu_id($id);
+					// remove from db
+					$cl_user->remove($id);
+				}
 			}
 			break;
 
 		case 'enable':
-			foreach($_REQUEST['identifier'] as $id) {
-				$cl_user = new clouduser();
-				$cl_user->get_instance_by_id($id);
-				$cl_user->activate_user_status($id, 1);
+			if(isset($_REQUEST['identifier'])) {
+				foreach($_REQUEST['identifier'] as $id) {
+					$cl_user = new clouduser();
+					$cl_user->get_instance_by_id($id);
+					$cl_user->activate_user_status($id, 1);
+				}
 			}
 			break;
 
 		case 'disable':
-			foreach($_REQUEST['identifier'] as $id) {
-				$cl_user = new clouduser();
-				$cl_user->get_instance_by_id($id);
-				$cl_user->activate_user_status($id, 0);
+			if(isset($_REQUEST['identifier'])) {
+				foreach($_REQUEST['identifier'] as $id) {
+					$cl_user = new clouduser();
+					$cl_user->get_instance_by_id($id);
+					$cl_user->activate_user_status($id, 0);
+				}
 			}
 			break;
 
 		case 'update':
-			foreach($_REQUEST['identifier'] as $id) {
-				$up_ccunits = $_REQUEST['cu_ccunits'];
-				$cl_user = new clouduser();
-				$cl_user->get_instance_by_id($id);
-				$cl_user->set_users_ccunits($id, $up_ccunits[$id]);
+			if(isset($_REQUEST['identifier'])) {
+				foreach($_REQUEST['identifier'] as $id) {
+					$up_ccunits = $_REQUEST['cu_ccunits'];
+					$cl_user = new clouduser();
+					$cl_user->get_instance_by_id($id);
+					$cl_user->set_users_ccunits($id, $up_ccunits[$id]);
+				}
 			}
 			break;
 
@@ -156,8 +171,10 @@ function cloud_user_manager() {
 
 	global $OPENQRM_USER;
 	global $OPENQRM_SERVER_IP_ADDRESS;
-    global $OPENQRM_WEB_PROTOCOL;
+	global $OPENQRM_WEB_PROTOCOL;
 	global $thisfile;
+	global $central_user_management;
+
 	$table = new htmlobject_db_table('cu_id', 'DESC');
 	$cc_conf = new cloudconfig();
 	// get external name
@@ -179,6 +196,9 @@ function cloud_user_manager() {
 	$arHead['cu_lastname'] = array();
 	$arHead['cu_lastname']['title'] ='Last name';
 
+	$arHead['cu_cg_id'] = array();
+	$arHead['cu_cg_id']['title'] ='Group';
+
 	$arHead['cu_email'] = array();
 	$arHead['cu_email']['title'] ='Email';
 
@@ -191,7 +211,7 @@ function cloud_user_manager() {
 	$arBody = array();
 
 	// db select
-    $cl_user_count = 0;
+	$cl_user_count = 0;
 	$cl_user = new clouduser();
 	$user_array = $cl_user->display_overview($table->offset, $table->limit, $table->sort, $table->order);
 	foreach ($user_array as $index => $cu) {
@@ -209,24 +229,28 @@ function cloud_user_manager() {
 		$cu_id = $cu["cu_id"];
 		$ccunits_input = "<input type=\"text\" name=\"cu_ccunits[$cu_id]\" value=\"$ccunits\" size=\"5\ maxsize=\"10\">";
 
-        // user login link
-        $tclu = new clouduser();
-        $tclu->get_instance_by_id($cu_id);
-        $user_auth_str = "://".$tclu->name.":".$tclu->password."@";
-        $external_portal_user_auth = str_replace("://", $user_auth_str, $external_portal_name);
-        $user_login_link = "<a href=\"".$external_portal_user_auth."/user/mycloud.php\" title=\"Login\" target=\"_BLANK\" onmouseover=\"return statusMsg('')\">".$tclu->name."</a>";
-
+		// user login link
+		$tclu = new clouduser();
+		$tclu->get_instance_by_id($cu_id);
+		$user_auth_str = "://".$tclu->name.":".$tclu->password."@";
+		$external_portal_user_auth = str_replace("://", $user_auth_str, $external_portal_name);
+		$user_login_link = "<a href=\"".$external_portal_user_auth."/user/mycloud.php\" title=\"Login\" target=\"_BLANK\" onmouseover=\"return statusMsg('')\">".$tclu->name."</a>";
+		// group
+		$cloudusergroup = new cloudusergroup();
+		$cloudusergroup->get_instance_by_id($cu["cu_cg_id"]);
+		$cg_name = $cloudusergroup->name;
 
 		$arBody[] = array(
 			'cu_id' => $cu["cu_id"],
 			'cu_name' => $user_login_link,
 			'cu_forename' => $cu["cu_forename"],
 			'cu_lastname' => $cu["cu_lastname"],
+			'cu_cg_id' => $cg_name,
 			'cu_email' => $cu["cu_email"],
 			'cu_ccunits' => $ccunits_input,
 			'cu_status' => $status_icon,
 		);
-        $cl_user_count++;
+		$cl_user_count++;
 	}
 
 	$table->id = 'Tabelle';
@@ -239,17 +263,29 @@ function cloud_user_manager() {
 	$table->head = $arHead;
 	$table->body = $arBody;
 	if ($OPENQRM_USER->role == "administrator") {
-		$table->bottom = array('update', 'enable', 'disable', 'limits', 'delete');
+		if (!$central_user_management) {
+			$table->bottom = array('update', 'enable', 'disable', 'limits', 'delete');
+		} else {
+			$table->bottom = array('update', 'enable', 'disable', 'limits');
+		}
 		$table->identifier = 'cu_id';
 	}
 	$table->max = $cl_user->get_count();
+
+	if (!$central_user_management) {
+		$create_user_link = '<a href='.$thisfile.'?action=create>Create new Cloud User</a>';
+	} else {
+		$create_user_link = '';
+	}
+
 	//------------------------------------------------------------ set template
 	$t = new Template_PHPLIB();
 	$t->debug = false;
 	$t->setFile('tplfile', './tpl/' . 'cloud-user-manager-tpl.php');
 	$t->setVar(array(
-        'thisfile' => $thisfile,
-        'external_portal_name' => $external_portal_name,
+		'thisfile' => $thisfile,
+		'create_user_link' => $create_user_link,
+		'external_portal_name' => $external_portal_name,
 		'cloud_user_table' => $table->get_string(),
 	));
 	$disp =  $t->parse('out', 'tplfile');
@@ -262,7 +298,7 @@ function cloud_create_user() {
 
 	global $OPENQRM_USER;
 	global $OPENQRM_SERVER_IP_ADDRESS;
-    global $OPENQRM_WEB_PROTOCOL;
+	global $OPENQRM_WEB_PROTOCOL;
 	global $thisfile;
 	$cc_conf = new cloudconfig();
 	// get external name
@@ -271,10 +307,17 @@ function cloud_create_user() {
 		$external_portal_name = "$OPENQRM_WEB_PROTOCOL://$OPENQRM_SERVER_IP_ADDRESS/cloud-portal";
 	}
 	$cu_name = htmlobject_input('cu_name', array("value" => '', "label" => 'User name'), 'text', 20);
-    // root password input plus generate password button
-    $generate_pass = "Password&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<input name=\"cu_password\" type=\"text\" id=\"cu_password\" value=\"\" size=\"10\" maxlength=\"10\">";
-    $generate_pass .= "<input type=\"button\" name=\"gen\" value=\"generate\" onclick=\"this.form.cu_password.value=getPassword(10, false, true, true, true, false, true, true, true, false);\"><br>";
-    // without generate pass button : $disp = $disp.htmlobject_input('cu_password', array("value" => '', "label" => 'Password'), 'text', 20);
+	// root password input plus generate password button
+	$generate_pass = "Password&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<input name=\"cu_password\" type=\"password\" id=\"cu_password\" value=\"\" size=\"10\" maxlength=\"10\">";
+	$generate_pass .= "<input type=\"button\" name=\"gen\" value=\"generate\" onclick=\"this.form.cu_password.value=getPassword(10, false, true, true, true, false, true, true, true, false);\"><br>";
+	// the user group select
+	$cloudusergroup = new cloudusergroup();
+	$cloudusergroup_list = array();
+	$cloudusergroup_list_select = array();
+	$cloudusergroup_list = $cloudusergroup->get_list();
+	foreach ($cloudusergroup_list as $id => $cg) {
+		$cloudusergroup_list_select[] = array("value" => $cg['value'], "label" => $cg['label']);
+	}
 	$cu_forename = htmlobject_input('cu_forename', array("value" => '', "label" => 'Fore name'), 'text', 50);
 	$cu_lastname = htmlobject_input('cu_lastname', array("value" => '', "label" => 'Last name'), 'text', 50);
 	$cu_email = htmlobject_input('cu_email', array("value" => '', "label" => 'Email'), 'text', 50);
@@ -287,17 +330,18 @@ function cloud_create_user() {
 	$t->debug = false;
 	$t->setFile('tplfile', './tpl/' . 'cloud-user-create-tpl.php');
 	$t->setVar(array(
-        'cu_name' => $cu_name,
-        'generate_pass' => $generate_pass,
-        'cu_forename' => $cu_forename,
-        'cu_lastname' => $cu_lastname,
-        'cu_email' => $cu_email,
-        'cu_street' => $cu_street,
-        'cu_city' => $cu_city,
-        'cu_country' => $cu_country,
-        'cu_phone' => $cu_phone,
-        'thisfile' => 'cloud-action.php',
-        'external_portal_name' => $external_portal_name,
+		'cu_name' => $cu_name,
+		'generate_pass' => $generate_pass,
+		'cu_cg' => htmlobject_select('cu_cg_id', $cloudusergroup_list_select, 'Group'),
+		'cu_forename' => $cu_forename,
+		'cu_lastname' => $cu_lastname,
+		'cu_email' => $cu_email,
+		'cu_street' => $cu_street,
+		'cu_city' => $cu_city,
+		'cu_country' => $cu_country,
+		'cu_phone' => $cu_phone,
+		'thisfile' => 'cloud-action.php',
+		'external_portal_name' => $external_portal_name,
 	));
 	$disp =  $t->parse('out', 'tplfile');
 	return $disp;
@@ -333,14 +377,14 @@ function cloud_set_user_limits($cloud_user_id) {
 	$t->debug = false;
 	$t->setFile('tplfile', './tpl/' . 'cloud-user-set-limit-tpl.php');
 	$t->setVar(array(
-        'cloud_user_id' => $cloud_user_id,
-        'cu_name' => $cu_name,
-        'cl_resource_limit' => $cl_resource_limit,
-        'cl_memory_limit' => $cl_memory_limit,
-        'cl_disk_limit' => $cl_disk_limit,
-        'cl_cpu_limit' => $cl_cpu_limit,
-        'cl_network_limit' => $cl_network_limit,
-        'thisfile' => $thisfile,
+		'cloud_user_id' => $cloud_user_id,
+		'cu_name' => $cloud_user->name,
+		'cl_resource_limit' => $cl_resource_limit,
+		'cl_memory_limit' => $cl_memory_limit,
+		'cl_disk_limit' => $cl_disk_limit,
+		'cl_cpu_limit' => $cl_cpu_limit,
+		'cl_network_limit' => $cl_network_limit,
+		'thisfile' => $thisfile,
 	));
 	$disp =  $t->parse('out', 'tplfile');
 	return $disp;
@@ -354,15 +398,18 @@ function cloud_set_user_limits($cloud_user_id) {
 
 $output = array();
 
-
 if(htmlobject_request('action') != '') {
 	switch (htmlobject_request('action')) {
 		case 'create':
-			$output[] = array('label' => 'Create Cloud User', 'value' => cloud_create_user());
+			if (!$central_user_management) {
+				$output[] = array('label' => 'Create Cloud User', 'value' => cloud_create_user());
+			}
 			break;
 		case 'limits':
-			foreach($_REQUEST['identifier'] as $id) {
-				$output[] = array('label' => 'Cloud User Limits', 'value' => cloud_set_user_limits($id));
+			if(isset($_REQUEST['identifier'])) {
+				foreach($_REQUEST['identifier'] as $id) {
+					$output[] = array('label' => 'Cloud User Limits', 'value' => cloud_set_user_limits($id));
+				}
 			}
 			$output[] = array('label' => 'Cloud User Manager', 'value' => cloud_user_manager());
 			break;
@@ -373,5 +420,9 @@ if(htmlobject_request('action') != '') {
 } else {
 	$output[] = array('label' => 'Cloud User Manager', 'value' => cloud_user_manager());
 }
+
+
+
+
 echo htmlobject_tabmenu($output);
 ?>

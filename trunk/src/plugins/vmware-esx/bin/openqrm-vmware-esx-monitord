@@ -1,3 +1,4 @@
+#!/bin/sh
 # this is a very much stripped down openQRM monitor daemon
 #
 # This file is part of openQRM.
@@ -18,17 +19,16 @@
 #
 
 MONITOR_CMD=$1
-OPENQRM_SERVER_IP=$2
-ESX_SERVER_IP=$3
-USER=$4
-PASSWORD=$5
 MONITORD_LOCKFILE="/var/run/openqrm-vmware-esx-monitord"
 OPENQRM_RESOURCE_PARAMETER_FILE="/var/openqrm/openqrm-resource.conf"
 export LANG=C
-# define wget to use with https
-if [ "$openqrm_web_protocol" == "https" ]; then
-    WGET_NO_CERT_CHECK="--no-check-certificate"
+
+if [ ! -f $OPENQRM_RESOURCE_PARAMETER_FILE ]; then
+	echo "ERROR: Not initialyzed yet ! Please run :"
+	echo "  /bin/openqrm-start-vmware-esx-init <openqrm-server-ip-address> <esx-server-ip-address> <openqrm-user> <openqrm-password>"
+	exit 1
 fi
+. $OPENQRM_RESOURCE_PARAMETER_FILE
 
 # stop and exit
 if [ "$MONITOR_CMD" == "stop" ]; then
@@ -36,112 +36,44 @@ if [ "$MONITOR_CMD" == "stop" ]; then
 		kill `cat $MONITORD_LOCKFILE`
 		rm -f $MONITORD_LOCKFILE
 	fi
-    kill `ps -c | grep openqrm | grep -v grep | awk {' print $1 '}` 2>/dev/null
+	kill `ps -c | grep openqrm | grep vmware-esx | grep -v grep | awk {' print $1 '}` 2>/dev/null
 fi
-# not start ?
-if [ "$MONITOR_CMD" != "start" ]; then
-	echo "Usage : $0 start [openqrm-server-ip-address] [esx-server-ip-address] &"
-	echo "Usage : $0 stop"
-	exit 1
-fi
-# parameter check for start
-if [ "$OPENQRM_SERVER_IP" == "" ]; then
-	echo "Usage : $0 start [openqrm-server-ip-address] [esx-server-ip-address] &"
-	echo "Usage : $0 stop"
-	exit 1
-fi
-if [ "$ESX_SERVER_IP" == "" ]; then
-	echo "Usage : $0 start [openqrm-server-ip-address] [esx-server-ip-address] &"
-	echo "Usage : $0 stop"
-	exit 1
-fi
-
 
 # create lockfile
 if [ -f "$MONITORD_LOCKFILE" ]; then
-    kill `cat $MONITORD_LOCKFILE` 2>/dev/null
-    rm -f $MONITORD_LOCKFILE
-    kill `ps -c | grep openqrm | grep -v grep | awk {' print $1 '}` 2>/dev/null
+	kill `cat $MONITORD_LOCKFILE` 2>/dev/null
+	rm -f $MONITORD_LOCKFILE
+	kill `ps -c | grep openqrm | grep vmware-esx | grep -v grep | awk {' print $1 '}` 2>/dev/null
 fi
 echo "starting $0"
 echo $$ > $MONITORD_LOCKFILE
 
-
 # main
-
-# if we do not have a resource-parameter file yet we run integrate
-if [ ! -f "$OPENQRM_RESOURCE_PARAMETER_FILE" ]; then
-	mkdir -p `dirname $OPENQRM_RESOURCE_PARAMETER_FILE`
-	resource_id=-1
-	resource_ip="$ESX_SERVER_IP"
-	resource_mac=`vim-cmd hostsvc/net/config | grep -A5 "ipAddress" | grep -A5 $ESX_SERVER_IP | grep "mac " | cut -d'"' -f2`
-	# remove whitespaces
-	resource_mac=`echo $resource_mac`
-	echo "Using $resource_ip/$resource_mac"
-    # https will fail since busybox on the esx does not support https connections
-    # try http
-    wget -q -O $OPENQRM_RESOURCE_PARAMETER_FILE "http://$OPENQRM_SERVER_IP/openqrm/action/resource-monitor.php?resource_command=get_parameter&resource_id=$resource_id&resource_mac=$resource_mac&resource_ip=$resource_ip"
-    sleep 2
-    # check if http was successfull
-    if ! grep resource_openqrmserver $OPENQRM_RESOURCE_PARAMETER_FILE 1>/dev/null 2>&1; then
-        echo "ERROR: Could not integrate the VMware ESX server into the openQRM-server at $OPENQRM_SERVER_IP!"
-        rm -f $MONITORD_LOCKFILE
-        exit 1
-    fi
-	. $OPENQRM_RESOURCE_PARAMETER_FILE
-    # define wget to use with https
-    #if [ "$openqrm_web_protocol" == "https" ]; then
-    #    WGET_NO_CERT_CHECK="--no-check-certificate"
-    #fi
-    # https will fail since busybox on the esx does not support https connections
-    WGET_NO_CERT_CHECK=""
-    openqrm_web_protocol="http"
-
-	# gather some more details to create the appliance on the openQRM-server
-	local_server_root_device=`mount | grep ' / ' | awk {' print $1 '}`
-	local_server_root_device_type=`mount | grep ' / ' | awk {' print $5 '}`
-	local_server_kernel_version=`uname -r`
-
-	# now we integrate it via the local-sever plugin
-	if ! wget -O /dev/null $WGET_NO_CERT_CHECK -q "$openqrm_web_protocol://$OPENQRM_SERVER_IP/openqrm/action/vmware-esx-integrate.php?USER=$USER&PASSWORD=$PASSWORD&local_server_command=integrate&local_server_id=$resource_id&local_server_root_device=$local_server_root_device&local_server_root_device_type=$local_server_root_device_type&local_server_kernel_version=$local_server_kernel_version"; then
-		echo "ERROR: Could not create the appliance resource$resouce_id on the openQRM-server!"
-		sleep 2
-		echo "NOTCIE: Removing the system from openQRM because of errors !"
-		# try to remove components from the local-server appliance
-		if ! wget -O /dev/null $WGET_NO_CERT_CHECK -q  "$openqrm_web_protocol://$OPENQRM_SERVER/openqrm/action/vmware-esx-integrate.php?USER=$USER&PASSWORD=$PASSWORD&local_server_command=remove&local_server_id=$resource_id"; then
-			echo "WARNING: Could not remove the appliance resource$resouce_id from the openQRM-server!"
-		fi
-		rm -f $MONITORD_LOCKFILE
-		exit 1
-	fi
-else
-	. $OPENQRM_RESOURCE_PARAMETER_FILE
-    # https will fail since busybox on the esx does not support https connections
-    WGET_NO_CERT_CHECK=""
-    openqrm_web_protocol="http"
-fi
+# https will fail since busybox on the esx does not support https connections
+WGET_NO_CERT_CHECK=""
+openqrm_web_protocol="http"
 
 # try to register all vms
 ESX_VER=$(vmware -v | awk '{print $4}')
 if [ -f /bin/vim-cmd ]; then
-    VMWARE_CMD=/bin/vim-cmd
+	VMWARE_CMD=/bin/vim-cmd
 elif [ -f /usr/bin/vmware-vim-cmd ]; then
-    VMWARE_CMD=/usr/bin/vmware-vim-cmd
+	VMWARE_CMD=/usr/bin/vmware-vim-cmd
 elif [[ "${ESX_VER}" == "3.0.3" ]] || [[ "${ESX_VER}" == "3.0.2" ]] || [[ "${ESX_VER}" == "3.0.1" ]] || [[ "${ESX_VER}" == "3.0.0" ]]; then
-    VMWARE_CMD=/usr/bin/vimsh
+	VMWARE_CMD=/usr/bin/vimsh
 else
-    echo "WARNING: Host type is not ESX 3.x+ or ESXi"
+	echo "WARNING: Host type is not ESX 3.x+ or ESXi"
 fi
 if [ "$VMWARE_CMD" != "" ]; then
-    for VM_CONF in `find /vmfs/volumes/ -name *.vmx`; do
-        echo "NOTICE: Trying to register $VM_CONF"
-        $VMWARE_CMD solo/registervm $VM_CONF
-    done
+	for VM_CONF in `find /vmfs/volumes/ -name *.vmx`; do
+		echo "NOTICE: Trying to register $VM_CONF"
+		$VMWARE_CMD solo/registervm $VM_CONF
+	done
 fi
 
 # loop
 HNAME=`hostname`
 while(true); do
-	wget -q -O /dev/null $WGET_NO_CERT_CHECK "$openqrm_web_protocol://$OPENQRM_SERVER_IP/openqrm/action/resource-monitor.php?resource_command=update_info&resource_id=$resource_id&resource_hostname=$HNAME&resource_state=active&resource_event=statistics"
-	sleep 20
+	busybox wget -q -O /dev/null $WGET_NO_CERT_CHECK "$openqrm_web_protocol://$resource_openqrmserver/openqrm/action/resource-monitor.php?resource_command=update_info&resource_id=$resource_id&resource_hostname=$HNAME&resource_state=active&resource_event=statistics"
+	sleep 10
 done

@@ -5,19 +5,19 @@
 /*
   This file is part of openQRM.
 
-    openQRM is free software: you can redistribute it and/or modify
-    it under the terms of the GNU General Public License version 2
-    as published by the Free Software Foundation.
+	openQRM is free software: you can redistribute it and/or modify
+	it under the terms of the GNU General Public License version 2
+	as published by the Free Software Foundation.
 
-    openQRM is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    GNU General Public License for more details.
+	openQRM is distributed in the hope that it will be useful,
+	but WITHOUT ANY WARRANTY; without even the implied warranty of
+	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+	GNU General Public License for more details.
 
-    You should have received a copy of the GNU General Public License
-    along with openQRM.  If not, see <http://www.gnu.org/licenses/>.
+	You should have received a copy of the GNU General Public License
+	along with openQRM.  If not, see <http://www.gnu.org/licenses/>.
 
-    Copyright 2009, Matthias Rechenburg <matt@openqrm.com>
+	Copyright 2010, Matthias Rechenburg <matt@openqrm.com>
 */
 
 
@@ -41,26 +41,28 @@ extract($store);
 
 // run actions
 if(htmlobject_request('action') != '') {
-    $strMsg = '';
-    switch (htmlobject_request('action')) {
-        case 'login':
-            foreach($_REQUEST['identifier'] as $id) {
-                $resource = new resource();
-                $resource->get_instance_by_id($id);
-                $ip = $resource->ip;
-                sshterm_login($id, $ip);
-            }
-            break;
-    }
+	$strMsg = '';
+	switch (htmlobject_request('action')) {
+		case 'login':
+			if (isset($_REQUEST['identifier'])) {
+				foreach($_REQUEST['identifier'] as $id) {
+					$resource = new resource();
+					$resource->get_instance_by_id($id);
+					$ip = $resource->ip;
+					sshterm_login($id, $ip);
+				}
+			}
+			break;
+	}
 }
 
 
 function sshterm_login($id, $ip) {
-    global $OPENQRM_SERVER_IP_ADDRESS;
-    global $OPENQRM_PLUGIN_AJAXTERM_REVERSE_PROXY_PORT;
-	$redirect_url="https://$ip:$OPENQRM_PLUGIN_AJAXTERM_REVERSE_PROXY_PORT";
+	global $OPENQRM_SERVER_IP_ADDRESS;
+	global $OPENQRM_PLUGIN_WEBSHELL_PORT;
+	$redirect_url="https://$ip:$OPENQRM_PLUGIN_WEBSHELL_PORT";
 	if ("$id" == 0) {
-		$redirect_url="https://$OPENQRM_SERVER_IP_ADDRESS:$OPENQRM_PLUGIN_AJAXTERM_REVERSE_PROXY_PORT";
+		$redirect_url="https://$OPENQRM_SERVER_IP_ADDRESS:$OPENQRM_PLUGIN_WEBSHELL_PORT";
 	}
 	$left=50+($id*50);
 	$top=100+($id*50);
@@ -68,8 +70,8 @@ function sshterm_login($id, $ip) {
 ?>
 <script type="text/javascript">
 function open_sshterm (url) {
-    sshterm_window = window.open(url, "<?php echo $ip; ?>", "width=580,height=420,left=<?php echo $left; ?>,top=<?php echo $top; ?>");
-    open_sshterm.focus();
+	sshterm_window = window.open(url, "<?php echo $ip; ?>", "width=580,height=420,scrollbars=1,left=<?php echo $left; ?>,top=<?php echo $top; ?>");
+	open_sshterm.focus();
 }
 open_sshterm("<?php echo $redirect_url; ?>");
 </script>
@@ -82,7 +84,7 @@ function sshterm_display() {
 	global $thisfile;
 
 	$resource_tmp = new resource();
-    $table = new htmlobject_table_builder('resource_id', '', '', '', 'select');
+	$table = new htmlobject_table_builder('resource_id', '', '', '', 'select');
 
 	$arHead = array();
 	$arHead['resource_state'] = array();
@@ -110,7 +112,7 @@ function sshterm_display() {
 	$resource_array = $resource_tmp->display_overview($table->offset, $table->limit, $table->sort, $table->order);
 
 	foreach ($resource_array as $index => $resource_db) {
-        $sshterm_login=false;
+		$sshterm_login=false;
 		// prepare the values for the array
 		$resource = new resource();
 		$resource->get_instance_by_id($resource_db["resource_id"]);
@@ -122,28 +124,28 @@ function sshterm_display() {
 		$swap = "$swap_used/$swap_total";
 		if ($resource->id == 0) {
 			$resource_icon_default="/openqrm/base/img/logo.png";
-	        $sshterm_login=true;
-    	} else {
+			$sshterm_login=true;
+		} else {
 			$resource_icon_default="/openqrm/base/img/resource.png";
 		}
 		$state_icon="/openqrm/base/img/$resource->state.png";
 		// idle ?
 		if (("$resource->imageid" == "1") && ("$resource->state" == "active")) {
 			$state_icon="/openqrm/base/img/idle.png";
-            $sshterm_login=false;
+			$sshterm_login=false;
 		}
-        if ("$resource->state" == "active") {
-	        $sshterm_login=true;
-        }
+		if ("$resource->state" == "active") {
+			$sshterm_login=true;
+		}
 		if (!file_exists($_SERVER["DOCUMENT_ROOT"]."/".$state_icon)) {
 			$state_icon="/openqrm/base/img/unknown.png";
 		}
 
-        $resource_action = "";
-        if ($sshterm_login) {
-            $resource_action .= "<input type=hidden name=\"sshterm_login_ip[$resource->id]\" value=\"$sshterm_login_ip\">";
-            $resource_action .= "<input type=\"image\" name=\"action\" value=\"login\" src=\"img/login.png\" alt=\"login\">";
-        }
+		$resource_action = "";
+		if ($sshterm_login) {
+			$resource_action .= "<input type=hidden name=\"sshterm_login_ip[$resource->id]\" value=\"$resource->ip\">";
+			$resource_action .= "<input type=\"image\" name=\"action\" value=\"login\" src=\"img/login.png\" alt=\"login\">";
+		}
 
 		$arBody[] = array(
 			'resource_state' => "<img src=$state_icon>",
@@ -170,12 +172,12 @@ function sshterm_display() {
 	}
 	$table->max = $resource_tmp->get_count('all');
 
-    // set template
+	// set template
 	$t = new Template_PHPLIB();
 	$t->debug = false;
 	$t->setFile('tplfile', './tpl/' . 'sshterm-manager.tpl.php');
 	$t->setVar(array(
-        'ssh_login_table' => $table->get_string(),
+		'ssh_login_table' => $table->get_string(),
 	));
 	$disp =  $t->parse('out', 'tplfile');
 	return $disp;
@@ -188,7 +190,7 @@ function sshterm_display() {
 $output = array();
 // only if admin
 if ($OPENQRM_USER->role == "administrator") {
-	$output[] = array('label' => 'SshTerm Manger', 'value' => sshterm_display());
+	$output[] = array('label' => 'SSH管理器', 'value' => sshterm_display());
 }
 
 

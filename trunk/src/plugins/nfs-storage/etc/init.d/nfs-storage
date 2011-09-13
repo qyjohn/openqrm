@@ -21,6 +21,7 @@
 OPENQRM_SERVER_BASE_DIR=$(pushd $(dirname $0)/../../../../.. > /dev/null; echo $PWD; popd > /dev/null)
 . $OPENQRM_SERVER_BASE_DIR/openqrm/include/openqrm-functions
 . $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/nfs-storage/include/openqrm-plugin-nfs-storage-functions
+. $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/nfs-storage/etc/openqrm-plugin-nfs-storage.conf
 
 # do not start on the intitrd
 if [ -f /etc/initrd-devices.conf ]; then
@@ -29,53 +30,65 @@ fi
 
 function nfs_storage_start() {
 	echo "Starting the openQRM nfs-storage-plugin"
-    if [ -x "/etc/init.d/nfs-kernel-server" ]; then
-        if [ -x "`which invoke-rc.d 2>/dev/null`" ]; then
-            invoke-rc.d nfs-kernel-server start
-        else
-            /etc/init.d/nfs-kernel-server start
-        fi
-    fi
-    if [ -x "/etc/init.d/nfs" ]; then
-        if [ -x "`which invoke-rc.d 2>/dev/null`" ]; then
-            invoke-rc.d nfs start
-        else
-            /etc/init.d/nfs start
-        fi
-    fi
-    if [ -x "/etc/init.d/nfslock" ]; then
-        if [ -x "`which invoke-rc.d 2>/dev/null`" ]; then
-            invoke-rc.d nfslock start
-        else
-            /etc/init.d/nfslock start
-        fi
-    fi
+	if [ "$NFS_STORAGE_AUTO_START" == "yes" ]; then
+		if [ -x "/etc/init.d/nfs-kernel-server" ]; then
+			if [ -x "`which invoke-rc.d 2>/dev/null`" ]; then
+				invoke-rc.d nfs-kernel-server start
+			else
+				/etc/init.d/nfs-kernel-server start
+			fi
+		fi
+		if [ -x "/etc/init.d/nfs" ]; then
+			if [ -x "`which invoke-rc.d 2>/dev/null`" ]; then
+				invoke-rc.d nfs start
+			else
+				/etc/init.d/nfs start
+			fi
+		fi
+		if [ -x "/etc/init.d/nfslock" ]; then
+			if [ -x "`which invoke-rc.d 2>/dev/null`" ]; then
+				invoke-rc.d nfslock start
+			else
+				/etc/init.d/nfslock start
+			fi
+		fi
+		# for Suse
+		if [ -x /etc/init.d/nfsserver ]; then
+			/etc/init.d/nfsserver start
+		fi
+	fi
 }
 
 
 function nfs_storage_stop() {
 	echo "Stopping the openQRM nfs-storage-plugin"
-    if [ -x "/etc/init.d/nfs-kernel-server" ]; then
-        if [ -x "`which invoke-rc.d 2>/dev/null`" ]; then
-            invoke-rc.d nfs-kernel-server stop
-        else
-            /etc/init.d/nfs-kernel-server stop
-        fi
-    fi
-    if [ -x "/etc/init.d/nfs" ]; then
-        if [ -x "`which invoke-rc.d 2>/dev/null`" ]; then
-            invoke-rc.d nfs stop
-        else
-            /etc/init.d/nfs stop
-        fi
-    fi
-    if [ -x "/etc/init.d/nfslock" ]; then
-        if [ -x "`which invoke-rc.d 2>/dev/null`" ]; then
-            invoke-rc.d nfslock stop
-        else
-            /etc/init.d/nfslock stop
-        fi
-    fi
+	if [ "$NFS_STORAGE_AUTO_START" == "yes" ]; then
+		if [ -x "/etc/init.d/nfs-kernel-server" ]; then
+			if [ -x "`which invoke-rc.d 2>/dev/null`" ]; then
+				invoke-rc.d nfs-kernel-server stop
+			else
+				/etc/init.d/nfs-kernel-server stop
+			fi
+		fi
+		if [ -x "/etc/init.d/nfs" ]; then
+			if [ -x "`which invoke-rc.d 2>/dev/null`" ]; then
+				invoke-rc.d nfs stop
+			else
+				/etc/init.d/nfs stop
+			fi
+		fi
+		if [ -x "/etc/init.d/nfslock" ]; then
+			if [ -x "`which invoke-rc.d 2>/dev/null`" ]; then
+				invoke-rc.d nfslock stop
+			else
+				/etc/init.d/nfslock stop
+			fi
+		fi
+		# for Suse
+		if [ -x /etc/init.d/nfsserver ]; then
+			/etc/init.d/nfsserver stop
+		fi
+	fi
 }
 
 
