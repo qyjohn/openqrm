@@ -20,10 +20,10 @@
     Copyright 2009, Matthias Rechenburg <matt@openqrm.com>
 */
 
-	$RootDir = $_SERVER["DOCUMENT_ROOT"].'/openqrm/base/';
-	require_once "$RootDir/include/openqrm-server-config.php";
-	require_once "$RootDir/include/openqrm-database-functions.php";
-	require_once "$RootDir/class/event.class.php";
+$RootDir = $_SERVER["DOCUMENT_ROOT"].'/openqrm/base/';
+require_once "$RootDir/include/openqrm-server-config.php";
+require_once "$RootDir/include/openqrm-database-functions.php";
+require_once "$RootDir/class/event.class.php";
 
 /**
  * This class represents a filesystem-image (rootfs) 
@@ -297,7 +297,7 @@ var $_event;
 		// remove from db
 		$db=openqrm_get_db_connection();
 		$rs = $db->Execute("delete from $this->_db_table where image_name='$image_name'");
-	
+
 	}
 
 	//--------------------------------------------------
@@ -334,7 +334,7 @@ var $_event;
 	*/
 	//--------------------------------------------------
 	function set_deployment_parameters($key, $value) {
-        $this->get_instance_by_id($this->id);
+		$this->get_instance_by_id($this->id);
 		$image_deployment_parameter = $this->deployment_parameter;
 		$key=trim($key);
 		if (strstr($image_deployment_parameter, $key)) {
@@ -344,7 +344,7 @@ var $_event;
 			$keystr="$key=\"";
 			$endmark="\"";
 			$cp3=str_replace($keystr, "", $cp2);
-            $endpos=strpos($cp3, $endmark);
+			$endpos=strpos($cp3, $endmark);
 			$cp=substr($cp3, 0, $endpos);
 			$new_image_deployment_parameter = str_replace("$key=\"$cp\"", "$key=\"$value\"", $image_deployment_parameter);
 		} else {
@@ -502,6 +502,33 @@ var $_event;
 	}
 
 
+	//--------------------------------------------------
+	/**
+	* get an array of all image ids on a storage
+	* <code>
+	* $image = new image();
+	* $arr = $image->get_ids_by_storage($storage_id);
+	* // $arr['value']
+	* </code>
+	* @access public
+	* @return array
+	*/
+	//--------------------------------------------------
+	function get_ids_by_storage($storage_id) {
+		$image_array = array();
+		$query = "select image_id from $this->_db_table where image_storageid=$storage_id";
+		$db=openqrm_get_db_connection();
+		$rs = $db->Execute($query);
+		if (!$rs)
+			$event->log("get_list", $_SERVER['REQUEST_TIME'], 2, "image.class.php", $db->ErrorMsg(), "", "", 0, 0, 0);
+		else
+		while (!$rs->EOF) {
+			$image_array[] = $rs->fields;
+			$rs->MoveNext();
+		}
+		return $image_array;
+	}
+
 
 
 	//--------------------------------------------------
@@ -558,7 +585,7 @@ var $_event;
 				$recordSet->MoveNext();
 			}
 			$recordSet->Close();
-		}		
+		}
 		return $image_array;
 	}
 
@@ -574,15 +601,15 @@ var $_event;
 		// start with a blank password
 		$password = "";
 		// define possible characters
-		$possible = "0123456789bcdfghjkmnpqrstvwxyz"; 
+		$possible = "0123456789bcdfghjkmnpqrstvwxyz";
 		// set up a counter
-		$i = 0; 
+		$i = 0;
 		// add random characters to $password until $length is reached
-		while ($i < $length) { 
+		while ($i < $length) {
 			// pick a random character from the possible ones
 			$char = substr($possible, mt_rand(0, strlen($possible)-1), 1);
 			// we don't want this character if it's already in the password
-			if (!strstr($password, $char)) { 
+			if (!strstr($password, $char)) {
 				$password .= $char;
 				$i++;
 			}

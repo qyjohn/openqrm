@@ -63,7 +63,7 @@ var $wrap = '';
 * @access public
 * @var string
 */
-var $text = '';
+var $value = '';
 
 	/**
 	 * init attribs
@@ -92,7 +92,7 @@ var $text = '';
 	$_strReturn = '';
 		$attribs = $this->get_attribs();
 		$_strReturn = "\n<textarea$attribs>";
-		$_strReturn .= $this->text;
+		$_strReturn .= $this->value;
 		$_strReturn .= "</textarea>\n";
 	return $_strReturn;
 	}

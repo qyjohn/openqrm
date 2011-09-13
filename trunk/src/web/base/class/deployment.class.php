@@ -329,7 +329,7 @@ var $_event;
 		foreach($ar_tmp as $val) {
 			$ar_Return[] = array('label' => $val, 'value' => $val);
 		}
-	
+
 		return $ar_Return;
 	}
 
@@ -347,7 +347,7 @@ var $_event;
 	*/
 	//--------------------------------------------------
 	function get_id_by_storagetype($type) {
-		$query = "select deployment_id from $this->_db_table where deployment_storagetype=\"$type\"";
+		$query = "select deployment_id, deployment_name from $this->_db_table where deployment_storagetype=\"$type\"";
 		$ar_Return = array();
 		$ar_Return = openqrm_db_get_result_double($query);
 		return $ar_Return;

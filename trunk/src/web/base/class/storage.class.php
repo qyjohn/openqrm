@@ -20,10 +20,10 @@
     Copyright 2009, Matthias Rechenburg <matt@openqrm.com>
 */
 
-	$RootDir = $_SERVER["DOCUMENT_ROOT"].'/openqrm/base/';
-	require_once "$RootDir/include/openqrm-database-functions.php";
-	require_once "$RootDir/class/deployment.class.php";
-	require_once "$RootDir/class/event.class.php";
+$RootDir = $_SERVER["DOCUMENT_ROOT"].'/openqrm/base/';
+require_once "$RootDir/include/openqrm-database-functions.php";
+require_once "$RootDir/class/deployment.class.php";
+require_once "$RootDir/class/event.class.php";
 
 /**
  * @package openQRM
@@ -331,7 +331,7 @@ var $_event;
 	}
 
 
-    //--------------------------------------------------
+	//--------------------------------------------------
 	/**
 	* get an array of all storage names
 	* <code>
@@ -350,6 +350,38 @@ var $_event;
 		$storage_name_array = openqrm_db_get_result_double ($query);
 		return $storage_name_array;
 	}
+
+
+
+	//--------------------------------------------------
+	/**
+	* get an array of all storage ids of a certain type
+	* <code>
+	* $storage = new storage();
+	* $arr = $storage->get_ids_by_storage_type($storage_type);
+	* // $arr[0]['value']
+	* // $arr[0]['label']
+	* </code>
+	* @access public
+	* @return array
+	*/
+	//--------------------------------------------------
+	function get_ids_by_storage_type($storage_type) {
+		$storage_array = array();
+		$query = "select storage_id from $this->_db_table where storage_type=$storage_type";
+		$db=openqrm_get_db_connection();
+		$rs = $db->Execute($query);
+		if (!$rs)
+			$this->_event->log("get_ids_by_storage_type", $_SERVER['REQUEST_TIME'], 2, "storage.class.php", $db->ErrorMsg(), "", "", 0, 0, 0);
+		else
+		while (!$rs->EOF) {
+			$storage_array[] = $rs->fields;
+			$rs->MoveNext();
+		}
+		return $storage_array;
+	}
+
+
 
 	//--------------------------------------------------
 	/**
@@ -391,7 +423,7 @@ var $_event;
 				$recordSet->MoveNext();
 			}
 			$recordSet->Close();
-		}		
+		}
 		return $storage_array;
 	}
 

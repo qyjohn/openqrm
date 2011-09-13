@@ -243,10 +243,10 @@ function add($resource_fields) {
 	foreach ($enabled_plugins as $index => $plugin_name) {
 		$plugin_new_resource_hook = "$RootDir/plugins/$plugin_name/openqrm-$plugin_name-resource-hook.php";
 		if (file_exists($plugin_new_resource_hook)) {
-			$event->log("check_all_states", $_SERVER['REQUEST_TIME'], 5, "resource.class.php", "Found plugin $plugin_name handling new-resource event.", "", "", 0, 0, $resource_id);
+			$event->log("check_all_states", $_SERVER['REQUEST_TIME'], 5, "resource.class.php", "Found plugin $plugin_name handling new-resource event.", "", "", 0, 0, $resource_fields["resource_id"]);
 			require_once "$plugin_new_resource_hook";
 			$resource_function="openqrm_"."$plugin_name"."_resource";
-            $resource_function=str_replace("-", "_", $resource_function);
+			$resource_function=str_replace("-", "_", $resource_function);
 			$resource_function("add", $resource_fields);
 		}
 	}
@@ -270,10 +270,11 @@ function remove($resource_id, $resource_mac) {
 		if (file_exists($plugin_new_resource_hook)) {
 			$event->log("check_all_states", $_SERVER['REQUEST_TIME'], 5, "resource.class.php", "Found plugin $plugin_name handling remove-resource event.", "", "", 0, 0, $resource_id);
 			require_once "$plugin_new_resource_hook";
-			$resource_fields["resource_id"]=$resource_id;
-			$resource_fields["resource_mac"]=$resource_mac;
+			$resource_fields = array();
+			$resource_fields = $this->get_fields($resource_id);
+			// run remove hook
 			$resource_function="openqrm_"."$plugin_name"."_resource";
-            $resource_function=str_replace("-", "_", $resource_function);
+			$resource_function=str_replace("-", "_", $resource_function);
 			$resource_function("remove", $resource_fields);
 		}
 	}
@@ -311,12 +312,17 @@ function get_parameter($resource_id) {
 	global $KERNEL_INFO_TABLE;
 	global $IMAGE_INFO_TABLE;
 	global $APPLIANCE_INFO_TABLE;
+	global $STORAGE_INFO_TABLE;
+	global $DEPLOYMENT_INFO_TABLE;
 	global $BootServiceDir;
 	global $event;
 	global $OPENQRM_EXECUTION_LAYER;
-    global $OPENQRM_WEB_PROTOCOL;
+	global $OPENQRM_WEB_PROTOCOL;
 	$db=openqrm_get_db_connection();
 	// resource parameter
+	if (!strlen($resource_id)) {
+		return;
+	}
 	$recordSet = &$db->Execute("select * from $RESOURCE_INFO_TABLE where resource_id=$resource_id");
 	if (!$recordSet)
 		$event->log("get_parameter", $_SERVER['REQUEST_TIME'], 2, "resource.class.php", $db->ErrorMsg(), "", "", 0, 0, 0);
@@ -349,7 +355,7 @@ function get_parameter($resource_id) {
 		$recordSet->MoveNext();
 	}
 	$recordSet->Close();
-	// storage parameter
+	// image storage parameter
 	if (strlen($image_storageid)) {
 		$storage = new storage();
 		$storage->get_instance_by_id($image_storageid);
@@ -367,23 +373,58 @@ function get_parameter($resource_id) {
 		echo "image_storage_server_ip=$image_storage_server_ip\n";
 	}
 	// appliance parameter
+	$appliance_virtualization = 0;
 	$recordSet = &$db->Execute("select * from $APPLIANCE_INFO_TABLE where appliance_resources=$resource_id and appliance_stoptime='0'");
 	if (!$recordSet)
 		$event->log("get_parameter", $_SERVER['REQUEST_TIME'], 2, "resource.class.php", $db->ErrorMsg(), "", "", 0, 0, 0);
 	else
 	while (!$recordSet->EOF) {
 		array_walk($recordSet->fields, 'print_array');
+		$appliance_virtualization = $recordSet->fields["appliance_virtualization"];
 		$recordSet->MoveNext();
 	}
 	$recordSet->Close();
+
+	// virtualization parameter
+	if ($appliance_virtualization > 0) {
+		$virtualization = new virtualization();
+		$virtualization->get_instance_by_id($appliance_virtualization);
+		echo "virtualization_type=\"$virtualization->type\"\n";
+		echo "virtualization_name=\"$virtualization->name\"\n";
+	}
+	// storage server parameter
+	if ($image_id<>1) {
+		$recordSet = &$db->Execute("select * from $STORAGE_INFO_TABLE where storage_resource_id=$resource_id");
+		if (!$recordSet)
+			$event->log("get_parameter", $_SERVER['REQUEST_TIME'], 2, "resource.class.php", $db->ErrorMsg(), "", "", 0, 0, 0);
+		else
+		while (!$recordSet->EOF) {
+			$storage_type = $recordSet->fields["storage_type"];
+			$recordSet1 = &$db->Execute("select deployment_storagetype from $DEPLOYMENT_INFO_TABLE where deployment_id=$storage_type");
+			if (!$recordSet1)
+				$event->log("get_parameter", $_SERVER['REQUEST_TIME'], 2, "resource.class.php", $db->ErrorMsg(), "", "", 0, 0, 0);
+			else
+			while (!$recordSet1->EOF) {
+				$deployment_storagetype = $recordSet1->fields["deployment_storagetype"];
+				echo "deployment_storagetype=$deployment_storagetype\n";
+				$recordSet1->MoveNext();
+			}
+			$recordSet1->Close();
+			$recordSet->MoveNext();
+		}
+		$recordSet->Close();
+	}
+
 	$db->Close();
 
-	// command executation layer
+	// command execution layer
 	echo "openqrm_execution_layer=\"$OPENQRM_EXECUTION_LAYER\"\n";
-    // openQRM server web protocol
-    echo "openqrm_web_protocol=\"$OPENQRM_WEB_PROTOCOL\"\n";
+	// openQRM server web protocol
+	echo "openqrm_web_protocol=\"$OPENQRM_WEB_PROTOCOL\"\n";
 
 	// plugin and bootservice list
+	$plugin_list = '';
+	$boot_service_list = '';
 	$plugin = new plugin();
 	$enabled_plugins = $plugin->enabled();
 	foreach ($enabled_plugins as $index => $plugin_name) {
@@ -410,7 +451,7 @@ function get_parameter($resource_id) {
 
 function get_parameter_array($resource_id) {
 	global $RESOURCE_INFO_TABLE;
-    $db = openqrm_get_db_connection();
+	$db = openqrm_get_db_connection();
 	$resource_array = $db->GetAll("select * from $RESOURCE_INFO_TABLE where resource_id=$resource_id");
 	return $resource_array;
 }
@@ -438,6 +479,9 @@ function update_info($resource_id, $resource_fields) {
 	global $event;
 	if (! is_array($resource_fields)) {
 		$event->log("update_info", $_SERVER['REQUEST_TIME'], 2, "resource.class.php", "Unable to update resource $resource_id", "", "", 0, 0, 0);
+		return 1;
+	}
+	if (!strlen($resource_id)) {
 		return 1;
 	}
 	$db=openqrm_get_db_connection();
@@ -510,7 +554,7 @@ function send_command($resource_ip, $resource_command) {
 	global $OPENQRM_EXECUTION_LAYER;
 	global $event;
 	global $RootDir;
-    // here we assume that we are the resource
+	// here we assume that we are the resource
 
 	// plugin hook in case a resource gets rebooted or halted
 	switch($resource_command) {
@@ -521,69 +565,71 @@ function send_command($resource_ip, $resource_command) {
 			foreach ($enabled_plugins as $index => $plugin_name) {
 				$plugin_start_resource_hook = "$RootDir/plugins/$plugin_name/openqrm-$plugin_name-resource-hook.php";
 				if (file_exists($plugin_start_resource_hook)) {
-					$event->log("start", $_SERVER['REQUEST_TIME'], 5, "resource.class.php", "Found plugin $plugin_name handling start-resource event.", "", "", 0, 0, $resource->id);
+					$event->log("start", $_SERVER['REQUEST_TIME'], 5, "resource.class.php", "Found plugin $plugin_name handling start-resource event.", "", "", 0, 0, $this->id);
 					// prepare resource_fields array
 					$resource_fields = array();
 					$resource_fields = $this->get_fields($this->id);
-					// include the plugin function file and run it						
+					// include the plugin function file and run it
 					require_once "$plugin_start_resource_hook";
 					$resource_function="openqrm_"."$plugin_name"."_resource";
-                    $resource_function=str_replace("-", "_", $resource_function);
+					$resource_function=str_replace("-", "_", $resource_function);
 					$resource_function("start", $resource_fields);
 				}
 			}
-            // here we check if the resource is virtual and if 
-            // the virtualization plugin wants to reboot it via the host
-            $virtualization = new virtualization();
-            $virtualization->get_instance_by_id($this->vtype);
-            $virtualization_plugin_name = str_replace("-vm", "", $virtualization->type);
-            $plugin_resource_virtual_command_hook_vm_type = "$RootDir/plugins/$virtualization_plugin_name/openqrm-$virtualization_plugin_name-resource-virtual-command-hook.php";
-            // we also give the deployment type a chance to implement virtual commands
-            if ($this->imageid != 1) {
-                $image = new image();
-                $image->get_instance_by_id($this->imageid);
-                $storage = new storage();
-                $storage->get_instance_by_id($image->storageid);
-                $deployment = new deployment();
-                $deployment->get_instance_by_id($storage->type);
-                $deployment_plugin_name = $deployment->storagetype;
-            }
-            $plugin_resource_virtual_command_hook_image_type = "$RootDir/plugins/$deployment_plugin_name/openqrm-$deployment_plugin_name-resource-virtual-command-hook.php";
-//            $plugin_resource_virtual_command_hook_image_type = "$RootDir/plugins/sanboot-storage/openqrm-sanboot-storage-resource-virtual-command-hook.php";
-            if (file_exists($plugin_resource_virtual_command_hook_vm_type)) {
-                $event->log("start", $_SERVER['REQUEST_TIME'], 5, "resource.class.php", "Found virtualization $virtualization_plugin_name managing virtual command.", "", "", 0, 0, $resource->id);
-                $plugin_resource_virtual_command_hook = $plugin_resource_virtual_command_hook_vm_type;
-            } else if (file_exists($plugin_resource_virtual_command_hook_image_type)) {
-                // check if IMAGE_VIRTUAL_RESOURCE_COMMAND=true
-                $event->log("start", $_SERVER['REQUEST_TIME'], 5, "resource.class.php", "Found deploymetn $deployment_plugin_name managing virtual command.", "", "", 0, 0, $resource->id);
-                $image = new image();
-                $image->get_instance_by_id($this->imageid);
-                $virtual_command_enabled = $image->get_deployment_parameter("IMAGE_VIRTUAL_RESOURCE_COMMAND");
-                if (!strcmp($virtual_command_enabled, "true")) {
-                    $event->log("start", $_SERVER['REQUEST_TIME'], 5, "resource.class.php", "Found IMAGE_VIRTUAL_RESOURCE_COMMAND enabled, using virtual command.", "", "", 0, 0, $resource->id);
-                    $plugin_resource_virtual_command_hook = $plugin_resource_virtual_command_hook_image_type;
-                    $virtualization_plugin_name="sanboot-storage";
-                } else {
-                    $event->log("start", $_SERVER['REQUEST_TIME'], 5, "resource.class.php", "Found IMAGE_VIRTUAL_RESOURCE_COMMAND disabled, using regular command.", "", "", 0, 0, $resource->id);
-                }
-            }
-            if (strlen($plugin_resource_virtual_command_hook)) {
-                $event->log("start", $_SERVER['REQUEST_TIME'], 5, "resource.class.php", "Found plugin $virtualization_plugin_name virtually handling the reboot command.", "", "", 0, 0, $resource->id);
-                // prepare resource_fields array
-                $resource_fields = array();
-                $resource_fields = $this->get_fields($this->id);
-                // include the plugin function file and run it
-                require_once "$plugin_resource_virtual_command_hook";
-                $resource_function="openqrm_"."$virtualization_plugin_name"."_resource_virtual_command";
-                $resource_function=str_replace("-", "_", $resource_function);
-                $resource_function("reboot", $resource_fields);
-                // the virtual reboot function can only be
-                // implemented by a single plugin depending on the
-                // resource type. So we return after that and
-                // do not try to reboot the resource via its ip
-                return;
-            }
-            break;
+			// here we check if the resource is virtual and if
+			// the virtualization plugin wants to reboot it via the host
+			$virtualization = new virtualization();
+			$virtualization->get_instance_by_id($this->vtype);
+			$virtualization_plugin_name = str_replace("-vm", "", $virtualization->type);
+			$plugin_resource_virtual_command_hook_vm_type = "$RootDir/plugins/$virtualization_plugin_name/openqrm-$virtualization_plugin_name-resource-virtual-command-hook.php";
+			// we also give the deployment type a chance to implement virtual commands
+			$deployment_plugin_name = '';
+			if ($this->imageid != 1) {
+				$image = new image();
+				$image->get_instance_by_id($this->imageid);
+				$storage = new storage();
+				$storage->get_instance_by_id($image->storageid);
+				$deployment = new deployment();
+				$deployment->get_instance_by_id($storage->type);
+				$deployment_plugin_name = $deployment->storagetype;
+			}
+			$plugin_resource_virtual_command_hook = '';
+			$plugin_resource_virtual_command_hook_image_type = "$RootDir/plugins/$deployment_plugin_name/openqrm-$deployment_plugin_name-resource-virtual-command-hook.php";
+	//            $plugin_resource_virtual_command_hook_image_type = "$RootDir/plugins/sanboot-storage/openqrm-sanboot-storage-resource-virtual-command-hook.php";
+			if (file_exists($plugin_resource_virtual_command_hook_vm_type)) {
+				$event->log("start", $_SERVER['REQUEST_TIME'], 5, "resource.class.php", "Found virtualization $virtualization_plugin_name managing virtual command.", "", "", 0, 0, $this->id);
+				$plugin_resource_virtual_command_hook = $plugin_resource_virtual_command_hook_vm_type;
+			} else if (file_exists($plugin_resource_virtual_command_hook_image_type)) {
+				// check if IMAGE_VIRTUAL_RESOURCE_COMMAND=true
+				$event->log("start", $_SERVER['REQUEST_TIME'], 5, "resource.class.php", "Found deploymetn $deployment_plugin_name managing virtual command.", "", "", 0, 0, $this->id);
+				$image = new image();
+				$image->get_instance_by_id($this->imageid);
+				$virtual_command_enabled = $image->get_deployment_parameter("IMAGE_VIRTUAL_RESOURCE_COMMAND");
+				if (!strcmp($virtual_command_enabled, "true")) {
+					$event->log("start", $_SERVER['REQUEST_TIME'], 5, "resource.class.php", "Found IMAGE_VIRTUAL_RESOURCE_COMMAND enabled, using virtual command.", "", "", 0, 0, $this->id);
+					$plugin_resource_virtual_command_hook = $plugin_resource_virtual_command_hook_image_type;
+					$virtualization_plugin_name="sanboot-storage";
+				} else {
+					$event->log("start", $_SERVER['REQUEST_TIME'], 5, "resource.class.php", "Found IMAGE_VIRTUAL_RESOURCE_COMMAND disabled, using regular command.", "", "", 0, 0, $this->id);
+				}
+			}
+			if (strlen($plugin_resource_virtual_command_hook)) {
+				$event->log("start", $_SERVER['REQUEST_TIME'], 5, "resource.class.php", "Found plugin $virtualization_plugin_name virtually handling the reboot command.", "", "", 0, 0, $this->id);
+				// prepare resource_fields array
+				$resource_fields = array();
+				$resource_fields = $this->get_fields($this->id);
+				// include the plugin function file and run it
+				require_once "$plugin_resource_virtual_command_hook";
+				$resource_function="openqrm_"."$virtualization_plugin_name"."_resource_virtual_command";
+				$resource_function=str_replace("-", "_", $resource_function);
+				$resource_function("reboot", $resource_fields);
+				// the virtual reboot function can only be
+				// implemented by a single plugin depending on the
+				// resource type. So we return after that and
+				// do not try to reboot the resource via its ip
+				return;
+			}
+			break;
 
 		case 'halt':
 			// stop hook
@@ -592,69 +638,69 @@ function send_command($resource_ip, $resource_command) {
 			foreach ($enabled_plugins as $index => $plugin_name) {
 				$plugin_start_resource_hook = "$RootDir/plugins/$plugin_name/openqrm-$plugin_name-resource-hook.php";
 				if (file_exists($plugin_start_resource_hook)) {
-					$event->log("stop", $_SERVER['REQUEST_TIME'], 5, "resource.class.php", "Found plugin $plugin_name handling start-resource event.", "", "", 0, 0, $resource->id);
+					$event->log("stop", $_SERVER['REQUEST_TIME'], 5, "resource.class.php", "Found plugin $plugin_name handling start-resource event.", "", "", 0, 0, $this->id);
 					// prepare resource_fields array
 					$resource_fields = array();
 					$resource_fields = $this->get_fields($this->id);
-					// include the plugin function file and run it						
+					// include the plugin function file and run it
 					require_once "$plugin_start_resource_hook";
 					$resource_function="openqrm_"."$plugin_name"."_resource";
-                    $resource_function=str_replace("-", "_", $resource_function);
+					$resource_function=str_replace("-", "_", $resource_function);
 					$resource_function("stop", $resource_fields);
 				}
 			}
-            // here we check if the resource is virtual and if
-            // the virtualization plugin wants to reboot it via the host
-            $virtualization = new virtualization();
-            $virtualization->get_instance_by_id($this->vtype);
-            $virtualization_plugin_name = str_replace("-vm", "", $virtualization->type);
-            $plugin_resource_virtual_command_hook_vm_type = "$RootDir/plugins/$virtualization_plugin_name/openqrm-$virtualization_plugin_name-resource-virtual-command-hook.php";
-            // we also give the deployment type a chance to implement virtual commands
-            if ($this->imageid != 1) {
-                $image = new image();
-                $image->get_instance_by_id($this->imageid);
-                $storage = new storage();
-                $storage->get_instance_by_id($image->storageid);
-                $deployment = new deployment();
-                $deployment->get_instance_by_id($storage->type);
-                $deployment_plugin_name = $deployment->storagetype;
-            }
-            $plugin_resource_virtual_command_hook_image_type = "$RootDir/plugins/$deployment_plugin_name/openqrm-$deployment_plugin_name-resource-virtual-command-hook.php";
-//            $plugin_resource_virtual_command_hook_image_type = "$RootDir/plugins/$virtualization_plugin_name/openqrm-$virtualization_plugin_name-resource-virtual-command-hook.php";
-            $plugin_resource_virtual_command_hook_image_type = "$RootDir/plugins/sanboot-storage/openqrm-sanboot-storage-resource-virtual-command-hook.php";
-            if (file_exists($plugin_resource_virtual_command_hook_vm_type)) {
-                $event->log("stop", $_SERVER['REQUEST_TIME'], 5, "resource.class.php", "Found virtualization $virtualization_plugin_name managing virtual command.", "", "", 0, 0, $resource->id);
-                $plugin_resource_virtual_command_hook = $plugin_resource_virtual_command_hook_vm_type;
-            } else if (file_exists($plugin_resource_virtual_command_hook_image_type)) {
-                // check if IMAGE_VIRTUAL_RESOURCE_COMMAND=true
-                $event->log("stop", $_SERVER['REQUEST_TIME'], 5, "resource.class.php", "Found deploymetn $deployment_plugin_name managing virtual command.", "", "", 0, 0, $resource->id);
-                $image = new image();
-                $image->get_instance_by_id($this->imageid);
-                $virtual_command_enabled = $image->get_deployment_parameter("IMAGE_VIRTUAL_RESOURCE_COMMAND");
-                if (!strcmp($virtual_command_enabled, "true")) {
-                    $event->log("stop", $_SERVER['REQUEST_TIME'], 5, "resource.class.php", "Found IMAGE_VIRTUAL_RESOURCE_COMMAND enabled, using virtual command.", "", "", 0, 0, $resource->id);
-                    $plugin_resource_virtual_command_hook = $plugin_resource_virtual_command_hook_image_type;
-                    $virtualization_plugin_name="sanboot-storage";
-                } else {
-                    $event->log("stop", $_SERVER['REQUEST_TIME'], 5, "resource.class.php", "Found IMAGE_VIRTUAL_RESOURCE_COMMAND disabled, using regular command.", "", "", 0, 0, $resource->id);
-                }
-            }
-            if (strlen($plugin_resource_virtual_command_hook)) {
-                $event->log("stop", $_SERVER['REQUEST_TIME'], 5, "resource.class.php", "Found plugin $virtualization_plugin_name virtually handling the reboot command.", "", "", 0, 0, $resource->id);
-                // prepare resource_fields array
-                $resource_fields = array();
-                $resource_fields = $this->get_fields($this->id);
-                // include the plugin function file and run it
-                require_once "$plugin_resource_virtual_command_hook";
-                $resource_function="openqrm_"."$virtualization_plugin_name"."_resource_virtual_command";
-                $resource_function=str_replace("-", "_", $resource_function);
-                $resource_function("halt", $resource_fields);
-                // the virtual halt function can only be
-                // implemented by a single plugin depending on the
-                // resource type. So we return after that and
-                // do not try to halt the resource via its ip
-                return;
-            }
+			// here we check if the resource is virtual and if
+			// the virtualization plugin wants to reboot it via the host
+			$virtualization = new virtualization();
+			$virtualization->get_instance_by_id($this->vtype);
+			$virtualization_plugin_name = str_replace("-vm", "", $virtualization->type);
+			$plugin_resource_virtual_command_hook_vm_type = "$RootDir/plugins/$virtualization_plugin_name/openqrm-$virtualization_plugin_name-resource-virtual-command-hook.php";
+			// we also give the deployment type a chance to implement virtual commands
+			$deployment_plugin_name = '';
+			if ($this->imageid != 1) {
+				$image = new image();
+				$image->get_instance_by_id($this->imageid);
+				$storage = new storage();
+				$storage->get_instance_by_id($image->storageid);
+				$deployment = new deployment();
+				$deployment->get_instance_by_id($storage->type);
+				$deployment_plugin_name = $deployment->storagetype;
+			}
+			$plugin_resource_virtual_command_hook = '';
+			$plugin_resource_virtual_command_hook_image_type = "$RootDir/plugins/$deployment_plugin_name/openqrm-$deployment_plugin_name-resource-virtual-command-hook.php";
+			if (file_exists($plugin_resource_virtual_command_hook_vm_type)) {
+				$event->log("stop", $_SERVER['REQUEST_TIME'], 5, "resource.class.php", "Found virtualization $virtualization_plugin_name managing virtual command.", "", "", 0, 0, $this->id);
+				$plugin_resource_virtual_command_hook = $plugin_resource_virtual_command_hook_vm_type;
+			} else if (file_exists($plugin_resource_virtual_command_hook_image_type)) {
+				// check if IMAGE_VIRTUAL_RESOURCE_COMMAND=true
+				$event->log("stop", $_SERVER['REQUEST_TIME'], 5, "resource.class.php", "Found deploymetn $deployment_plugin_name managing virtual command.", "", "", 0, 0, $this->id);
+				$image = new image();
+				$image->get_instance_by_id($this->imageid);
+				$virtual_command_enabled = $image->get_deployment_parameter("IMAGE_VIRTUAL_RESOURCE_COMMAND");
+				if (!strcmp($virtual_command_enabled, "true")) {
+					$event->log("stop", $_SERVER['REQUEST_TIME'], 5, "resource.class.php", "Found IMAGE_VIRTUAL_RESOURCE_COMMAND enabled, using virtual command.", "", "", 0, 0, $this->id);
+					$plugin_resource_virtual_command_hook = $plugin_resource_virtual_command_hook_image_type;
+					$virtualization_plugin_name="sanboot-storage";
+				} else {
+					$event->log("stop", $_SERVER['REQUEST_TIME'], 5, "resource.class.php", "Found IMAGE_VIRTUAL_RESOURCE_COMMAND disabled, using regular command.", "", "", 0, 0, $this->id);
+				}
+			}
+			if (strlen($plugin_resource_virtual_command_hook)) {
+				$event->log("stop", $_SERVER['REQUEST_TIME'], 5, "resource.class.php", "Found plugin $virtualization_plugin_name virtually handling the reboot command.", "", "", 0, 0, $this->id);
+				// prepare resource_fields array
+				$resource_fields = array();
+				$resource_fields = $this->get_fields($this->id);
+				// include the plugin function file and run it
+				require_once "$plugin_resource_virtual_command_hook";
+				$resource_function="openqrm_"."$virtualization_plugin_name"."_resource_virtual_command";
+				$resource_function=str_replace("-", "_", $resource_function);
+				$resource_function("halt", $resource_fields);
+				// the virtual halt function can only be
+				// implemented by a single plugin depending on the
+				// resource type. So we return after that and
+				// do not try to halt the resource via its ip
+				return;
+			}
 			break;
 	}
 
@@ -684,6 +730,68 @@ function send_command($resource_ip, $resource_command) {
 
 
 
+//--------------------------------------------------
+/**
+* set the capabilities of a resource
+* @access public
+* @param string $key
+* @param string $value
+*/
+//--------------------------------------------------
+function set_resource_capabilities($key, $value) {
+	$this->get_instance_by_id($this->id);
+	$resource_capabilites_parameter = $this->capabilities;
+	$key=trim($key);
+	if (strstr($resource_capabilites_parameter, $key)) {
+		// change
+		$cp1=trim($resource_capabilites_parameter);
+		$cp2 = strstr($cp1, $key);
+		$keystr="$key=\"";
+		$endmark="\"";
+		$cp3=str_replace($keystr, "", $cp2);
+		$endpos=strpos($cp3, $endmark);
+		$cp=substr($cp3, 0, $endpos);
+		$new_resource_capabilites_parameter = str_replace("$key=\"$cp\"", "$key=\"$value\"", $resource_capabilites_parameter);
+	} else {
+		// add
+		$new_resource_capabilites_parameter = "$resource_capabilites_parameter $key=\"$value\"";
+	}
+	$resource_fields=array();
+	$resource_fields["resource_capabilities"]="$new_resource_capabilites_parameter";
+	$this->update_info($this->id, $resource_fields);
+}
+
+
+
+//--------------------------------------------------
+/**
+* gets a deployment parameter of an image
+* @access public
+* @param string $key
+* @return string $value
+*/
+//--------------------------------------------------
+function get_resource_capabilities($key) {
+	$resource_capabilites_parameter = $this->capabilities;
+	$key=trim($key);
+	if (strstr($resource_capabilites_parameter, $key)) {
+		// change
+		$cp1=trim($resource_capabilites_parameter);
+		$cp2 = strstr($cp1, $key);
+		$keystr="$key=\"";
+		$endmark="\"";
+		$cp3=str_replace($keystr, "", $cp2);
+		$endpos=strpos($cp3, $endmark);
+		$cp=substr($cp3, 0, $endpos);
+		return $cp;
+	} else {
+		return "";
+	}
+}
+
+
+
+
 
 
 // returns the number of managed resource
@@ -693,7 +801,7 @@ function get_count($which) {
 	$count = 0;
 	$db=openqrm_get_db_connection();
 
-    $sql = "select count(resource_id) as num from $RESOURCE_INFO_TABLE where resource_id!=0";
+	$sql = "select count(resource_id) as num from $RESOURCE_INFO_TABLE where resource_id!=0";
 	switch($which) {
 		case 'all':
 			break;
@@ -745,6 +853,14 @@ function check_all_states() {
 		$resource_lastgood=$rs->fields['resource_lastgood'];
 		$resource_state=$rs->fields['resource_state'];
 		$check_time=$_SERVER['REQUEST_TIME'];
+		// get the HA-timeout per resource from the capabilites
+		$custom_resource_ha_timeout="";
+		$resource_hat = new resource();
+		$resource_hat->get_instance_by_id($resource_id);
+		$custom_resource_ha_timeout = $resource_hat->get_resource_capabilities("HAT");
+		if (strlen($custom_resource_ha_timeout)) {
+			$RESOURCE_TIME_OUT = $custom_resource_ha_timeout;
+		}
 
 		// resolve errors for all active resources
 		if (("$resource_state" == "active") && ($resource_id != 0)) {
@@ -803,7 +919,7 @@ function display_idle_overview($offset, $limit, $sort, $order) {
 			$recordSet->MoveNext();
 		}
 		$recordSet->Close();
-	}		
+	}
 	return $resource_array;
 }
 

@@ -95,22 +95,22 @@ var $arr_table = array();
 	}
 
 	function get_string() {
-	$_strReturn = '';
+	$_str = '';
 		$attribs = $this->get_attribs();
-		$_strReturn = "\n<table$attribs>";
+		$_str = "\n<table$attribs>";
 		foreach($this->arr_table as $tr) {
-			if(is_object($tr) == true && get_class($tr) == 'htmlobject_tr') {
-				$_strReturn .= $tr->get_string();
+			if(is_object($tr) == true && $tr instanceof htmlobject_tr) {
+				$_str .= $tr->get_string();
 			}
 			elseif(is_string($tr) == true) {
-				$_strReturn .= $tr;
+				$_str .= $tr;
 			}
 			else {
-				$_strReturn .= 'tr type not defined';
+				$_str .= 'tr type not defined';
 			}
 		}
-		$_strReturn .= "</table>\n";
-	return $_strReturn;
+		$_str .= "</table>\n";
+	return $_str;
 	}
 
 	function add($tr) {

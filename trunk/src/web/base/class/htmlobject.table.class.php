@@ -111,7 +111,7 @@ var $arr_table = array();
 	}
 
 	function get_string() {
-	$_strReturn = '';
+		$_strReturn = '';
 		$this->init();
 		$_strReturn = "\n<table$this->_init>";
 		foreach($this->arr_table as $tr) {
@@ -120,18 +120,18 @@ var $arr_table = array();
 			}
 			elseif(is_string($tr) == true) {
 				$_strReturn .= $tr;
-			}			
+			}
 			else {
 				$_strReturn .= 'tr type not defined';
-			}			
+			}
 		}
 		$_strReturn .= "</table>\n";
-	return $_strReturn;
+		return $_strReturn;
 	}
-	
+
 	function add($tr) {
 		$this->arr_table[] = $tr;
-	}	
+	}
 	
 }
 
@@ -158,7 +158,7 @@ var $arr_tr = array();
 
 
 	function get_string() {
-	$_strReturn = '';
+		$_strReturn = '';
 		$this->init();
 		$_strReturn = "\n<tr$this->_init>";
 		foreach($this->arr_tr as $td) {
@@ -173,13 +173,13 @@ var $arr_tr = array();
 			}
 		}
 		$_strReturn .= "</tr>\n";
-	return $_strReturn;
+		return $_strReturn;
 	}
-	
+
 	function add($td) {
 		$this->arr_tr[] = $td;
-	}	
-	
+	}
+
 }
 
 //----------------------------------------------------------------------------------------
@@ -222,12 +222,12 @@ var $text = '';
 	}
 
 	function get_string() {
-	$_strReturn = '';
+		$_strReturn = '';
 		$this->init();
 		$_strReturn = "\n<$this->type$this->_init>";
 		$_strReturn .= $this->text;
 		$_strReturn .= "</$this->type>";
-	return $_strReturn;
+		return $_strReturn;
 	}
 }
 
@@ -431,55 +431,55 @@ var $autosort = false;
 * @access public
 * @var string
 */
-var $lang_button_refresh = 'refresh';
+var $lang_button_refresh = '刷新';
 /**
 * label for sort select
 * @access public
 * @var string
 */
-var $lang_label_sort = 'order by';
+var $lang_label_sort = '排序';
 /**
 * label for offset input
 * @access public
 * @var string
 */
-var $lang_label_offset = 'offset';
+var $lang_label_offset = '起始条目';
 /**
 * label for limit select
 * @access public
 * @var string
 */
-var $lang_label_limit = 'limit';
+var $lang_label_limit = '显示条目';
 /**
 * text for nolimit option
 * @access public
 * @var string
 */
-var $lang_option_nolimit = 'none';
+var $lang_option_nolimit = '无限制';
 /**
 * Title for identifier Select function
 * @access public
 * @var string
 */
-var $lang_select_title = 'Select:';
+var $lang_select_title = '选取：';
 /**
 * identifier Select function (all)
 * @access public
 * @var string
 */
-var $lang_select_all = 'all';
+var $lang_select_all = '全部选中';
 /**
 * identifier Select function (none)
 * @access public
 * @var string
 */
-var $lang_select_none = 'none';
+var $lang_select_none = '全部不选';
 /**
 * identifier Select function (none)
 * @access public
 * @var string
 */
-var $lang_select_invert = 'inverted';
+var $lang_select_invert = '逆向选择';
 
 /**
 *  ------------------------------------------------------------- Private Section
@@ -529,12 +529,12 @@ var $_var_prefix;
 	//----------------------------------------------------------------------------------------
 	function htmlobject_table_builder($sort = '', $orderr = '', $limit = '', $offset = '', $var_prefix = 'table_') {
 
-		$this->_var_prefix = $var_prefix;		
-	
+		$this->_var_prefix = $var_prefix;
+
 		// filter request - remove all none digits
 		$replace_tmp = $this->request_filter;
-		$this->request_filter = array(array('pattern' => '~[^0-9]~', 'replace' => '')); 
-		
+		$this->request_filter = array(array('pattern' => '~[^0-9]~', 'replace' => ''));
+
 		if($this->get_request($this->_var_prefix.'limit') != '') {
 			$this->limit = $this->get_request($this->_var_prefix.'limit');
 		}
@@ -546,21 +546,21 @@ var $_var_prefix;
 		}
 		if($this->get_request($this->_var_prefix.'offset') != '') {
 			$this->offset = $this->get_request($this->_var_prefix.'offset');
-		} 
+		}
 		else if ($offset != '') {
 			$this->offset = $offset;
 		}
-		
+
 		// reset request filter
-		$this->request_filter = $replace_tmp;		
-		
+		$this->request_filter = $replace_tmp;
+
 		if($this->get_request($this->_var_prefix.'order') != '') {
 			$this->order = $this->get_request($this->_var_prefix.'order');
 		} else if($orderr != '') {
 			$this->order = $orderr;
-        } else {
-            $this->order = $this->dorder;
-        }
+		} else {
+			$this->order = $this->dorder;
+		}
 		if($this->get_request($this->_var_prefix.'sort') != '') {
 			$this->sort = $this->get_request($this->_var_prefix.'sort');
 		}
@@ -569,14 +569,14 @@ var $_var_prefix;
 		}
 
 		//------------------------------------------------------------------- set new offset
-		if($this->get_request($this->_var_prefix.'action') != '') {		
-		    switch ($this->get_request($this->_var_prefix.'action')) {
-			    case '<': $this->offset = $this->offset - $this->limit; break;
-			    case '<<': $this->offset = 0; break;
-			    case '>': $this->offset = $this->offset + $this->limit; break;
-			    case '>>': $this->offset = $this->max - $this->limit; break;
-			    case $this->lang_button_refresh: break;
-		    }
+		if($this->get_request($this->_var_prefix.'action') != '') {
+			switch ($this->get_request($this->_var_prefix.'action')) {
+				case '<': $this->offset = $this->offset - $this->limit; break;
+				case '<<': $this->offset = 0; break;
+				case '>': $this->offset = $this->offset + $this->limit; break;
+				case '>>': $this->offset = $this->max - $this->limit; break;
+				case $this->lang_button_refresh: break;
+			}
 		}
 		//------------------------------------------- check offset
 		if($this->offset >= $this->max ) {
@@ -586,15 +586,15 @@ var $_var_prefix;
 			$this->offset = 0;
 		}
 	}
-	
+
 	//----------------------------------------------------------------------------------------
 	/**
 	* init basic values _body, _num_cols
 	* @access public
 	*/
-	//----------------------------------------------------------------------------------------	
+	//----------------------------------------------------------------------------------------
 	function init_table_builder() {
-	
+
 		$minus = 0;
 		// Execute head array special key values
 		foreach($this->head as $key => $value) {
@@ -607,7 +607,7 @@ var $_var_prefix;
 		}
 		$this->_num_cols = count($this->head) - $minus;
 		if($this->identifier != '') { $this->_num_cols = $this->_num_cols +1; }
-		
+
 		// Sortfunction eabled?
 		if($this->sort != '') {
 			// use autosort ?
@@ -617,10 +617,10 @@ var $_var_prefix;
 			// Input bigger than Output?
 			if(count($this->body) > $this->limit && $this->limit != 0) {
 				// max smaller than  limit + offset?
-				if(($this->offset + $this->limit) < $this->max ) {			
+				if(($this->offset + $this->limit) < $this->max ) {
 					$max = $this->offset + $this->limit;
 				} else { $max = $this->max;	}
-				// Transfer Input to Output				
+				// Transfer Input to Output
 				for($i = $this->offset; $i < $max; $i++) {
 					$this->_body[$i] = $this->body[$i];
 				}
@@ -632,7 +632,7 @@ var $_var_prefix;
 	* sorts array [body] by key [sort]
 	* @access public
 	*/
-	//----------------------------------------------------------------------------------------	
+	//----------------------------------------------------------------------------------------
 	function arr_sort() {
 		if($this->order != '') {
 			if($this->order == 'ASC') $sort_order = SORT_ASC;
@@ -652,9 +652,9 @@ var $_var_prefix;
 	* @access public
 	* @return object|string htmlobject_tr or empty string
 	*/
-	//----------------------------------------------------------------------------------------	
+	//----------------------------------------------------------------------------------------
 	function get_table_head() {
-	$tr = '';
+		$tr = '';
 		if(count($this->head) > 0) {
 			$tr = new htmlobject_tr();
 			$tr->css = $this->css_prefix.'tr';
@@ -668,17 +668,17 @@ var $_var_prefix;
 						$hidden = true;
 					}
 				}
-				
+
 				$sortable = true;
 				if(@array_key_exists('sortable', $this->head[$key_2]) == true) {
 					if($this->head[$key_2]['sortable'] === false) {
 						$sortable = false;
 					}
 				}
-				
+
 				if($hidden === false) {
-					if($value['title'] == '') { 
-						$str = '&#160;'; 
+					if($value['title'] == '') {
+						$str = '&#160;';
 					} else {
 						if($this->sort != '' && $sortable ===  true && isset($this->sort_params)) {
 							$order_param = '';
@@ -693,7 +693,7 @@ var $_var_prefix;
 							}
 							$str = '<a href="?'.$this->_var_prefix.'sort='.$key_2.$this->sort_params.$order_param.'"'.$linkclass.'>'.$value['title'].'</a>';
 						} else {
-							$str = $value['title'];		
+							$str = $value['title'];
 						}
 					}
 					$td = new htmlobject_td();
@@ -711,23 +711,23 @@ var $_var_prefix;
 				$tr->add($td);
 			}
 		}
-	return $tr;
+		return $tr;
 	}
 	//----------------------------------------------------------------------------------------
 	/**
 	* adds one row to table body
 	* @access public
-	* @param array $val 
+	* @param array $val
 	* @return object|string htmlobject_tr or empty string
 	*/
-	//----------------------------------------------------------------------------------------		
+	//----------------------------------------------------------------------------------------
 	function get_table_body($key, $val, $i) {
 		$ident = 'id'. uniqid();
-		
+
 		$tr = new htmlobject_tr();
 		$tr->css = $this->css_prefix.'tr ' .$i;
 		$tr->id = 'tr_'. uniqid();
-		$tr->handler = $this->get_js_tr($ident);		
+		$tr->handler = $this->get_js_tr($ident);
 
 		foreach($val as $key_2 => $v) {
 			if($v == '') { $v = '&#160;'; }
@@ -740,7 +740,7 @@ var $_var_prefix;
 						$hidden = true;
 					}
 				}
-					
+
 				if($hidden === false) {
 					$td = new htmlobject_td();
 					$td->type = 'td';
@@ -761,14 +761,14 @@ var $_var_prefix;
 	* @access public
 	* @return object|string htmlobject_tr or empty string
 	*/
-	//----------------------------------------------------------------------------------------	
+	//----------------------------------------------------------------------------------------
 	function get_table_bottom () {
-	$tr = '';
+		$tr = '';
 		if(isset($this->bottom[0]) && isset($this->body[0])) {
 			$tr = new htmlobject_tr();
 			$tr->css = $this->css_prefix.'tr';
 			$tr->id = 'tr_'. uniqid();
-		
+
 			$td = new htmlobject_td();
 			$td->colspan = $this->_num_cols;
 			$td->type = 'td';
@@ -783,9 +783,9 @@ var $_var_prefix;
 			}
 			$str .= '</div>';
 			$td->text = $this->get_select().''.$str.'<div style="line-height:0px;clear:both;">&#160;</div>';
-			$tr->add($td);	
+			$tr->add($td);
 		}
-	return $tr;	
+		return $tr;
 	}
 	//----------------------------------------------------------------------------------------
 	/**
@@ -795,18 +795,18 @@ var $_var_prefix;
 	*/
 	//----------------------------------------------------------------------------------------
 	function add_headrow($str = '') {
-			$tr = new htmlobject_tr();
-			$tr->css = $this->css_prefix.'tr';
-			$tr->id = 'tr_'. uniqid();
-		
-			$td = new htmlobject_td();
-			$td->colspan = $this->_num_cols;
-			$td->type = 'td';
-			$td->css = $this->css_prefix.'td head';
-			$td->text = $str;
-			$tr->add($td);	
+		$tr = new htmlobject_tr();
+		$tr->css = $this->css_prefix.'tr';
+		$tr->id = 'tr_'. uniqid();
 
-	$this->_headrow[] = $tr;	
+		$td = new htmlobject_td();
+		$td->colspan = $this->_num_cols;
+		$td->type = 'td';
+		$td->css = $this->css_prefix.'td head';
+		$td->text = $str;
+		$tr->add($td);
+
+		$this->_headrow[] = $tr;
 	}
 	//----------------------------------------------------------------------------------------
 	/**
@@ -816,18 +816,18 @@ var $_var_prefix;
 	*/
 	//----------------------------------------------------------------------------------------
 	function add_bottomrow($str = '') {
-			$tr = new htmlobject_tr();
-			$tr->css = $this->css_prefix.'tr';
-			$tr->id = 'tr_'. uniqid();
-		
-			$td = new htmlobject_td();
-			$td->colspan = $this->_num_cols;
-			$td->type = 'td';
-			$td->css = $this->css_prefix.'td head';
-			$td->text = $str;
-			$tr->add($td);	
+		$tr = new htmlobject_tr();
+		$tr->css = $this->css_prefix.'tr';
+		$tr->id = 'tr_'. uniqid();
 
-	$this->_bottomrow[] = $tr;	
+		$td = new htmlobject_td();
+		$td->colspan = $this->_num_cols;
+		$td->type = 'td';
+		$td->css = $this->css_prefix.'td head';
+		$td->text = $str;
+		$tr->add($td);
+
+		$this->_bottomrow[] = $tr;
 	}
 	//----------------------------------------------------------------------------------------
 	/**
@@ -837,12 +837,12 @@ var $_var_prefix;
 	*/
 	//----------------------------------------------------------------------------------------
 	function get_sort() {
-	$strR = '';
+		$strR = '';
 		if($this->sort != '') {
 			foreach($this->head as $key_2 => $v) {
 				if(isset($v['sortable']) == false) {
 					$v['sortable'] = true;
-				} 
+				}
 				if($v['sortable'] == true) {
 					$value[] = array("value" => $key_2, "label" => $v['title']);
 				}
@@ -854,12 +854,12 @@ var $_var_prefix;
 			$sort->text = $value;
 			$sort->selected = array($this->sort);
 			$str_sort = '<label for="'.$sort->id.'">'.$this->lang_label_sort.$sort->get_string().'</label>';
-			
+
 			$order = new htmlobject_select();
 			$order->id = 'p'.uniqid();
 			$order->name = $this->_var_prefix.'order';
 			$order->text_index = array("value" => "value", "text" => "text");
-			$order->text = array(array("value" => "ASC", "text" => "ASC"),array("value" => "DESC", "text" => "DESC"));
+			$order->text = array(array("value" => "ASC", "text" => "升序"),array("value" => "DESC", "text" => "降序"));
 			$order->selected = array($this->order);
 			$str_order = $order->get_string();
 
@@ -880,7 +880,7 @@ var $_var_prefix;
 			$limit_input->text = $this->limit_select;
 			$limit_input->selected = array($this->limit);
 			$str_limit = '<label for="'.$limit_input->id.'">'.$this->lang_label_limit.$limit_input->get_string().'</label>';
-			
+
 			$offset_input = new htmlobject_input();
 			$offset_input->id = 'p'.uniqid();
 			$offset_input->name = $this->_var_prefix.'offset';
@@ -888,17 +888,17 @@ var $_var_prefix;
 			$offset_input->type = 'text';
 			$offset_input->size = 3;
 			$str_offset = '<label for="'.$offset_input->id.'">'.$this->lang_label_offset.$offset_input->get_string().'</label>';
-			
+
 			$max_input = new htmlobject_input();
 			$max_input->name = $this->_var_prefix.'max';
 			$max_input->value = $this->max;
 			$max_input->type = 'hidden';
-			
+
 			$action = new htmlobject_input();
 			$action->name =  $this->_var_prefix.'action';
 			$action->value = $this->lang_button_refresh;
 			$action->type = 'submit';
-			
+
 			$strR = '<div class="sort_box">';
 			$strR .= $max_input->get_string().
 						$str_sort.
@@ -909,7 +909,7 @@ var $_var_prefix;
 			$strR .= '<div style="line-height:0px;clear:both;">&#160;</div>';
 			$strR .= '</div>';
 		}
-	return $strR;
+		return $strR;
 	}
 	//----------------------------------------------------------------------------------------
 	/**
@@ -919,20 +919,20 @@ var $_var_prefix;
 	*/
 	//----------------------------------------------------------------------------------------
 	function get_pageturn() {
-	$strR = '';
+		$strR = '';
 		if($this->sort != '') {
 			#$this->init_table_builder();
-			
+
 			$first = new htmlobject_input();
 			$first->name =  $this->_var_prefix.'action';
 			$first->value = '<<';
 			$first->type = 'submit';
-			
+
 			$prev = new htmlobject_input();
 			$prev->name =  $this->_var_prefix.'action';
 			$prev->value = '<';
 			$prev->type = 'submit';
-						
+
 			$next = new htmlobject_input();
 			$next->name =  $this->_var_prefix.'action';
 			$next->value = '>';
@@ -942,9 +942,9 @@ var $_var_prefix;
 			$last->name =  $this->_var_prefix.'action';
 			$last->value = '>>';
 			$last->type = 'submit';
-			
+
 			if($this->limit == 0) { $this->limit = $this->max; }
-			
+
 			if(( $this->offset + $this->limit ) >= $this->max) {
 				$next->style = 'visibility:hidden;';
 				$last->style = 'visibility:hidden;';
@@ -953,7 +953,7 @@ var $_var_prefix;
 				$first->style = 'visibility:hidden;';
 				$prev->style = 'visibility:hidden;';
 			}
-			
+
 			if(($this->offset + $this->limit) < $this->max ) {
 				$max = $this->offset + $this->limit;
 			} else {
@@ -964,7 +964,7 @@ var $_var_prefix;
 			$strR .= '<table class="pageturn_table" cellpadding="0" cellspacing="0"></tr>';
 			$strR .= '  <td class="pageturn_left">'.$first->get_string().$prev->get_string().'</td>';
 			$strR .= '  <td class="pageturn_middle">';
-			$strR .= '    <span>'.( $this->offset + 1 ).'</span> - '; 
+			$strR .= '    <span>'.( $this->offset + 1 ).'</span> - ';
 			$strR .= '    <span>'.$max.'</span> / ';
 			$strR .= '    <span>'.$this->max.'</span>';
 			$strR .= '  </td>';
@@ -972,17 +972,17 @@ var $_var_prefix;
 			$strR .= '</tr></table>';
 			$strR .= '</div>';
 		}
-	return $strR;
-	}	
+		return $strR;
+	}
 	//----------------------------------------------------------------------------------------
 	/**
-	* returns identifier multi select functions 
+	* returns identifier multi select functions
 	* @access public
 	* @return string
 	*/
 	//----------------------------------------------------------------------------------------
 	function get_select() {
-	$strR = '';
+		$strR = '';
 		if($this->identifier_type == 'checkbox' && $this->identifier != '') {
 			$strR .= '<div class="selecttable" id="'.$this->_var_prefix.'SelectTable" style="display:none;">';
 			$strR .= $this->lang_select_title;
@@ -994,18 +994,18 @@ var $_var_prefix;
 			$strR .= 'function selectident(arg) {'."\n";
 			$strR .= '  if(arg == "all") {'."\n";
 			$strR .= '    for(i = 0; i < document.getElementsByName("'.$this->identifier_name.'[]").length; i++)  {'."\n";
-			$strR .= '      document.getElementsByName("'.$this->identifier_name.'[]")[i].checked = true;'."\n";			
-			$strR .= '    }'."\n";			
+			$strR .= '      document.getElementsByName("'.$this->identifier_name.'[]")[i].checked = true;'."\n";
+			$strR .= '    }'."\n";
 			$strR .= '  }'."\n";
 			$strR .= '  if(arg == "none") {'."\n";
 			$strR .= '    for(i = 0; i < document.getElementsByName("'.$this->identifier_name.'[]").length; i++)  {'."\n";
-			$strR .= '      document.getElementsByName("'.$this->identifier_name.'[]")[i].checked = false;'."\n";			
-			$strR .= '    }'."\n";			
+			$strR .= '      document.getElementsByName("'.$this->identifier_name.'[]")[i].checked = false;'."\n";
+			$strR .= '    }'."\n";
 			$strR .= '  }'."\n";
 			$strR .= '  if(arg == "invert") {'."\n";
 			$strR .= '    for(i = 0; i < document.getElementsByName("'.$this->identifier_name.'[]").length; i++)  {'."\n";
 			$strR .= '      if(document.getElementsByName("'.$this->identifier_name.'[]")[i].checked == false) {'."\n";
-			$strR .= '        document.getElementsByName("'.$this->identifier_name.'[]")[i].checked = true;'."\n";			
+			$strR .= '        document.getElementsByName("'.$this->identifier_name.'[]")[i].checked = true;'."\n";
 			$strR .= '      } else {'."\n";
 			$strR .= '        document.getElementsByName("'.$this->identifier_name.'[]")[i].checked = false;'."\n";
 			$strR .= '      }'."\n";
@@ -1015,7 +1015,7 @@ var $_var_prefix;
 			$strR .= '</script>'."\n";
 			$strR .= '</div>'."\n";
 		}
-	return $strR;
+		return $strR;
 	}
 	//----------------------------------------------------------------------------------------
 	/**
@@ -1024,9 +1024,9 @@ var $_var_prefix;
 	* @param  $ident string
 	* @return object|string
 	*/
-	//----------------------------------------------------------------------------------------		
+	//----------------------------------------------------------------------------------------
 	function get_indentifier($key, $ident) {
-	$td = '';
+		$td = '';
 		if($this->identifier != '') {
 			$html = new htmlobject_input();
 			$html->id = $ident;
@@ -1040,13 +1040,13 @@ var $_var_prefix;
 				$html = new htmlobject_div();
 				$html->text = '&#160;';
 			}
-					
+
 			$td = new htmlobject_td();
 			$td->type = 'td';
 			$td->css = $this->css_prefix.'td '.$this->identifier_name;
 			$td->text = $html->get_string();
 		}
-	return $td;
+		return $td;
 	}
 	//----------------------------------------------------------------------------------------
 	/**
@@ -1054,9 +1054,9 @@ var $_var_prefix;
 	* @access public
 	* @return string
 	*/
-	//----------------------------------------------------------------------------------------	
+	//----------------------------------------------------------------------------------------
 	function  get_js() {
-	$_strReturn = '';
+		$_strReturn = '';
 		$id_1 = '';
 		$id_2 = '';
 		if($this->identifier != '') {
@@ -1072,13 +1072,13 @@ var $_var_prefix;
 		$_strReturn .= '}'."\n";
 		$_strReturn .= 'function tr_click(element, arg) {'."\n";
 		$_strReturn .= '	x = element.className.match(/tr_click/g);'."\n";
-		$_strReturn .= '	if(x == null) {	element.className = element.className + " tr_click";'; 
+		$_strReturn .= '	if(x == null) {	element.className = element.className + " tr_click";';
 		$_strReturn .= '	'.$id_1.' }'."\n";
-		$_strReturn .= '	else { element.className = element.className.replace(/ tr_click/g, "");';	
+		$_strReturn .= '	else { element.className = element.className.replace(/ tr_click/g, "");';
 		$_strReturn .= '	'.$id_2.' }'."\n";
 		$_strReturn .= '}'."\n";
 		$_strReturn .= '</script>'."\n";
-	return $_strReturn;
+		return $_strReturn;
 	}
 	//----------------------------------------------------------------------------------------
 	/**
@@ -1086,7 +1086,7 @@ var $_var_prefix;
 	* @access public
 	* @return string
 	*/
-	//----------------------------------------------------------------------------------------	
+	//----------------------------------------------------------------------------------------
 	function  get_js_tr($ident) {
 		$script = 'onmouseover="tr_hover(this);" onmouseout="tr_hover(this);"';
 		#if($this->identifier != '') {
@@ -1104,7 +1104,7 @@ var $_var_prefix;
 	*/
 	//----------------------------------------------------------------------------------------
 	function get_string() {
-	$_strReturn = '';
+		$_strReturn = '';
 
 		// build table
 		$this->init_table_builder();
@@ -1114,7 +1114,7 @@ var $_var_prefix;
 			$row->arr_tr[0]->colspan = $this->_num_cols;
 			htmlobject_table::add($row);
 		}
-		// build sort functions	
+		// build sort functions
 		if($this->sort != '') {
 			$td = new htmlobject_td();
 			$td->colspan = $this->_num_cols;
@@ -1123,14 +1123,14 @@ var $_var_prefix;
 
 			$tr = new htmlobject_tr();
 			$tr->css = $this->css_prefix.'tr pageturn_head';
-			$tr->id = 'tr_'. uniqid();		
+			$tr->id = 'tr_'. uniqid();
 			$td->text = $this->get_sort().$this->get_pageturn();
 			$tr->add($td);
 			htmlobject_table::add($tr);
-		}		
-		// build table head		
+		}
+		// build table head
 		htmlobject_table::add($this->get_table_head());
-	
+
 		// build table body
 		$i = 'odd';
 		foreach ($this->_body as $key => $value) {
@@ -1147,15 +1147,15 @@ var $_var_prefix;
 			$td->colspan = $this->_num_cols;
 			$td->type = 'td';
 			$td->css = $this->css_prefix.'td pageturn_bottom';
-		
+
 			$tr = new htmlobject_tr();
 			$tr->css = $this->css_prefix.'tr pageturn_bottom';
-			$tr->id = 'tr_'. uniqid();		
+			$tr->id = 'tr_'. uniqid();
 			$td->text = $this->get_pageturn();
 			$tr->add($td);
 			htmlobject_table::add($tr);
 		}
-		
+
 		foreach ($this->_bottomrow as $row) {
 			$row->arr_tr[0]->colspan = $this->_num_cols;
 			htmlobject_table::add($row);
@@ -1165,7 +1165,7 @@ var $_var_prefix;
 		($this->form_action != '') ? $_strReturn .= '<form action="'.$this->form_action.'" method="GET">' : null;
 		$_strReturn .= htmlobject_table::get_string();
 		($this->form_action != '') ? $_strReturn .= '</form>' : null;
-	return $_strReturn;
+		return $_strReturn;
 	}
 
 }//-- end class

@@ -110,7 +110,7 @@ var $_tabs = array();
 	function htmlobject_tabmenu($arr, $prefix = 'currenttab', $prefix_tab = 'tab') {
 		$this->prefix = $prefix;
 		$this->prefix_tab = $prefix_tab;
-		$this->_set($arr);	
+		$this->_set($arr);
 	}
 
 	//----------------------------------------------------------------------------------------
@@ -119,11 +119,11 @@ var $_tabs = array();
 	* @access private
 	* @param array $arr
 	*/
-	//----------------------------------------------------------------------------------------	
+	//----------------------------------------------------------------------------------------
 	function _set( $arr ) {
 		$i = 0;
 		foreach ($arr as $val) {
-			
+
 			$identifier = $this->prefix.$this->prefix_tab.$i;
 
 			if(array_key_exists('value', $val)) {
@@ -164,11 +164,11 @@ var $_tabs = array();
 	* @param string $currenttab
 	* @return string
 	*/
-	//----------------------------------------------------------------------------------------	
+	//----------------------------------------------------------------------------------------
 	function _get_tabs($currenttab) {
 		$thisfile = basename($_SERVER['PHP_SELF']);
 		$_str = "\n<div ".$this->_init.">\n";
-		$_str .= "<ul>\n";	
+		$_str .= "<ul>\n";
 		foreach($this->_tabs as $tab) {
 			$css = '';
 			if($tab['id'] == $this->prefix.$this->prefix_tab.$currenttab) { $css = ' class="'.$this->tabcss.'"'; }
@@ -190,12 +190,12 @@ var $_tabs = array();
 		}
 		$_str .= "</ul>\n";
 		if($this->custom_tab != '') {
-			$_str .= "<div class=\"custom_tab\">".$this->custom_tab."</div>\n";		
-		}	
+			$_str .= "<div class=\"custom_tab\">".$this->custom_tab."</div>\n";
+		}
 		$_str .= "</div>\n";
 		$_str .= "<div style=\"line-height:0px;clear:both;\">&#160;</div>\n";
-		
-	return $_str;
+
+		return $_str;
 	}
 
 	//----------------------------------------------------------------------------------------
@@ -204,9 +204,9 @@ var $_tabs = array();
 	* @access private
 	* @return string
 	*/
-	//----------------------------------------------------------------------------------------	
+	//----------------------------------------------------------------------------------------
 	function _get_js() {
-	$_str = '';
+		$_str = '';
 		$thisfile = basename($_SERVER['PHP_SELF']);
 		$_str .= "\n<script type=\"text/javascript\">\n";
 		$_str .= "function ".$this->prefix."Toggle(id) {\n";
@@ -218,10 +218,10 @@ var $_tabs = array();
 		}
 		$_str .= "document.getElementById(id).style.display = 'block';\n";
 		$_str .= "document.getElementById('tab_' + id).className = '".$this->tabcss."';\n";
-		$_str .= "}\n";	
+		$_str .= "}\n";
 		$_str .= "</script>\n";
-		
-	return $_str;
+
+		return $_str;
 	}
 
 	//----------------------------------------------------------------------------------------
@@ -230,23 +230,23 @@ var $_tabs = array();
 	* @access private
 	* @return string
 	*/
-	//----------------------------------------------------------------------------------------	
+	//----------------------------------------------------------------------------------------
 	function _get_messagebox() {
-	$_str = '';
+		$_str = '';
 		$msg = $this->get_request($this->message_param);
-	    if($msg != "") {
-		    $_str .= '';
-		    $_str .= '<div class="'.$this->message_css.'" id="'.$this->prefix.'msgBox">'.$msg.'</div>';
-		    $_str .= '<script type="text/javascript">';
-		    $_str .= 'var '.$this->prefix.'aktiv = window.setInterval("'.$this->prefix.'msgBox()", '.$this->message_time.');';
-		    $_str .= 'function '.$this->prefix.'msgBox() {';
-		    $_str .= '    document.getElementById(\''.$this->prefix.'msgBox\').style.display = \'none\';';
-		    $_str .= '    window.clearInterval('.$this->prefix.'aktiv);';
-		    $_str .= '}';
-		    $_str .= '</script>';
-		    $_str .= '';
-	    }
-	return $_str;
+		if($msg != "") {
+			$_str .= '';
+			$_str .= '<div class="'.$this->message_css.'" id="'.$this->prefix.'msgBox">'.$msg.'</div>';
+			$_str .= '<script type="text/javascript">';
+			$_str .= 'var '.$this->prefix.'aktiv = window.setInterval("'.$this->prefix.'msgBox()", '.$this->message_time.');';
+			$_str .= 'function '.$this->prefix.'msgBox() {';
+			$_str .= '    document.getElementById(\''.$this->prefix.'msgBox\').style.display = \'none\';';
+			$_str .= '    window.clearInterval('.$this->prefix.'aktiv);';
+			$_str .= '}';
+			$_str .= '</script>';
+			$_str .= '';
+		}
+		return $_str;
 	}
 
 	//----------------------------------------------------------------------------------------
@@ -256,9 +256,9 @@ var $_tabs = array();
 	* @param array $arr
 	* @return string
 	*/
-	//----------------------------------------------------------------------------------------	
+	//----------------------------------------------------------------------------------------
 	function get_string() {
-	$_str = '';
+		$_str = '';
 		($this->form_action != '') ? $_str .= '<form action="'.$this->form_action.'" method="POST">' : null;
 		if(count($this->_tabs) > 0) {
 			$this->init();
@@ -276,14 +276,14 @@ var $_tabs = array();
 						$html->style = 'display:none;';
 					} else {
 						$html->text = $this->_get_messagebox().$html->text;
-					}										
+					}
 					$_str .= $html->get_string();
 				}
 			}
 		}
 		($this->form_action != '') ? $_str .= '</form>' : null;
-		
-	return $_str;
+
+		return $_str;
 	}
 }
 ?>

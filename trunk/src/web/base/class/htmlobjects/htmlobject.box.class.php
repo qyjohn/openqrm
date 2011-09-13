@@ -75,35 +75,40 @@ var $arr_content = array();
 	 * @return string
 	 */
 	function get_string() {
-	$_strReturn = '';
+	$_str = '';
 
-		if( is_object($this->content) ) {
-			$this->id = $this->content->id.'_box'; 
-			$content  = $this->content->get_string();
+		$str  = '';
+		$text = $this->content;
+		if(!is_array($text)) {
+			$text = array($text);
 		}
-		if( is_string($this->content) ) { 
-			$content = $this->content; 
+		reset($text);
+		foreach($text as $value) {
+			if(is_object($value)) {
+				if(!isset($id)) {
+					$this->id = $value->id.'_box';
+					$id       = $value->id;
+				}
+				$str .= $value->get_string();
+			} else { $str .= $value; }
 		}
-
 		if($this->label !== '') {
-			$attribs = $this->get_attribs();
-			$_strReturn .= "\n<div".$attribs.">";
-			$_strReturn .= "\n<div".$this->css_left.">";
-			if(is_object($this->content) && isset($this->content->id)) { $_strReturn .= '<label for="'.$this->content->id.'">'.$this->label.'</label>'; }
-			if(is_string($this->content)) {
-				if($this->label_for != '') { $_strReturn .= '<label for="'.$this->label_for.'">'.$this->label.'</label>'; }
-				else { $_strReturn .= $this->label; }
-			}
-			$_strReturn .= "</div>";
-			$_strReturn .= "\n<div".$this->css_right.">";
-			$_strReturn .= $content;
-			$_strReturn .= "</div>";
-			$_strReturn .= "\n<div style=\"line-height:0px;height:0px;clear:both;\" class=\"floatbreaker\">&#160;</div>";
-			$_strReturn .= "\n</div>";
+			$attr  = $this->get_attribs();
+			$_str .= "\n<div".$attr.">";
+			$_str .= "\n<div".$this->css_left.">";
+			if($this->label_for != '') { $_str .= '<label for="'.$this->label_for.'">'.$this->label.'</label>'; }
+			else if(isset($id)) { $_str .= '<label for="'.$id.'">'.$this->label.'</label>'; }
+			else { $_str .= $this->label; }
+			$_str .= "</div>";
+			$_str .= "\n<div".$this->css_right.">";
+			$_str .= $str;
+			$_str .= "</div>";
+			$_str .= "\n<div style=\"line-height:0px;height:0px;clear:both;\" class=\"floatbreaker\">&#160;</div>";
+			$_str .= "\n</div>";
 		} else {
-			$_strReturn .= $content;
+			$_str .= $content;
 		}
-	return $_strReturn;
+	return $_str;
 	}
 
 	/**
@@ -111,8 +116,8 @@ var $arr_content = array();
 	 *
 	 * @access public
 	 */
-	function add($content) {
-		$this->arr_content[] = $content;
+	function add($text) {
+		$this->content[] = $text;
 	}
 
 }

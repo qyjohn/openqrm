@@ -138,7 +138,7 @@ function add($image_authentication_fields) {
 			if (! $result) {
 				$event->log("add", $_SERVER['REQUEST_TIME'], 2, "image_authentication.class.php", "Failed adding new image_authentication to database", "", "", 0, 0, 0);
 			}
-	
+
 		} else {
 			$event->log("add", $_SERVER['REQUEST_TIME'], 2, "image_authentication.class.php", "Not adding image_authentication for image id $image_id type $auth_type since it already is registered.", "", "", 0, 0, 0);
 		}
@@ -268,14 +268,14 @@ function check_all_image_authentication() {
 						require_once "$storage_auth_hook";
 						storage_auth_deployment_stop($image->id);
 
-                        $image->get_instance_by_id($ia_auth->image_id);
-                        $image_name = $image->name;
-                        $image_id = $image->id;
-                        // remove all install from or transfer to deployment parameters
-                        $image->set_deployment_parameters("IMAGE_INSTALL_FROM_NFS", "");
-                        $image->set_deployment_parameters("IMAGE_TRANSFER_TO_NFS", "");
-                        $image->set_deployment_parameters("IMAGE_INSTALL_FROM_LOCAL", "");
-                        $image->set_deployment_parameters("IMAGE_TRANSFER_TO_LOCAL", "");
+						$image->get_instance_by_id($ia_auth->image_id);
+						$image_name = $image->name;
+						$image_id = $image->id;
+						// remove all install from or transfer to deployment parameters
+						$image->set_deployment_parameters("IMAGE_INSTALL_FROM_NFS", "");
+						$image->set_deployment_parameters("IMAGE_TRANSFER_TO_NFS", "");
+						$image->set_deployment_parameters("IMAGE_INSTALL_FROM_LOCAL", "");
+						$image->set_deployment_parameters("IMAGE_TRANSFER_TO_LOCAL", "");
 						// remove image_authentication
 						$ia_auth->remove($ia_auth_id);
 					}
@@ -308,7 +308,7 @@ function display_overview($offset, $limit, $sort, $order) {
 			$recordSet->MoveNext();
 		}
 		$recordSet->Close();
-	}		
+	}
 	return $image_authentication_array;
 }
 

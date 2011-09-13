@@ -101,10 +101,10 @@ var $_init;
 		// if no id is set
 		if($this->id == '') {
 			if(isset($this->name)) {
-				$this->id = $this->name;				
+				$this->id = $this->name;
 			} else {
 				$this->id = uniqid('p');
-			}				
+			}
 		}
 	}
 	
@@ -203,35 +203,35 @@ var $selected_by_text = false;
 	 * @return string
 	 */
 	function get_string() {
-	$_strReturn = '';
+		$_strReturn = '';
 		$this->init();
 		$_strReturn = "\n<select$this->_init>\n";
 		$_strReturn .= $this->get_options();
 		$_strReturn .= "</select>\n";
-	return $_strReturn;
+		return $_strReturn;
 	}
 
 	function get_options() {
-	$_strReturn = '';
-	    if(count($this->text) > 0){
-	        for ($i=0; count($this->text)>$i; $i++) {
-	        $sel =  "";
-	            if($this->selected_by_text === true) {
-	        		if(in_array($this->text[$i][$this->text_index['text']], $this->selected)) {
-						$sel =  ' selected="selected"'; 
+		$_strReturn = '';
+		if(count($this->text) > 0){
+			for ($i=0; count($this->text)>$i; $i++) {
+			$sel =  "";
+				if($this->selected_by_text === true) {
+					if(in_array($this->text[$i][$this->text_index['text']], $this->selected)) {
+						$sel =  ' selected="selected"';
 					}
-	        	} 
+				}
 				else {
-	        		if(in_array($this->text[$i][$this->text_index['value']], $this->selected)) {
-						$sel =  ' selected="selected"'; 
+					if(in_array($this->text[$i][$this->text_index['value']], $this->selected)) {
+						$sel =  ' selected="selected"';
 					}
-	        	}
-	        $_strReturn .= "<option value=\"".$this->text[$i][$this->text_index['value']]."\"$sel>".$this->text[$i][$this->text_index['text']]."</option>\n";        
-	        }
-	    } else {
-	        $_strReturn .= '';   
-	    }
-	return $_strReturn;
+				}
+			$_strReturn .= "<option value=\"".$this->text[$i][$this->text_index['value']]."\"$sel>".$this->text[$i][$this->text_index['text']]."</option>\n";
+			}
+		} else {
+			$_strReturn .= '';
+		}
+		return $_strReturn;
 	}
 }
 
@@ -338,10 +338,10 @@ var $value = '';
 	 * @return string
 	 */
 	function get_string() {
-	$_strReturn = '';
+		$_strReturn = '';
 		$this->init();
 		$_strReturn = "<input$this->_init>";
-	return $_strReturn;
+		return $_strReturn;
 	}
 }
 
@@ -428,10 +428,10 @@ var $label = '';
 	 * @return string
 	 */
 	function get_string() {
-	$_strReturn = '';
+		$_strReturn = '';
 		$this->init();
 		$_strReturn = "\n<button$this->_init>$this->label</button>";
-	return $_strReturn;
+		return $_strReturn;
 	}
 }
 
@@ -519,12 +519,12 @@ var $text = '';
 	 * @return string
 	 */
 	function get_string() {
-	$_strReturn = '';
+		$_strReturn = '';
 		$this->init();
 		$_strReturn = "\n<textarea$this->_init>";
 		$_strReturn .= $this->text;
 		$_strReturn .= "</textarea>\n";
-	return $_strReturn;
+		return $_strReturn;
 	}
 }
 
@@ -597,12 +597,12 @@ var $fields = '';
 	 * @return string
 	 */
 	function get_string() {
-	$_strReturn = '';
+		$_strReturn = '';
 		$this->init();
 		$_strReturn .= "\n<form$this->_init>\n";
 		$_strReturn .= $this->fields;
 		$_strReturn .= "\n</form>\n";
-	return $_strReturn;
+		return $_strReturn;
 	}
 }
 
@@ -629,12 +629,12 @@ var $text = '';
 	 *
 	 * @acess public
 	 * @return string
-	 */	
+	 */
 	function get_string() {
-	$_strReturn = '';
+		$_strReturn = '';
 		$this->init();
 		$_strReturn = "\n<div$this->_init>$this->text</div>";
-	return $_strReturn;
+		return $_strReturn;
 	}
 }
 
@@ -700,7 +700,7 @@ var $css_right = 'right';
 	 * @return string
 	 */
 	function get_string() {
-	$_strReturn = '';
+		$_strReturn = '';
 		$this->init();
 		$_strReturn .= "\n<div".$this->_init.">";
 
@@ -709,7 +709,7 @@ var $css_right = 'right';
 			if(is_object($this->content) && isset($this->content->id)) { $_strReturn .= '<label for="'.$this->content->id.'">'.$this->label.'</label>'; }
 			if(is_string($this->content)) {
 				if($this->label_for != '') { $_strReturn .= '<label for="'.$this->label_for.'">'.$this->label.'</label>'; }
-				else { $_strReturn .= $this->label; } 
+				else { $_strReturn .= $this->label; }
 			}
 			$_strReturn .= "</div>";
 		}
@@ -721,7 +721,7 @@ var $css_right = 'right';
 		$_strReturn .= "</div>";
 		$_strReturn .= "\n<div style=\"line-height:0px;height:0px;clear:both;\" class=\"floatbreaker\">&#160;</div>";
 		$_strReturn .= "\n</div>";
-	return $_strReturn;
+		return $_strReturn;
 	}
 }
 ?>

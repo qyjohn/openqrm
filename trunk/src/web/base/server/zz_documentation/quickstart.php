@@ -24,61 +24,60 @@ require_once "$RootDir/include/htmlobject.inc.php";
 
 function documentation_quickstart() {
 
-	$disp = "<h1>Quick Start</h1>";
+	$disp = "<h1>快速入门</h1>";
 	$disp = $disp."<br>";
-	$disp = $disp."How to start with openQRM ? Which plugins to enable ? What I need for a simple-setup ?";
+	$disp = $disp."如何启动OpenQRM？我需要哪些插件？我需要哪些条件来安装一个最简单的系统？";
 	$disp = $disp."<br>";
-	$disp = $disp."To give a very quick overview of possible answers of the above questions here in general how to start :";
+	$disp = $disp."按照下面的步骤，您可以迅速配置一个可以使用得最简单系统：";
 	$disp = $disp."<ul>";
 	$disp = $disp."<li>";
-	$disp = $disp."Enable and start one (or more) of the 'storage' plugins";
+	$disp = $disp."启用并且启动一个或者多个存储（storage）插件";
 	$disp = $disp."</li><li>";
-	$disp = $disp."Create one (or more) storage-server";
+	$disp = $disp."创建一个或者多个存储服务器";
 	$disp = $disp."</li><li>";
-	$disp = $disp."Create one (or more) images";
+	$disp = $disp."创建一个或者多个映像";
 	$disp = $disp."</li><li>";
-	$disp = $disp."Enable and start the 'dhcpd' and the 'tftpd' plugin";
+	$disp = $disp."启用并且启动dhcpd和tftpd插件";
 	$disp = $disp."</li><li>";
-	$disp = $disp."Power on one (or more) servers via network-boot";
+	$disp = $disp."通过网络启动一台或者多台服务器";
 	$disp = $disp."<br>";
-	$disp = $disp."(set to boot from PXE/Network in the systems bios)";
+	$disp = $disp."（在服务器的系统BIOS中设置为通过PXE/Network启动）";
 	$disp = $disp."<br>";
-	$disp = $disp."-> the system will startup via network and being added to openQRM automatically";
+	$disp = $disp."-> 通过网络系统的系统，会被自动添加到OpenQRM网络中。";
 	$disp = $disp."</li><li>";
-	$disp = $disp."Create one (or more) appliances, select one of the idle/available resources";
+	$disp = $disp."选择一个空闲或者可用的计算资源，创建一个或者多个器件";
 	$disp = $disp."</li><li>";
-	$disp = $disp."Start the appliance(s)";
+	$disp = $disp."启动器件";
 	$disp = $disp."</li>";
 	$disp = $disp."</ul>";
 	$disp = $disp."<br>";
 	$disp = $disp."<br>";
-	$disp = $disp."This procedure will rapid-deploy the selected server-image to the selected resource.";
+	$disp = $disp."通过如下步骤，可以迅速地将指定的服务器映像部署到指定的计算资源上。";
 	$disp = $disp."<br>";
-	$disp = $disp."Of course openQRM supports different storage- and deployment-types which can be added/removed on-the-fly by enabling/disabling the specific plugin.";
-	$disp = $disp." Therefore this 'quick-start' just can be a very limited and generic overview. For more detailed informations please check the specific howto regarding your scenario.";
+	$disp = $disp."OpenQRM可以通过插件支持不同的存储和部署类型。因此，本快速入门文档所提供的仅仅是一个非常有限的概览。如果您需要更加详细的信息，请参考与您的配置所对应的<a href='howto.php'>实战教程</a>。";
 	$disp = $disp."<br>";
 	$disp = $disp."<br>";
-	$disp = $disp."<b>Kernel creation</b>";
+	$disp = $disp."<b>创建内核</b>";
 	$disp = $disp."<br>";
-	$disp = $disp."'Kernels' for resources and appliances managed by the the openQRM-server can be created using the 'openqrm' client located in the bin directory (/usr/share/openqrm/bin/openqrm by default).";
+	$disp = $disp."OpenQRM提供了名称为openqrm的客户端工具，用来创建新的内核。openqrm客户端工具的缺省安装位置为 /usr/share/openqrm/bin/openqrm 。";
 	$disp = $disp."<br>";
-	$disp = $disp."Adding a kernel to openQRM :";
+	$disp = $disp."向OpenQRM添加一个内核：";
 	$disp = $disp."<br>";
 	$disp = $disp."<br>";
 	$disp = $disp."<i>openqrm kernel add -n [name] -v [version] -u [username] -p [password] -l [location] -i [initramfs/ext2]</i>";
 	$disp = $disp."<br>";
 	$disp = $disp."<br>";
-	$disp = $disp."Removing a kernel from openQRM :";
+	$disp = $disp."从OpenQRM删除一个内核：";
 	$disp = $disp."<br>";
 	$disp = $disp."<br>";
 	$disp = $disp."<i>openqrm kernel remove -n [name] -u [username] -p [password]</i>";
 	$disp = $disp."<br>";
 	$disp = $disp."<br>";
-	$disp = $disp."<b>(Server-) Image creation</b>";
+	$disp = $disp."<b>创建（虚拟机）映像</b>";
 	$disp = $disp."<br>";
-	$disp = $disp."Server images in openQRM are created 'on-the-fly' during deployment-time. The storage-plugins providing lots of options to automatically install an image ";
-	$disp = $disp." from e.g. a local-devices or a nfs-export. Also an image type X can be transfered to an image type Y easily using the 'tranform-to' parameter.";
-	$disp = $disp." These mechanisms are configured by the image-deployment parameters and documented by each plugin.";
+	$disp = $disp."虚拟机映像通常是在部署阶段快速创建的。OpenQRM还通过存储插件提供了多种自动安装映像的方法（例如本地存储设备或者NFS设备）。";
+	$disp = $disp."同时，以某种格式存储的虚拟机映像，能够迅速转换成以另外一种格式存储的虚拟机映像（使用tranform-to参数）。";
+	$disp = $disp."这些选项可以通过映像部署参数来配置，具体的使用方法请参考各个插件的文档。";
 	$disp = $disp."<br>";
 	$disp = $disp."<br>";
 	return $disp;
@@ -88,7 +87,7 @@ function documentation_quickstart() {
 
 
 $output = array();
-$output[] = array('label' => 'Quick Start', 'value' => documentation_quickstart());
+$output[] = array('label' => '快速入门', 'value' => documentation_quickstart());
 
 ?>
 <link rel="stylesheet" type="text/css" href="../../css/htmlobject.css" />

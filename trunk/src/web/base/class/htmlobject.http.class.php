@@ -51,7 +51,7 @@ var $request_filter;
 	* @return string | array [empty if request not set]
 	*/
 	//---------------------------------------------------------------
-	function get_request($arg) 
+	function get_request($arg)
 	{
 		if(debug::active()) {
 			debug::add($arg);
@@ -74,7 +74,7 @@ var $request_filter;
 	/**
 	 * get values from http request as array
 	 * @acess protected
-	 * @return array 
+	 * @return array
 	 */
 	//-------------------------------------------------
 	function get_request_array($arg) {
@@ -168,7 +168,7 @@ var $request_filter;
 				}
 			} else {
 				debug::add('no filter set - use set_request_filter()', 'NOTICE');
-				$str = $arg;		
+				$str = $arg;
 			}
 			debug::add($arg.' return '.$str);
 			return $str;
@@ -189,7 +189,7 @@ var $request_filter;
 	function get_request_string($firstchar = '?', $excludes = array()) {
 		$type = array('$_POST','$_GET');
 		$_strReturn = '';
-		foreach($type as $request) {	
+		foreach($type as $request) {
 			foreach(eval("return $request;") as $name => $foo) {
 				if(in_array($name, $excludes) == false) {
 					$value = http_request($name);
@@ -214,7 +214,7 @@ var $request_filter;
 	 * @param array $name
 	 * @return string
 	 */
-	//-------------------------------------------------	
+	//-------------------------------------------------
 	function string_to_index($arg) {
 
 		$strReturn = '';
@@ -233,7 +233,7 @@ var $request_filter;
 		// add quots to make it array
 		$str = str_replace('[', '["', $str);
 		$str = str_replace(']', '"]', $str);
-		
+
 		return $str;
 
 	}
@@ -245,7 +245,7 @@ var $request_filter;
 	 * @param array $name
 	 * @return string
 	 */
-	//-------------------------------------------------	
+	//-------------------------------------------------
 	function unindex_array($name) {
 		return preg_replace('~\[]$~', '', $name);
 	}
@@ -263,14 +263,14 @@ var $request_filter;
 	//---------------------------------------------------------------
 	function redirect($url){
 		if (!headers_sent()){
-		    header('Location: '.$url); exit;
-		}else{
-		    echo '<script type="text/javascript">';
-		    echo 'window.location.href="'.$url.'";';
-		    echo '</script>';
-		    echo '<noscript>';
-		    echo '<meta http-equiv="refresh" content="0;url='.$url.'" />';
-		    echo '</noscript>'; exit;
+			header('Location: '.$url); exit;
+		} else {
+			echo '<script type="text/javascript">';
+			echo 'window.location.href="'.$url.'";';
+			echo '</script>';
+			echo '<noscript>';
+			echo '<meta http-equiv="refresh" content="0;url='.$url.'" />';
+			echo '</noscript>'; exit;
 		}
 	}
 

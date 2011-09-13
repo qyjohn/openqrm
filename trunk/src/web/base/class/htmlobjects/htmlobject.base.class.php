@@ -48,13 +48,6 @@ var $title = '';
 */
 var $handler = '';
 
-/**
-* string of attribs
-* @access protected
-* @var string
-*/
-#var $_init;
-
 	/**
 	 * init attribs
 	 *

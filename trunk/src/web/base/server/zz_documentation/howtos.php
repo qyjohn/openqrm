@@ -29,9 +29,9 @@ function documentation_howtos() {
 	$disp = $disp."This section provides HowTo's (and links to HowTo's) guiding how to manage different scenarios with openQRM.";
 	$disp = $disp."<ul>";
 	$disp = $disp."<li>";
-	$disp = $disp."<a href='quickstart.php'>Get started</a>";
+	$disp = $disp."<a href='http://www.openqrm-enterprise.com/news/details/article/howto-setup-your-own-openqrm-cloud-with-kvm-on-ubuntu-lucid-lynx.html' target='_BLANK'>HowTo: Setup your own openQRM Cloud with KVM on Ubuntu</a>";
 	$disp = $disp."</li><li>";
-	$disp = $disp."(more soon)";
+	$disp = $disp."<a href='http://www.openqrm-enterprise.com/news/details/article/howto-setup-openqrm-cloud-deploying-physical-windows-systems-on-centos-55.html' target='_BLANK'>Howto: Setup openQRM Cloud deploying physical Windows Systems on CentOS</a>";
 	$disp = $disp."</li>";
 	$disp = $disp."</ul>";
 	$disp = $disp."<br>";

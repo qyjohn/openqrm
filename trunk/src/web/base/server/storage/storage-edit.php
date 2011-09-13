@@ -33,7 +33,7 @@ $storage_id = htmlobject_request("storage_id");
 
 
 function redirect($strMsg, $currenttab = 'tab0', $url = '') {
-global $thisfile;
+	global $thisfile;
 	if($url == '') {
 		$url = $thisfile.'?strMsg='.urlencode($strMsg).'&currenttab='.$currenttab.'&storage_filter='.htmlobject_request('storage_filter');
 	}
@@ -42,8 +42,8 @@ global $thisfile;
 }
 
 if(htmlobject_request('action') != '') {
-$strMsg = '';
-$error = 0;
+	$strMsg = '';
+	$error = 0;
 
 	switch (htmlobject_request('action')) {
 
@@ -53,10 +53,10 @@ $error = 0;
 
 			// check passed values
 			if($storage_name != '') {
-				if (ereg("^[A-Za-z0-9_-]*$", $storage_name) === false) {
+				if (!preg_match('#^[A-Za-z0-9_-]*$#', $storage_name)) {
 					$strMsg .= 'storage name must be [A-Za-z0-9_-]<br/>';
 					$error = 1;
-				} 
+				}
 			} else {
 				$strMsg .= "storage name can not be empty<br/>";
 				$error = 1;
@@ -73,9 +73,7 @@ $error = 0;
 
 				if(isset($_REQUEST['identifier'])) {
 					foreach($_REQUEST['identifier'] as $id) {
-						if(!strlen($image_fields["storage_resource_id"])) {
-							$storage_fields["storage_resource_id"]=$id;
-						}
+						$storage_fields["storage_resource_id"]=$id;
 					}
 				}
 
@@ -86,14 +84,14 @@ $error = 0;
 				$storage = new storage();
 				$storage->update($storage_id, $storage_fields);
 				$strMsg .= 'updated storage <strong>'.$storage_fields["storage_name"].'</strong><br>';
-				
+
 				$args = '?strMsg='.$strMsg;
 				$args .= '&storage_id='.$storage_fields["storage_id"];
 				$args .= '&currenttab=tab0';
 				$args .= '&storage_filter='.htmlobject_request('storage_filter');
 				$url = 'storage-index.php'.$args;
 
-			} 
+			}
 			// if something went wrong
 			else {
 				$url = error_redirect($strMsg);
@@ -101,7 +99,6 @@ $error = 0;
 			redirect('', '', $url);
 			break;
 	}
-
 }
 
 
@@ -129,10 +126,10 @@ function storage_edit($storage_id='') {
 
 	$store = "<h1>Edit Storage</h1>";
 	$store .= htmlobject_input('storage_name', array("value" => $storage->name, "label" => 'Storage name'), 'text', 20);
-		
+
 	$int = $storage->type;
 
-	
+
 	$helplink = '<a href="../../plugins/'.$deployment->storagetype.'/'.$deployment->storagetype.'-about.php" target="blank" class="doculink">
 	'.$deployment->storagedescription.'
 	</a>';
@@ -140,7 +137,7 @@ function storage_edit($storage_id='') {
 	$html = new htmlobject_div();
 	$html->text = $helplink;
 	$html->id = 'htmlobject_storage_type';
-	
+
 	$box = new htmlobject_box();
 	$box->id = 'htmlobject_box_storage_type';
 	$box->css = 'htmlobject_box';
@@ -182,19 +179,19 @@ function storage_edit($storage_id='') {
 	$arHead['resource_icon']['sortable'] = false;
 
 	$arHead['resource_id'] = array();
-	$arHead['resource_id']['title'] ='ID';
+	$arHead['resource_id']['title'] ='编号';
 
 	$arHead['resource_hostname'] = array();
-	$arHead['resource_hostname']['title'] ='Name';
+	$arHead['resource_hostname']['title'] ='名称';
 
-    $arHead['resource_mac'] = array();
-    $arHead['resource_mac']['title'] ='Mac';
+	$arHead['resource_mac'] = array();
+	$arHead['resource_mac']['title'] ='Mac地址';
 
-    $arHead['resource_ip'] = array();
-    $arHead['resource_ip']['title'] ='IP';
+	$arHead['resource_ip'] = array();
+	$arHead['resource_ip']['title'] ='IP地址';
 
-    $arHead['resource_vtype'] = array();
-    $arHead['resource_vtype']['title'] ='Type';
+	$arHead['resource_vtype'] = array();
+	$arHead['resource_vtype']['title'] ='类型';
 
 	$arBody = array();
 
@@ -223,24 +220,24 @@ function storage_edit($storage_id='') {
 		if (!file_exists($_SERVER["DOCUMENT_ROOT"]."/".$state_icon)) {
 			$state_icon="/openqrm/base/img/unknown.png";
 		}
-        if ($resource->id == 0) {
-            $resource_type_info="openQRM Server";
-            $resource_mac = "x:x:x:x:x:x";
-        } else {
-            $virtualization = new virtualization();
-            $virtualization->get_instance_by_id($resource->vtype);
-            $resource_type_info=$virtualization->name." on Res. ".$resource->vhostid;
-            $resource_mac=$resource_db["resource_mac"];
-        }
+		if ($resource->id == 0) {
+			$resource_type_info="openQRM Server";
+			$resource_mac = "x:x:x:x:x:x";
+		} else {
+			$virtualization = new virtualization();
+			$virtualization->get_instance_by_id($resource->vtype);
+			$resource_type_info=$virtualization->name." on Res. ".$resource->vhostid;
+			$resource_mac=$resource_db["resource_mac"];
+		}
 
 		$arBody[] = array(
 			'resource_state' => "<img src=$state_icon>",
 			'resource_icon' => "<img width=24 height=24 src=$resource_icon_default>",
 			'resource_id' => $resource_db["resource_id"],
 			'resource_hostname' => $resource_db["resource_hostname"],
-            'resource_mac' => $resource_mac,
-            'resource_ip' => $resource_db["resource_ip"],
-            'resource_vtype' => $resource_type_info,
+			'resource_mac' => $resource_mac,
+			'resource_ip' => $resource_db["resource_ip"],
+			'resource_vtype' => $resource_type_info,
 		);
 	}
 
@@ -260,14 +257,14 @@ function storage_edit($storage_id='') {
 	}
 	$all = $resource_tmp->get_count('all');
 	$table->max = $all + 1; // add openqrmserver
-		
+
 	if (count($deployment_list) > 0) {
 		return $table->get_string();
 	} else {
 		$str = '<center>';
-		$str .= '<h1>No storage plugins enabled</h1>';
+		$str .= '<h1>没有可用的存储插件</h1>';
 		$str .= '<br><br>';
-		$str .= '<a href="../../plugins/aa_plugins/plugin-manager.php">Pluginmanager</a>';
+		$str .= '<a href="../../plugins/aa_plugins/plugin-manager.php">管理插件</a>';
 		$str .= '</center>';
 		$str .= '<br><br>';
 		return $str;
@@ -276,9 +273,9 @@ function storage_edit($storage_id='') {
 
 
 $output = array();
-$output[] = array('label' => 'Storage List', 'value' => '', 'target' => 'storage-index.php', 'request' => array('storage_filter' => htmlobject_request('storage_filter')));
-$output[] = array('label' => 'New Storage', 'value' => '', 'target' => 'storage-new.php', 'request' => array('storage_filter' => htmlobject_request('storage_filter')));
-$output[] = array('label' => 'Edit Storage', 'value' => storage_edit($storage_id), 'request' => array('storage_id' => $storage_id, 'storage_filter' => htmlobject_request('storage_filter')));
+$output[] = array('label' => '存储列表', 'value' => '', 'target' => 'storage-index.php', 'request' => array('storage_filter' => htmlobject_request('storage_filter')));
+$output[] = array('label' => '创建存储', 'value' => '', 'target' => 'storage-new.php', 'request' => array('storage_filter' => htmlobject_request('storage_filter')));
+$output[] = array('label' => '编辑存储', 'value' => storage_edit($storage_id), 'request' => array('storage_id' => $storage_id, 'storage_filter' => htmlobject_request('storage_filter')));
 
 
 		

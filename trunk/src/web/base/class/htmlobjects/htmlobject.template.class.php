@@ -30,10 +30,10 @@ var $file = '';
 var $_keys = array();
     
 /**
-* $_vals[key] = "value";
+* $elements[key] = "value";
 * @var array
 */
-var $_vals = array();
+var $elements = array();
 
 	/**
 	* Constructor
@@ -52,22 +52,21 @@ var $_vals = array();
      * @param  string value of that variable
      * @param  boolean if true, the value is appended to the variable's existing value
      */
-    function init($varname, $value = "", $append = false) {
+	function init($varname, $value = "", $append = false) {
+		$this->_keys['?']    = $this->_varname('?');
+		$this->elements['?'] = '';
         if (!is_array($varname)) {
-            if ($varname !== '') {
-                $this->_keys[$varname] = $this->_varname($varname);
-                ($append) ? $this->_vals[$varname] .= $value : $this->_vals[$varname] = $value;
-            }
-        } else {
-            reset($varname);
-            while (list($k, $v) = each($varname)) {
-                if ($k !== '') {
-                    $this->_keys[$k] = $this->_varname($k);
-                    ($append) ? $this->_vals[$k] .= $v : $this->_vals[$k] = $v;
-                }
-            }
-        }
-    }
+			$varname = array($varname);
+		}
+        reset($varname);
+        while (list($k, $v) = each($varname)) {
+			if ($k !== '') {
+				$this->_keys[$k]   = $this->_varname($k);
+				($append) ? $this->elements[$k] .= $v : $this->elements[$k] = $v;
+				$this->elements['?'] .= '&#123;'.$k.'&#125;';
+			}
+		}
+	}
 
     /**
      * parse variables into file
@@ -83,10 +82,18 @@ var $_vals = array();
         $i       = 0;
         foreach($this->_keys as $key => $value) {
             $search[$i]  = $value;
-            $replace[$i] = $this->_vals[$key];
-            if(is_object($replace[$i])) {
-                $replace[$i] = $replace[$i]->get_string();
-            }
+			$replace[$i] = '';
+            $element     = $this->elements[$key];
+			if(!is_array($element)) {
+				$element = array($element);
+			}
+			foreach($element as $value) {
+		        if(is_object($value)) {
+		            $replace[$i] .= $value->get_string();
+		        } else {
+					$replace[$i] .= $value;
+				}
+			}
             ++$i;
         }
         return str_replace($search, $replace, $file);
@@ -100,8 +107,7 @@ var $_vals = array();
      */
 
     function get_string() {
-		$str = $this->_parse();
-        return $str;
+        return $this->_parse();
     }
 
     /**

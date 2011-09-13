@@ -51,6 +51,9 @@ function get_ip_address() {
 		$resource_openqrmserver=$rs->fields["resource_openqrmserver"];
 		$rs->MoveNext();
 	}
+	if (!strlen($resource_openqrmserver)) {
+		$event->log("get_ip_address", $_SERVER['REQUEST_TIME'], 2, "openqrm_server.class.php", "Could not find out IP-Address of the openQRM server. Server misconfiguration!", "", "", 0, 0, 0);
+	}
 	return $resource_openqrmserver;
 }
 

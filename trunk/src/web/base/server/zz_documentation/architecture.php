@@ -24,12 +24,11 @@ require_once "$RootDir/include/htmlobject.inc.php";
 
 function documentation_architecture() {
 
-	$disp = "<h1>Architecture</h1>";
+	$disp = "<h1>系统构架</h1>";
 	$disp = $disp."<br>";
-	$disp = $disp."As the overview of the <a href='concept.php'>concept</a> pointed out managing a data-center with";
-	$disp = $disp." all its componentents is a serious task which (as we experienced) is quickly overloading the capabilities";
-	$disp = $disp." of a single application. Automatism and high-availability can only work well if all components are well integrated";
-	$disp = $disp." and cooperating in a defined way. The result is even more complexity.";
+	$disp = $disp."在<a href='concept.php'>设计理念</a>中我们提到，管理数据中心的所有设备、功能与服务是一个严峻的任务，已经超出了一个专有应用程序的处理能力。";
+	$disp = $disp."如果不能完美集成所有的组件，自动化和高可用性就成了一句空谈。";
+	$disp = $disp."其结果就是让数据中心变得越来越复杂。";
 	$disp = $disp."<br><br>";
 	$disp = $disp."To solve this problem openQRM is based on an strictly plugg-able architecture !";
 	$disp = $disp."<br><br>";
@@ -68,7 +67,7 @@ function documentation_architecture() {
 
 
 $output = array();
-$output[] = array('label' => 'Architecture', 'value' => documentation_architecture());
+$output[] = array('label' => '系统构架', 'value' => documentation_architecture());
 
 ?>
 <link rel="stylesheet" type="text/css" href="../../css/htmlobject.css" />

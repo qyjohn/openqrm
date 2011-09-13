@@ -21,9 +21,9 @@ $RootDir = $_SERVER["DOCUMENT_ROOT"].'/openqrm/base/';
 require_once ($RootDir.'include/openqrm-server-config.php');
 
 if (isset($OPENQRM_ORACLE_HOME))  {
-        PutEnv("LD_LIBRARY_PATH=$OPENQRM_LD_LIBRARY_PATH");
-        PutEnv("ORACLE_HOME=$OPENQRM_ORACLE_HOME");
-        PutEnv("TNS_ADMIN=$OPENQRM_TNS_ADMIN");
+	PutEnv("LD_LIBRARY_PATH=$OPENQRM_LD_LIBRARY_PATH");
+	PutEnv("ORACLE_HOME=$OPENQRM_ORACLE_HOME");
+	PutEnv("TNS_ADMIN=$OPENQRM_TNS_ADMIN");
 }
 
 if (!defined("ADODB_ASSOC_CASE")) {
@@ -31,9 +31,9 @@ if (!defined("ADODB_ASSOC_CASE")) {
 }
 // different locations of adodb for suse/redhat/debian
 if (file_exists('/usr/share/php/adodb/adodb.inc.php')) {
-    require_once ('/usr/share/php/adodb/adodb.inc.php');
+	require_once ('/usr/share/php/adodb/adodb.inc.php');
 } else if (file_exists($RootDir.'include/adodb/adodb.inc.php')) {
-    require_once ($RootDir.'include/adodb/adodb.inc.php');
+	require_once ($RootDir.'include/adodb/adodb.inc.php');
 } else if (file_exists('/usr/share/adodb/adodb.inc.php')) {
 	require_once ('/usr/share/adodb/adodb.inc.php');
 } else {
@@ -88,7 +88,7 @@ function openqrm_get_db_connection() {
 	global $OPENQRM_DATABASE_NAME;
 	global $OPENQRM_DATABASE_USER;
 	global $OPENQRM_DATABASE_PASSWORD;
-	
+
 	if ("$OPENQRM_DATABASE_TYPE" == "db2") {
 		$db = &ADONewConnection('odbc');
 		$db->PConnect($OPENQRM_DATABASE_NAME,$OPENQRM_DATABASE_USER,$OPENQRM_DATABASE_PASSWORD);
@@ -96,7 +96,7 @@ function openqrm_get_db_connection() {
 		return $db;
 
 	} else if ("$OPENQRM_DATABASE_TYPE" == "oracle") {
-		// we need to use the oci8po driver because it is the 
+		// we need to use the oci8po driver because it is the
 		// only oracle driver supporting to set the column-names to lowercase
 		// via define('ADODB_ASSOC_CASE',0);
 		$db = NewADOConnection("oci8po");
@@ -110,7 +110,7 @@ function openqrm_get_db_connection() {
 		}
 	$db = &ADONewConnection($dsn);
 	}
-	
+
 	// to get the column names in the resulting array
 	$db->SetFetchMode(ADODB_FETCH_ASSOC);
 	return $db;
@@ -129,10 +129,10 @@ function openqrm_db_get_free_id($fieldname, $tablename) {
 	$db=openqrm_get_db_connection();
 	$recordSet = &$db->Execute("select $fieldname from $tablename");
 	if (!$recordSet)
-        print $db->ErrorMsg();
-    else {
+		print $db->ErrorMsg();
+	else {
 		$ar_ids = array();
-		
+
 		while ($arr = $recordSet->FetchRow()) {
 		foreach($arr as $val) {
 			$ar_ids[] = $val;
@@ -148,7 +148,7 @@ function openqrm_db_get_free_id($fieldname, $tablename) {
 		 $i++;
 		}
 	}
-    $db->Close();
+	$db->Close();
 }
 //-----------------------------------------------------------------------------------
 function openqrm_db_get_result($query) {

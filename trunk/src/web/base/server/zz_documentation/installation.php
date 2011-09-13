@@ -24,85 +24,85 @@ global $OPENQRM_WEB_PROTOCOL;
 
 
 function documentation_installation() {
-    global $OPENQRM_WEB_PROTOCOL;
-	$disp = "<h1>Installation</h1>";
+	global $OPENQRM_WEB_PROTOCOL;
+	$disp = "<h1>安装配置</h1>";
 	$disp = $disp."<br>";
-	$disp = $disp."openQRM can be easily installed from its source or using the provided binary packages.";
+	$disp = $disp."不管是采用编译源代码还是通过安装二进制包的方式，OpenQRM的安装配置都非常简单。";
 	$disp = $disp."<br>";
 	$disp = $disp."<br>";
-	$disp = $disp."<b>Install openQRM from its sources :</b>";
+	$disp = $disp."<b>通过源代码安装OpenQRM：</b>";
 
 
 	$disp = $disp."<ul>";
 	$disp = $disp."<li>";
-	$disp = $disp."Get the latest sources from the openQRM svn-repository on sourceforge.net";
+	$disp = $disp."从sourceforge.net的OpenQRM SVN代码库获得最新版本的源代码：";
 	$disp = $disp."<br>";
 	$disp = $disp."<i>svn co https://openqrm.svn.sourceforge.net/svnroot/openqrm openqrm</i>";
 	$disp = $disp."</li><li>";
-	$disp = $disp."Change to the source directory";
+	$disp = $disp."进入源代码目录：";
 	$disp = $disp."<br>";
 	$disp = $disp."<i>cd openqrm/trunk/src</i>";
 	$disp = $disp."</li><li>";
-	$disp = $disp."run <b>make</b>";
+	$disp = $disp."运行 <b>make</b>";
 	$disp = $disp."<br>";
 	$disp = $disp."<i>make</i>";
 	$disp = $disp."</li><li>";
-	$disp = $disp."run <b>make install</b>";
+	$disp = $disp."运行 <b>make install</b>";
 	$disp = $disp."<br>";
-	$disp = $disp."(as root)";
+	$disp = $disp."（需要root权限）";
 	$disp = $disp."<br>";
 	$disp = $disp."<i>make install</i>";
 	$disp = $disp."</li><li>";
-	$disp = $disp."run <b>make start</b>";
+	$disp = $disp."运行 <b>make start</b>";
 	$disp = $disp."<br>";
-	$disp = $disp."(as root)";
+	$disp = $disp."（需要root权限）";
 	$disp = $disp."<br>";
 	$disp = $disp."<i>make start</i>";
 	$disp = $disp."</li>";
 	$disp = $disp."</ul>";
 	$disp = $disp."<br>";
-	$disp = $disp."Please notice that package dependencies for the build-procedure are solved automatically !";
+	$disp = $disp."在安装过程中遇到的软件依赖性问题，会由OpenQRM安装程序自动解决。";
 	$disp = $disp."<br>";
 	$disp = $disp."<br>";
 	$disp = $disp."<br>";
-	$disp = $disp."<b>Install openQRM from binary packages :</b>";
+	$disp = $disp."<b>通过二进制包安装OpenQRM：</b>";
 	$disp = $disp."<br>";
-	$disp = $disp."To install openQRM from binary packages first select the package(s) to download from";
-	$disp = $disp." the sourceforge-project page. openQRM is packaged in the following way :";
+	$disp = $disp."首先，您需要从sourceforge.net的项目下载页面下载您所需要安装的软件包。";
+	$disp = $disp."可供选择的OpenQRM软件包包括：";
 	$disp = $disp."<ul>";
 	$disp = $disp."<li>";
 	$disp = $disp."<b>openqrm-server-entire</b>";
 	$disp = $disp."<br>";
-	$disp = $disp."Contains the openQRM-server and all plugins";
+	$disp = $disp."包含OpenQRM服务器以及所有的插件";
 	$disp = $disp."</li><li>";
 	$disp = $disp."<b>openqrm-server</b>";
 	$disp = $disp."<br>";
-	$disp = $disp."Contains just the base openQRM-server (no plugins)";
+	$disp = $disp."饱含OpenQRM服务器但没有任何插件";
 	$disp = $disp."</li><li>";
 	$disp = $disp."<b>openqrm-plugin-[plugin-name]</b>";
 	$disp = $disp."<br>";
-	$disp = $disp."Each plugin as a separated package";
+	$disp = $disp."每个插件都是一个独立的软件包";
 	$disp = $disp."</li>";
 	$disp = $disp."</ul>";
 	$disp = $disp."<br>";
-	$disp = $disp."Then just use the standard package-manager of your distribution to install the packages.";
+	$disp = $disp."然后，使用与您所使用的Linux发行版所对应的包管理工具安装您所下载的软件包。";
 	$disp = $disp."<br>";
 	$disp = $disp."<br>";
 	$disp = $disp."<br>";
-	$disp = $disp."<b>After a successfull installation :</b>";
+	$disp = $disp."<b>安装成功后的系统配置：</b>";
 	$disp = $disp."<br>";
-	$disp = $disp."After the installation you can access the openQRM-server at :";
+	$disp = $disp."安装成功之后，通过浏览器访问OpenQRM服务器：";
 	$disp = $disp."<br>";
 	$disp = $disp."<br>";
 	$disp = $disp."<b>$OPENQRM_WEB_PROTOCOL://[ip-address]/openqrm</b>";
 	$disp = $disp."<br>";
 	$disp = $disp."<br>";
-	$disp = $disp."where [ip-address] is the ip-address of the system you installed openQRM on.";
+	$disp = $disp."其中，[ip-address] 是您所安装OpenQRM服务的服务器IP地址。";
 	$disp = $disp."<br>";
-	$disp = $disp."You can login with the user 'openqrm' and the password 'openqrm'.";
+	$disp = $disp."初始的用户名是openqrm，密码也是openqrm。";
 	$disp = $disp."<br>";
 	$disp = $disp."<br>";
-	$disp = $disp."Please make sure to change the default password after first login!";
+	$disp = $disp."在第一次登录之后，请务必修改您的密码。";
 	$disp = $disp."<br>";
 	return $disp;
 }
@@ -111,7 +111,7 @@ function documentation_installation() {
 
 
 $output = array();
-$output[] = array('label' => 'Installation', 'value' => documentation_installation());
+$output[] = array('label' => '安装配置', 'value' => documentation_installation());
 
 ?>
 <link rel="stylesheet" type="text/css" href="../../css/htmlobject.css" />

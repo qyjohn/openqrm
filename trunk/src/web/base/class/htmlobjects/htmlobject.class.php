@@ -24,6 +24,13 @@ class htmlobject {
 
 	function htmlobject( $path ) {
 		$this->_path = $path;
+		if(isset($_SERVER['REDIRECT_URL'])) {
+			$this->thisfile = basename($_SERVER['REDIRECT_URL']);
+		} else if(isset($_SERVER['PHP_SELF'])) {
+			$this->thisfile = basename($_SERVER['PHP_SELF']);
+		} else {
+		
+		}
 	}
 
 	function debug($level = 1, $tag = 'htmlobject_debug') {

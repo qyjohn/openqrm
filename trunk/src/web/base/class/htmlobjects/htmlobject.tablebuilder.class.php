@@ -199,16 +199,16 @@ var $autosort = false;
 * @var array
 */
 var $lang = array(
-	'button_refresh' => 'refresh',
-	'label_sort'     => 'order by',
-	'label_offset'   => 'offset',
-	'label_limit'    => 'limit',
-	'option_nolimit' => 'none',
-	'select_label'   => 'Select:',
-	'select_all'     => 'all',
-	'select_none'    => 'none',
-	'select_invert'  => 'inverted',
-	'no_data'        => 'no data',
+	'button_refresh' => '刷新',
+	'label_sort'     => '排序',
+	'label_offset'   => '起始条目',
+	'label_limit'    => '显示条目',
+	'option_nolimit' => '无限制',
+	'select_label'   => '选择：',
+	'select_all'     => '全部选中',
+	'select_none'    => '全部取消',
+	'select_invert'  => '逆向选择',
+	'no_data'        => '没有数据',
 );
 /**
 *  ------------------------------------------------------------- Private Section
@@ -385,6 +385,7 @@ var $_var_prefix;
 			$sort_order = SORT_ASC;
 		}
 		$column = array();
+		#reset($this->body);
 		foreach($this->body as $val) {
 			$column[] = $val[$this->sort];
 		}
@@ -483,7 +484,7 @@ var $_var_prefix;
 		$data = array();
 		foreach( $this->head as $key => $value ) {
 			$data[$key] = $val[$key];
-		}		
+		}
 
 		foreach($data as $key_2 => $v) {
 			if($v == '') { $v = '&#160;'; }
@@ -518,38 +519,40 @@ var $_var_prefix;
 	function get_table_actions () {
 	$tr = '';
 		if(isset($this->actions[0]) && isset($this->_body)) {
-			$tr = $this->html->tr();
+			$tr      = $this->html->tr();
 			$tr->css = $this->css_prefix.'tr';
-			$tr->id = 'tr_'. uniqid();
+			$tr->id  = 'tr_'. uniqid();
 		
-			$td = $this->html->td();
+			$td          = $this->html->td();
 			$td->colspan = $this->_num_cols;
-			$td->type = 'td';
-			$td->css = $this->css_prefix.'td actions';
-			$str = '<div class="actiontable">';
+			$td->type    = 'td';
+			$td->css     = $this->css_prefix.'td actions';
+
+			$div      = $this->html->div();
+			$div->css = "actiontable";
+			$div->add($this->get_select());
 			
 			foreach($this->actions as $key_2 => $v) {
 				if(!is_array($v)) {
-					$html = $this->html->input();
-					$html->id = uniqid('p');
-					$html->name = $this->actions_name;
+					$html        = $this->html->input();
+					$html->id    = uniqid('p');
+					$html->name  = $this->actions_name;
 					$html->value = $v;
-					$html->type = 'submit';
-					$str .= $html->get_string();
+					$html->type  = 'submit';
+					$div->add($html);
 				}
 				if(is_array($v)) {
-					$html = $this->html->button();
-					$html->id = uniqid('p');
-					$html->name = $this->actions_name;
+					$html        = $this->html->button();
+					$html->id    = uniqid('p');
+					$html->name  = $this->actions_name;
 					$html->value = $v['value'];
 					$html->label = $v['label'];
-					$html->type = 'submit';
-					$str .= $html->get_string();
+					$html->type  = 'submit';
+					$div->add($html);
 				}
 			}
-
-			$str .= '</div>';
-			$td->text = $this->get_select().''.$str.'<div style="line-height:0px;clear:both;">&#160;</div>';
+			$div->add('<div style="line-height:0px;clear:both;">&#160;</div>');
+			$td->add($div);
 			$tr->add($td);	
 		}
 	return $tr;	
@@ -604,7 +607,7 @@ var $_var_prefix;
 	*/
 	//----------------------------------------------------------------------------------------
 	function get_sort() {
-	$_str = '';
+	$div = '';
 		if($this->sort !== '') {
 			foreach($this->head as $key_2 => $v) {
 				if(!isset($v['title'])) {
@@ -617,21 +620,20 @@ var $_var_prefix;
 					$value[] = array("value" => $key_2, "label" => $v['title']);
 				}
 			}
-			$sort = $this->html->select();
-			$sort->id = uniqid('p');
-			$sort->name = $this->_var_prefix.'sort';
+			$sort             = $this->html->select();
+			$sort->id         = uniqid('p');
+			$sort->name       = $this->_var_prefix.'sort';
 			$sort->text_index = array("value" => "value", "text" => "label");
-			$sort->text = $value;
-			$sort->selected = array($this->sort);
+			$sort->text       = $value;
+			$sort->selected   = array($this->sort);
 			$str_sort = '<label for="'.$sort->id.'">'.$this->lang['label_sort'].$sort->get_string().'</label>';
 			
-			$order = $this->html->select();
-			$order->id = uniqid('p');
-			$order->name = $this->_var_prefix.'order';
+			$order             = $this->html->select();
+			$order->id         = uniqid('p');
+			$order->name       = $this->_var_prefix.'order';
 			$order->text_index = array("value" => "value", "text" => "text");
-			$order->text = array(array("value" => "ASC", "text" => "ASC"),array("value" => "DESC", "text" => "DESC"));
-			$order->selected = array($this->order);
-			$str_order = $order->get_string();
+			$order->text       = array(array("value" => "ASC", "text" => "升序"),array("value" => "DESC", "text" => "降序"));
+			$order->selected   = array($this->order);
 
 			if (count($this->limit_select) <= 0) {
 			$this->limit_select = array(
@@ -643,45 +645,52 @@ var $_var_prefix;
 				array("value" => 50, "text" => 50),
 				);
 			}
-			$limit_input = $this->html->select();
-			$limit_input->id = uniqid('p');
-			$limit_input->name = $this->_var_prefix.'limit';
-			$limit_input->text_index = array("value" => "value", "text" => "text");
-			$limit_input->text = $this->limit_select;
-			$limit_input->selected = array($this->limit);
-			$str_limit = '<label for="'.$limit_input->id.'">'.$this->lang['label_limit'].$limit_input->get_string().'</label>';
+			$limit             = $this->html->select();
+			$limit->id         = uniqid('p');
+			$limit->name       = $this->_var_prefix.'limit';
+			$limit->text_index = array("value" => "value", "text" => "text");
+			$limit->text       = $this->limit_select;
+			$limit->selected   = array($this->limit);
+			$str_limit = '<label for="'.$limit->id.'">'.$this->lang['label_limit'].$limit->get_string().'</label>';
 			
-			$offset_input = $this->html->input();
-			$offset_input->id = uniqid('p');
-			$offset_input->name = $this->_var_prefix.'offset';
-			$offset_input->value = "$this->offset";
-			$offset_input->type = 'text';
-			$offset_input->size = 3;
-			$str_offset = '<label for="'.$offset_input->id.'">'.$this->lang['label_offset'].$offset_input->get_string().'</label>';
+			$offset        = $this->html->input();
+			$offset->id    = uniqid('p');
+			$offset->name  = $this->_var_prefix.'offset';
+			$offset->value = "$this->offset";
+			$offset->type  = 'text';
+			$offset->size  = 3;
+			$str_offset = '<label for="'.$offset->id.'">'.$this->lang['label_offset'].$offset->get_string().'</label>';
 			
-			$max_input = $this->html->input();
-			$max_input->name = $this->_var_prefix.'max';
-			$max_input->value = $this->max;
-			$max_input->type = 'hidden';
+			$max        = $this->html->input();
+			$max->name  = $this->_var_prefix.'max';
+			$max->value = $this->max;
+			$max->type  = 'hidden';
 			
-			$action = $this->html->input();
-			$action->id = uniqid('p');
-			$action->name =  $this->_var_prefix.'action';
-			$action->value = $this->lang['button_refresh'];
-			$action->type = 'submit';
+			$action        = $this->html->input();
+			$action->id    = uniqid('p');
+			$action->name  =  $this->_var_prefix.'action';
+			$action->value = $this->get_lang('button_refresh');
+			$action->type  = 'submit';
+
+			$div      = $this->html->div();
+			$div->css = "sort_box";
+			$div->add($max);
+			$div->add($str_sort);
+			$div->add($order);
+			$div->add($str_offset);
+			$div->add($str_limit);
+			$div->add($action);
+			$div->add('<div style="line-height:0px;clear:both;">&#160;</div>');
 			
-			$_str = '<div class="sort_box">';
-			$_str .= $max_input->get_string().
-						$str_sort.
-						$str_order.
-						$str_offset.
-						$str_limit.
-						$action->get_string();
-			$_str .= '<div style="line-height:0px;clear:both;">&#160;</div>';
-			$_str .= '</div>';
 		}
-	return $_str;
+	return $div;
 	}
+
+
+function get_lang($param) {
+	return $this->lang[$param];
+}
+
 	//----------------------------------------------------------------------------------------
 	/**
 	* returns page turn functions
@@ -945,12 +954,13 @@ var $_var_prefix;
 				$td->colspan = $this->_num_cols;
 				$td->type = 'td';
 				$td->css = $this->css_prefix.'td pageturn_bottom';
+				$td->add($this->get_pageturn());
 		
 				$tr = $this->html->tr();
 				$tr->css = $this->css_prefix.'tr pageturn_bottom';
-				$tr->id = 'tr_'. uniqid();		
-				$td->add($this->get_pageturn());
+				$tr->id = 'tr_'. uniqid();
 				$tr->add($td);
+
 				$table->add($tr);
 			}
 		
@@ -958,13 +968,17 @@ var $_var_prefix;
 				$row->arr_tr[0]->colspan = $this->_num_cols;
 				$table->add($row);
 			}
-			unset($this->_body);
+			// set too null to avoid beeing 
+			// reinitialized by get_string()
+			$this->_body = null;
 			return $this;
 		} else {
 			return null;
 		}
 
 	}
+
+
 
 	//----------------------------------------------------------------------------------------
 	/**

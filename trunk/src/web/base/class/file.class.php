@@ -84,22 +84,22 @@ var $width = 0;
 var $pictype = '';
 
    /**
-          *
-          * @access public
-          * @return object
-          */
+	  *
+	  * @access public
+	  * @return object
+	  */
 	function File($path) {
-	$this->path = $path;
-	$path_parts = pathinfo($path);
-	$this->name = $path_parts["basename"];
-	$this->dir = $path_parts["dirname"];
+		$this->path = $path;
+		$path_parts = pathinfo($path);
+		$this->name = $path_parts["basename"];
+		$this->dir = $path_parts["dirname"];
 		if(isset($path_parts["extension"])) {
 			$this->extension = strtolower($path_parts["extension"]);
 		}
-	$this->filesize = round (filesize ($path)/100) /10;
-	$this->date = date("d.m.Y - H:i", filemtime ($path));
-	$this->date_short = date("d.m.Y", filemtime ($path));
-	$this->filetype = filetype($path);
+		$this->filesize = round (filesize ($path)/100) /10;
+		$this->date = date("d.m.Y - H:i", filemtime ($path));
+		$this->date_short = date("d.m.Y", filemtime ($path));
+		$this->filetype = filetype($path);
 		if($this->filesize != 0) {
 			$imgsize = getimagesize($path);
 			$this->width = $imgsize[0];
@@ -113,10 +113,10 @@ var $pictype = '';
 	//
 	//-------------------------------------------------------------------	
 	function Move($target) {
-	$strMsg = "";
+		$strMsg = "";
 		if(!copy($this->path, $target)){ $strMsg .= 'failed to copy '.$this->name.'<br>'; }
 		if(!unlink($this->path)) {$strMsg .= 'failed to delete '.$this->name.'<br>';}
-	return $strMsg;
+		return $strMsg;
 	}
 }
 ?>

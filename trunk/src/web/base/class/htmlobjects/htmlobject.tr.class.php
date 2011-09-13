@@ -26,22 +26,22 @@ var $arr_tr = array();
 
 
 	function get_string() {
-	$_strReturn = '';
+	$_str = '';
 		$str = $this->get_attribs();
-		$_strReturn = "\n<tr$str>";
+		$_str = "\n<tr$str>";
 		foreach($this->arr_tr as $td) {
 			if(is_object($td) == true && get_class($td) == 'htmlobject_td') {
-				$_strReturn .= $td->get_string();
+				$_str .= $td->get_string();
 			}
 			elseif(is_string($td) == true) {
-				$_strReturn .= $td;
+				$_str .= $td;
 			}
 			else {
-				$_strReturn .= 'td type not defined';
+				$_str .= 'td type not defined';
 			}
 		}
-		$_strReturn .= "</tr>\n";
-	return $_strReturn;
+		$_str .= "</tr>\n";
+	return $_str;
 	}
 
 	function add($td) {

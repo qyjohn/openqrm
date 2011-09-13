@@ -104,7 +104,12 @@ var $_send;
 	//----------------------------------------------------------------------------------------		
 	function get_table_body($key, $val, $i) {
 
-		if( isset($this->identifier) && !in_array( $this->identifier, array_keys($val) ) ) {
+		if( 
+			isset($this->actions) && 
+			count($this->actions) > 0 &&
+			isset($this->identifier) &&
+			!in_array( $this->identifier, array_keys($val) ) 
+		) {
 			$this->_error_body[] = array('ERROR', 'index not found ['.__CLASS__.'->identifier = "'.$this->identifier.'"]');
 		}
 

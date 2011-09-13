@@ -17,12 +17,14 @@
     Copyright 2009, Matthias Rechenburg <matt@openqrm.com>
 */
 -->
-<h1>openQRM Event Summary</h1>
+<h1>CloudPro事件概览</h1>
 <br>
-{events_all} Events in the database  --  Errors :  {events_error}
+所有事件: {events_all} 
+<br>
+错误事件: {events_error}
 <br>
 <br>
-Top {max_show_error} Error Events :
+出错次数最多的 {max_show_error} 错误事件 :
 <br>
 <br>
 {events_error_table}

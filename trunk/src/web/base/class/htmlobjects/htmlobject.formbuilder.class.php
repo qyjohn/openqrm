@@ -18,12 +18,6 @@
 class htmlobject_formbuilder extends htmlobject_http
 {
 /**
-* string to mark value as required
-* @access public
-* @var string
-*/
-var $str_required = '*';
-/**
 * store data
 * @access protected
 * @var string
@@ -40,14 +34,16 @@ var $request = array();
 * @access protected
 * @var array|null
 */
-var $check_request = null;
-
-
-
-var $error_required = 'must not be empty';
-
-
-var $html;
+var $request_errors = null;
+/**
+* translation 
+* @access public
+* @var array
+*/
+var $lang = array(
+	'error_required' => 'must not be empty',
+	'required'       => '*',
+);
 
 
 	//---------------------------------------
@@ -118,8 +114,9 @@ var $html;
 				array( 'pattern' => '~&quot;~', 'replace' => '"'),
 			));
 		$this->data = $data;
-		$this->set_request();
-		$this->set_check_request();
+		$this->_set_request();
+		$this->_set_request_errors();
+		$this->_set_elements($data);
 	}
 
 	//---------------------------------------
@@ -131,71 +128,7 @@ var $html;
 	 */
 	//---------------------------------------
 	function get_request_as_array() {
-
 		return $this->request;
-
-	}
-
-	//---------------------------------------
-	/**
-	 * get request values as url params
-	 *
-	 * @access public
-	 * @return string
-	 */
-	//---------------------------------------
-	function get_request_as_string() {
-
-		$strReturn = '';
-		foreach ($this->data as $data) {
-			if(isset($data['object']['attrib']['name'])) {
-				$name = $this->unindex_array($data['object']['attrib']['name']);
-				$request = '$this->request'.$this->string_to_index($name);
-				if(eval("return isset($request);")) {
-					if(is_array(eval("return $request;"))) {
-						foreach(eval("return $request;") as $key => $value) {
-							$strReturn .= '&'.$name.'['.$key.']='.$value;
-						}
-					}
-					else {
-						$strReturn .= '&'.$name.'='. eval("return $request;");
-					}
-				}
-			}
-		}
-		return $strReturn;
-
-	}
-
-	//---------------------------------------
-	/**
-	 * get array for html template
-	 *
-	 * will return
-	 * array[$key] = html element as string
-	 * $key is
-	 *
-	 * @access public
-	 * @return array of strings
-	 */
-	//---------------------------------------
-	function get_template_array( $name = null ) {
-
-		$ar = array();
-		if( $name ) {
-			$data[$name] = $this->data[$name];
-		} else {
-			$data = $this->data;
-		}
-		
-		foreach ($data as $key => $data) {
-			$box = $this->html->box();
-			$box->label = $this->get_label($data);
-			$box->content = $this->get_htmlobject_object($data);
-			$ar = array_merge($ar, array($key => $box->get_string()));
-		}
-		return $ar;
-
 	}
 
 	//---------------------------------------
@@ -210,7 +143,7 @@ var $html;
 	 */
 	//---------------------------------------
 	function get_errors() {
-		return $this->check_request;
+		return $this->request_errors;
 	}
 
 	//---------------------------------------
@@ -220,7 +153,7 @@ var $html;
 	 * @access protected
 	 */
 	//---------------------------------------
-	function set_request() {
+	function _set_request() {
 
 		$arReturn = null;
 		foreach ($this->data as $data) {
@@ -265,7 +198,7 @@ var $html;
 	 * @todo pregmatch for arrays
 	 */
 	//---------------------------------------
-	function set_check_request() {
+	function _set_request_errors() {
 		foreach ($this->data as $data) {
 			// handle validate
 			if(
@@ -281,7 +214,7 @@ var $html;
 				if(eval("return isset($request);") && isset($regex) && $regex != '') {
 					$matches = @preg_match($regex, eval("return $request;"));
 					if(!$matches) {
-						$this->check_request[$name] = $data['validate']['errormsg'];
+						$this->request_errors[$name] = $data['validate']['errormsg'];
 					}
 				}
 			}
@@ -294,7 +227,7 @@ var $html;
 				$name    = $data['object']['attrib']['name'];
 				$request = '$this->request'.$this->string_to_index($name);
 				if (eval("return !isset($request);") && isset($data['required']) && $data['required'] == true) {
-					$this->check_request[$name] = $data['label'].' '.$this->error_required;
+					$this->request_errors[$name] = $data['label'].' '.$this->lang['error_required'];
 				}
 			}
 		}
@@ -303,101 +236,70 @@ var $html;
 
 	//---------------------------------------
 	/**
-	 * get html objects
+	 * set elements
+	 * make sure data, request and request_errors
+	 * are set first
 	 *
 	 * @access protected
-	 * @param array $data
-	 * @return object|null
 	 */
 	//---------------------------------------
-	function get_htmlobject_object($data) {
-
-		if(
-			isset($data['object']) &&
-			isset($data['object']['type']) &&
-			isset($data['object']['attrib']) &&
-			isset($data['object']['attrib']['name'])
-		) {
-
-			// set vars
-			$object  = strtolower($data['object']['type']);
-			$attribs = $data['object']['attrib'];
-			$name 	 = $data['object']['attrib']['name'];
-
-			// build object
-			switch($object) {
-				case 'htmlobject_input':
-				case 'htmlobject_select':
-				case 'htmlobject_textarea':
-				case 'htmlobject_button':
-					$html = $this->make_htmlobject($object, $attribs);
-				break;
+	function _set_elements($data) {
+		$ar = array();
+		foreach($data as $key => $value) {
+			$obj = str_replace('htmlobject_', '', $value['object']['type']);
+			$obj = $this->html->$obj();
+			foreach($value['object']['attrib'] as $akey => $attrib) {
+				$obj->$akey = $attrib;
 			}
-
-			// set request
-			if( !isset($data['static']) || $data['static'] !== true ) {
-				if(	isset($this->request) && count($this->request) > 0) {
-					$request = '$this->request'.$this->string_to_index($name);
-				}
-			} else {
-				$html->value = $data['object']['attrib']['value'];
-			} 
-
-			// build return
-			if(
-				isset($request) &&
-				$request != '' &&
-				isset($html)
-			) {
-				// add request to object
-				switch($object) {
-					case 'htmlobject_input':
-						$html = $this->handle_htmlobject_input($html, $request);
-					break;
-					case 'htmlobject_select':
-						$html = $this->handle_htmlobject_select($html, $request);
-					break;
-					case  'htmlobject_textarea':
-						$html = $this->handle_htmlobject_textarea($html, $request);
-					break;
-				}
-				return $html;
-			}
-			elseif(isset($html)) {
-				return $html;
-			} else {
-				return '';
-			}
+			$this->elements[$key] = $obj;
+			$this->_set_elements_value($key);			
 		}
-
 	}
 
 	//---------------------------------------
 	/**
-	 * make html objects
+	 * set elements value
+	 * make sure data, request and request_errors
+	 * are set first
 	 *
 	 * @access protected
-	 * @param string $object
-	 * @param array $attrib
+	 */
+	//---------------------------------------
+	function _set_elements_value($key) {
+		$name = $this->data[$key]['object']['attrib']['name'];
+		if( isset($this->data[$key]['static']) && $this->data[$key]['static'] === true ) {
+			$this->handle_htmlobject($key, $this->data[$key]['object']['attrib']['value']);
+		} else {
+			if(	isset($this->request) && count($this->request) > 0) {
+				if(isset($this->request[$name])) {
+					$this->handle_htmlobject($key, $this->request[$name]);
+				}
+			}
+		}		
+	}
+
+	//---------------------------------------
+	/**
+	 * handle htmlobject
+	 *
+	 * @access protected
+	 * @param object $html
+	 * @param string $request
 	 * @return object
 	 */
 	//---------------------------------------
-	function make_htmlobject( $object, $attrib ) {
-
-		$object = str_replace('htmlobject_', '', $object);
-
-		// build htmlobject
-		$html = $this->html->$object();
-		foreach ($attrib as $key => $param) {
-			$html->$key = $param;
+	function handle_htmlobject($key, $value) {
+		$html = $this->elements[$key];
+		if($html instanceof htmlobject_input) {
+			$this->handle_htmlobject_input($key, $value);
 		}
-		// make sure id is set
-		$html->set_id();
-		return $html;
-
+		if($html instanceof htmlobject_textarea) {
+			$this->handle_htmlobject_textarea($key, $value);
+		}
+		if($html instanceof htmlobject_select) {
+			$this->handle_htmlobject_select($key, $value);
+		}
 	}
-
-	//------- Object Section
 
 	//---------------------------------------
 	/**
@@ -410,7 +312,9 @@ var $html;
 	 * @return object
 	 */
 	//---------------------------------------
-	function handle_htmlobject_input($html, $request) {
+	function handle_htmlobject_input($key, $value) {
+
+		$html = $this->elements[$key];
 
 		$html->type = strtolower($html->type);
 		switch($html->type) {
@@ -422,10 +326,7 @@ var $html;
 				// do nothing
 			break;
 			case 'radio':
-				if(
-					eval("return isset($request);") &&
-					eval("return $request;") == $html->value
-				) {
+				if($value == $html->value) {
 					$html->checked = true;
 				} else {
 					$html->checked = false;
@@ -433,31 +334,23 @@ var $html;
 			break;
 			case 'checkbox':
 				$checked = false;
-				if(eval("return isset($request);")) {
-					if(is_string(eval("return $request;"))) {
-						if(eval("return $request;") != '') {
-							$checked = true;
+					if(is_string($value)) {
+						if($value !== '') {
+							$html->checked = true;
 						}
 					}
-					if(is_array(eval("return $request;"))) {
-						if(in_array($html->value, eval("return $request;"))) {
-							$checked = true;
+					if(is_array($value)) {
+						if(in_array($html->value, $value)) {
+							$html->checked = true;
 						}
 					}
-					$html->checked = $checked;
-				}				
 			break;
 			case 'text':
 			case 'hidden':
 			case 'password':
-				if(eval("return isset($request);")) {
-					$html->value = str_replace('"', '&quot;', eval("return $request;"));
-				} else {
-					$html->value = '';
-				}
+					$html->value = $value;
 			break;
 		}
-		return $html;
 
 	}
 
@@ -471,17 +364,13 @@ var $html;
 	 * @return object
 	 */
 	//---------------------------------------
-	function handle_htmlobject_select($html, $request) {
-
-		if(eval("return isset($request);")) {
-			if(is_array(eval("return $request;"))) {
-				$html->selected = eval("return $request;");
-			} else {
-				$html->selected = array(eval("return $request;"));
-			}
+	function handle_htmlobject_select($key, $value) {
+		$html = $this->elements[$key];
+		if(is_array($value)) {
+			$html->selected = $value;
+		} else {
+			$html->selected = array($value);
 		}
-		return $html;
-
 	}
 
 	//---------------------------------------
@@ -494,15 +383,9 @@ var $html;
 	 * @return object
 	 */
 	//---------------------------------------
-	function handle_htmlobject_textarea($html, $request) {
-
-		if(eval("return isset($request);")) {
-			$html->text = str_replace('<', '&lt;', eval("return $request;"));
-		} else {
-			$html->text = '';
-		}
-		return $html;
-
+	function handle_htmlobject_textarea($key, $value) {
+		$html = $this->elements[$key];
+		$html->value = str_replace('<', '&lt;', eval("return $request;"));
 	}
 
 	//---------------------------------------
@@ -524,87 +407,54 @@ var $html;
 			$label = $data['label'];
 			$name  = $data['object']['attrib']['name'];
 			// mark error
-			if($this->check_request) {
-				if(array_key_exists($name, $this->check_request)) {
+			if($this->request_errors) {
+				if(array_key_exists($name, $this->request_errors)) {
 					$label = '<span class="error">'.$label.'</span>';
 				}
 			}
 			// mark required
 			if(isset($data['required']) && $data['required'] === true) {
-				$label = $label.' '.$this->str_required;
+				$label = $label.' '.$this->lang['required'];
 			}
 		}
 		return $label;
 
 	}
-	//-------------------------- Helpers
 
 	//---------------------------------------
 	/**
-	 * get tab_request as html inputs
+	 * get array for htmlobject_template
+	 *
+	 * will return array($name => htmlobject_box)
 	 *
 	 * @access public
-	 * @param array $arValues
-	 * @return string
+	 * @param string name of element
+	 * @return array of objects
 	 */
 	//---------------------------------------
-	function get_tab_request_as_input($arValues = array()) {
-
-		$strReturn = '';
-		$arValues = array_merge($this->tab_request, $arValues);
-		foreach ($arValues as $key => $value) {
-			$strReturn .= $this->get_input($key, $value, 'hidden');
+	function get_object( $name = null ) {
+		$a = array();
+		if( $name ) {
+			$data[$name] = $this->data[$name];
+		} else {
+			$data = $this->data;
 		}
-		return $strReturn;
-
+    	$k = array_keys($data);
+    	$s = sizeOf($k);
+		reset($data);
+		for($i = 0; $i < $s; ++$i) {
+			$html         = $this->elements[$k[$i]];
+			$box          = $this->html->box();
+			$box->label   = $this->get_label($data[$k[$i]]);
+			$box->content = $html;
+			if($box->label !== '') {
+				$a = array_merge($a, array($k[$i] => $box));
+			} else {
+				$a = array_merge($a, array($k[$i] => $html));
+			}
+		}
+		return $a;
 	}
-
-	//---------------------------------------
-	/**
-	 * get htmlobject_input as string
-	 *
-	 * @access public
-	 * @param string $name
-	 * @param string $value
-	 * @param enum $type
-	 * @return string
-	 */
-	//---------------------------------------
-	function get_input($name, $value, $type = 'hidden') {
-
-		$value = str_replace('"', '&quot;', $value);
-		$value = str_replace('<', '&lt;', $value);
-
-		$html = $this->html->input();
-		$html->name = $name;
-		$html->value = $value;
-		$html->type = $type;
-
-		return $html->get_string();
-	}
-
-	//---------------------------------------
-	/**
-	 * get htmlobject_button as string
-	 *
-	 * @access public
-	 * @param string $name
-	 * @param string $value
-	 * @param string $label
-	 * @return string
-	 */
-	//---------------------------------------
-	function get_button($name, $value, $label) {
-
-		$html = $this->html->button();
-		$html->name = $name;
-		$html->value = $value;
-		$html->type = 'submit';
-		$html->label = $label;
-
-		return $html->get_string();
-	}
-
 
 	//---------------------------------------
 	/**
@@ -615,24 +465,23 @@ var $html;
 	 */
 	//---------------------------------------
 	function get_string( $name = null ) {
-	$str  = '';
+
+		$str = '';
 		if( $name ) {
-			$data = $data = $this->get_template_array( $name );
+			$data = $data = $this->get_object( $name );
 		} else {
-			$data = $data = $this->get_template_array();
+			$data = $data = $this->get_object();
 		}
-
-
 		foreach( $data as $key => $value) {
 			if( $name ) {
 				if( $key === $name ) {
-					$str .= $value;
+					$str .= $value->get_string();
 				}				
 			} else {
-				$str .= $value;
+				$str .= $value->get_string();
 			}
 		}
-	return $str;
+		return $str;
 	}
 
 

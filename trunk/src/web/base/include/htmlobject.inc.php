@@ -48,16 +48,16 @@ function htmlobject_input($name, $value, $type = 'text', $arg = '') {
 	$html->value = $value['value'];
 	$html->title = $value['label'];
 	$html->type = $type;
-	
+
 	switch($type) {
 		case 'text':
 		case 'password':
-			$html->maxlength = $arg;		
+			$html->maxlength = $arg;
 			return htmlobject_box_from_object($html, ' input');
 			break;
 		case 'checkbox':
 			$html->value = '';
-			$html->checked = $arg;		
+			$html->checked = $arg;
 			return htmlobject_box_from_object($html, ' checkbox');
 			break;
 		case 'hidden':
@@ -67,7 +67,7 @@ function htmlobject_input($name, $value, $type = 'text', $arg = '') {
 			break;
 		default:
 			return $html->get_string();
-			break;			
+			break;
 	}
 }
 //---------------------------------------------------------------
@@ -82,15 +82,15 @@ function htmlobject_input($name, $value, $type = 'text', $arg = '') {
 */
 function htmlobject_select($name, $value, $title = '', $selected = array()) {
 
-		$html = new htmlobject_select();
-		$html->id = 'p'.uniqid();
-		$html->name = $name;
-		$html->title = $title;
-		$html->selected = $selected;
-		$html->text_index = array("value" => "value", "text" => "label");
-		$html->text = $value;
+	$html = new htmlobject_select();
+	$html->id = 'p'.uniqid();
+	$html->name = $name;
+	$html->title = $title;
+	$html->selected = $selected;
+	$html->text_index = array("value" => "value", "text" => "label");
+	$html->text = $value;
 
-		return htmlobject_box_from_object($html, ' select');
+	return htmlobject_box_from_object($html, ' select');
 }
 //---------------------------------------------------------------
 /**
@@ -103,13 +103,13 @@ function htmlobject_select($name, $value, $title = '', $selected = array()) {
 * @return string
 */
 function htmlobject_select_simple($name, $value, $title = '', $selected = '') {
-		$html = new htmlobject_select();
-		$html->name = $name;
-		$html->title = $title;
-		$html->selected = $selected;
-		$html->text_index = array("value" => "value", "text" => "label");
-		$html->text = $value;
-		return $html->get_string();
+	$html = new htmlobject_select();
+	$html->name = $name;
+	$html->title = $title;
+	$html->selected = $selected;
+	$html->text_index = array("value" => "value", "text" => "label");
+	$html->text = $value;
+	return $html->get_string();
 }
 //---------------------------------------------------------------
 /**
@@ -121,13 +121,13 @@ function htmlobject_select_simple($name, $value, $title = '', $selected = '') {
 */
 function htmlobject_textarea($name, $value) {
 
-		$html = new htmlobject_textarea();
-		$html->id = 'p'.uniqid();
-		$html->name = $name;
-		$html->title = $value['label'];
-		$html->text = $value['value'];
+	$html = new htmlobject_textarea();
+	$html->id = 'p'.uniqid();
+	$html->name = $name;
+	$html->title = $value['label'];
+	$html->text = $value['value'];
 
-		return htmlobject_box_from_object($html, ' textarea');
+	return htmlobject_box_from_object($html, ' textarea');
 }
 //---------------------------------------------------------------
 /**
@@ -153,7 +153,7 @@ function htmlobject_tabmenu($value) {
 		$tabmenu->add($html);
 		$i++;
 	}
-*/
+	*/
 
 	return $tabmenu->get_string();
 }
@@ -172,11 +172,11 @@ function htmlobject_box_from_object($html, $css='', $usetitle = true) {
 	$box->css = 'htmlobject_box'.$css;
 	$box->label = $html->title;
 	$box->content = $html;
-	
+
 	if($usetitle === false) {
 		$html->title = '';
 	}
-	
+
 	return $box->get_string();
 }
 //---------------------------------------------------------------
@@ -203,17 +203,17 @@ function htmlobject_radio_list($name, $value, $title = '', $checked = '') {
 		}
 		$html->value = $val['value'];
 		$_strReturn .= htmlobject_box_from_object($html, ' radio');
-		
+
 		$i++;
 	}
-	
+
 	$html = new htmlobject_div();
 	$html->name = '';
 	$html->title = $title;
 	$html->text = $_strReturn;
 
-	$_strReturn = htmlobject_box_from_object($html, ' outerbox', false);	
-	
+	$_strReturn = htmlobject_box_from_object($html, ' outerbox', false);
+
 	return $_strReturn;
 }
 //---------------------------------------------------------------
@@ -227,7 +227,7 @@ function htmlobject_radio_list($name, $value, $title = '', $checked = '') {
 */
 function htmlobject_table($id, $value, $mode = 'object') {
 	$_strReturn = '';
-	
+
 	$table = new htmlobject_table();
 	$table->id = $id;
 	$table->css = 'htmlobject_table';
@@ -237,7 +237,7 @@ function htmlobject_table($id, $value, $mode = 'object') {
 
 	$i = 0;
 	if($mode == 'object') {
-		foreach ($value as $val) {	
+		foreach ($value as $val) {
 		$tr = new htmlobject_tr();
 			foreach($val as $key => $v) {
 				$td = new htmlobject_td();
@@ -255,7 +255,7 @@ function htmlobject_table($id, $value, $mode = 'object') {
 			}
 		$table->add($tr);
 	}
-	
+
 	return $table->get_string();
 }
 //---------------------------------------------------------------
@@ -274,28 +274,27 @@ function htmlobject_head($title = '', $timer = '', $url = '') {
 	$html->add_meta('cache-control','no-cache');
 	$html->add_meta('pragma','no-cache');
 	if($timer != '' && $url != '') {
-		$html->add_meta('refresh', $timer.'; URL='.$url);	
+		$html->add_meta('refresh', $timer.'; URL='.$url);
 	}
 	$html->add_style('../../css/htmlobject.css');
 	$html->title = $title;
-	
+
 	return $html->get_string();
 }
 //---------------------------------------------------------------
-function htmlobject_request($arg) 
-{
-	if (isset($_REQUEST[$arg])) 
-			return $_REQUEST[$arg];	
+function htmlobject_request($arg) {
+	if (isset($_REQUEST[$arg]))
+		return $_REQUEST[$arg];
 	else
-			return '';
+		return '';
 }
 
 function error_redirect($strMsg = '') {
-global $thisfile;
+	global $thisfile;
 	$args = '?strMsg=<strong>Error:</strong><br>'.$strMsg;
 	foreach($_POST as $key => $value) {
 	if($key != 'action') {
-		
+
 		if(is_array($value)) {
 			foreach($value as $key1 => $value1) {
 				$args .= '&'.$key.'[]='.$value1;
@@ -307,7 +306,7 @@ global $thisfile;
 	}
 	foreach($_GET as $key => $value) {
 	if($key != 'action') {
-		
+
 		if(is_array($value)) {
 			foreach($value as $key1 => $value1) {
 				$args .= '&'.$key.'[]='.$value1;
@@ -334,8 +333,8 @@ class htmlobject_db_table extends htmlobject_table_builder
 class htmlobject_table_identifiers_checked extends htmlobject_table_builder 
 {
 
-var $_identifiers = array();
-	
+	var $_identifiers = array();
+
 	function get_indentifier($key, $ident) {
 		if($this->identifier != '') {
 			$html = new htmlobject_input();
@@ -343,18 +342,18 @@ var $_identifiers = array();
 			$html->name = 'identifier[]';
 			$html->value = $this->body[$key][$this->identifier];
 			$html->type = 'hidden';
-			
+
 			$this->_identifiers[] = $html->get_string();
 		}
 	}
 
 	function get_table_head() {
-	$tr = '';
+		$tr = '';
 		if(count($this->head) > 0) {
 			$tr = new htmlobject_tr();
 			$tr->css = 'htmlobject_tr';
 			$tr->id = 'tr_'. uniqid();
-		
+
 			foreach($this->head as $key_2 => $value) {
 				if($value['title'] == '') { $value['title'] = '&#160;'; }
 				$td = new htmlobject_td();
@@ -364,16 +363,16 @@ var $_identifiers = array();
 				$tr->add($td);
 			}
 		}
-	return $tr;
+		return $tr;
 	}
 
 	function get_table_bottom () {
-	$tr = '';
+		$tr = '';
 		if(isset($this->bottom[0])) {
 			$tr = new htmlobject_tr();
 			$tr->css = 'htmlobject_tr';
 			$tr->id = 'tr_'. uniqid();
-		
+
 			$td = new htmlobject_td();
 			$td->colspan = $this->_num_cols;
 			$td->type = 'td';
@@ -388,9 +387,9 @@ var $_identifiers = array();
 			}
 			$str .= join("", $this->_identifiers);
 			$td->text = $str;
-			$tr->add($td);	
+			$tr->add($td);
 		}
-	return $tr;	
+	return $tr;
 	}
 }
 class htmlobject_table_identifiers_radio extends htmlobject_table_builder 
@@ -405,7 +404,7 @@ class htmlobject_table_identifiers_radio extends htmlobject_table_builder
 	* @access public
 	* @return string
 	*/
-	//----------------------------------------------------------------------------------------	
+	//----------------------------------------------------------------------------------------
 	function  get_js() {
 	$_strReturn = '';
 		$_strReturn .= "\n";

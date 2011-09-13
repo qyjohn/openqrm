@@ -17,16 +17,16 @@
     Copyright 2009, Matthias Rechenburg <matt@openqrm.com>
 */
 -->
-<h1>openQRM Appliance Summary</h1>
+<h1>CloudPro器件概览</h1>
 <br>
-All Appliances : {appliance_all}
+所有器件: {appliance_all}
 <br>
-Active Appliances :  {appliance_active}
+活跃器件: {appliance_active}
 <br>
-Appliances in Error : {appliance_error}
+错误器件: {appliance_error}
 <br>
 <br>
-Top {max_show_appliance_} Most active Appliances  :
+最活跃的 {max_show_appliance_} 个器件:
 <br>
 <br>
 {appliance_table}

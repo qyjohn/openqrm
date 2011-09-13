@@ -17,18 +17,18 @@
     Copyright 2009, Matthias Rechenburg <matt@openqrm.com>
 */
 -->
-<h1>openQRM Cloud Summary</h1>
+<h1>CloudPro云平台概览</h1>
 <br>
-All Cloud Users : {cloud_users}
+全部云平台用户: {cloud_users}
 <br>
-All Cloud Requests : {cr_all}
+全部云平台请求: {cr_all}
 <br>
-Active Cloud Requests :  {cr_active}
+活跃云平台请求:  {cr_active}
 <br>
-Cloud Errors : {cloud_errors}
+云平台错误: {cloud_errors}
 <br>
 <br>
-Top {max_show_cr} Active Cloud Requests :
+最活跃的 {max_show_cr} 个云平台请求:
 <br>
 <br>
 {cloud_table}

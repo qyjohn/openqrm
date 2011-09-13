@@ -1,8 +1,13 @@
 .htmlobject_tab_box {
-	width:700px;
+	width:800px;
 }
 .htmlobject_td {
 	padding:5px !important;
+}
+.htmlobject_td.kernel_icon {
+	text-align:center;
+	width:25px;
+	vertical-align:top;
 }
 .htmlobject_td.kernel_id {
 	text-align:center;
@@ -11,17 +16,17 @@
 }
 .htmlobject_td.kernel_name {
 	text-align:left;
-	width:110px;
+	width:220px;
 	vertical-align:top;
 }
 .htmlobject_td.kernel_version {
 	text-align:left;
-	width:110px;
+	width:140px;
 	vertical-align:top;
 }
-.htmlobject_td.kernel_capabilities {
+.htmlobject_td.kernel_comment {
 	text-align:left;
-	width:320px;
+	width:200px;
 	vertical-align:top;
 }
 .htmlobject_td.identifier {
@@ -30,8 +35,8 @@
 }
 
 .tr_hover {
-background-color:#eee;
+	background-color:#eee;
 }
 .tr_click {
-background-color:#ddd;
+	background-color:#ddd;
 }

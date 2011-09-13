@@ -51,7 +51,12 @@ var $text = '';
 			$text = array($text);
 		}
 
-		foreach($text as $value) {
+    	$k = array_keys($text);
+    	$s = sizeOf($k);
+		reset($text);
+
+		for($i = 0; $i < $s; ++$i) {
+			$value = $text[$k[$i]];
 			if(is_object($value)) {
 				$str .= $value->get_string();
 			} else {

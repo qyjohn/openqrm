@@ -29,81 +29,79 @@
 
 
 #introduction {
-    position: absolute;
-    left: 40px;
+	position: absolute;
+	left: 40px;
 	width:500px;
-    top: 150px;
-    padding: 10px;
+	top: 150px;
+	padding: 10px;
 }
 
 
 #config_text {
-    position: absolute;
-    left: 40px;
+	position: absolute;
+	left: 40px;
 	width:300px;
-    top: 200px;
-    padding: 10px;
-    border: solid 1px #ccc;
+	top: 200px;
+	padding: 10px;
+	border: solid 1px #ccc;
 }
 
 #config_table {
-    position: absolute;
-    left: 380px;
+	position: absolute;
+	left: 380px;
 	width:250px;
-    top: 200px;
-    padding: 10px;
-    border: solid 1px #ccc;
+	top: 200px;
+	padding: 10px;
+	border: solid 1px #ccc;
 }
 
 #steps {
-    position: absolute;
-    left: 530px;
+	position: absolute;
+	left: 530px;
 	width:350px;
-    top: 50px;
+	top: 50px;
 }
 
 
 #openqrm_logo {
-    position: absolute;
-    left: 130px;
+	position: absolute;
+	left: 130px;
 	width:150px;
-    top: 410px;
-    padding: 10px;
+	top: 410px;
+	padding: 10px;
 }
 
 a {
-    text-decoration:none
+	text-decoration:none
 }
 
 </style>
 <div>
-    <h1>openQRM Configuration Manager</h1>
-    <div id="steps">
-    <strong>step 1</strong> - step 2 - step 3
-    </div>
+	<h1>CloudPro配置向导</h1>
+	<div id="steps">
+	<strong>第一步</strong> - 第二步 - 第三步
+	</div>
 
-    <div id="introduction">
-    This Wizard will help you to configure your openQRM Server in 3 simple steps.
-    </div>
+	<div id="introduction">
+	本向导通过三个简单的步骤帮助您配置您的CloudPro服务器。
+	</div>
 
-    <div id="config_text">
-    <h4>Please select a network card</h4>
-    The selected network card will be used to setup openQRM Server and create
-    the openQRM Management Network. All available and configured network interfaces
-    on this system are listed on the right.
-    </div>
+	<div id="config_text">
+	<h4>选择网卡</h4>
+	本系统上所有可用的网卡如右侧的列表所示。请选择一个网卡用于安装CloudPro服务器以及创建CloudPro管理网络。
+	</div>
 
 	<div id="config_table">
-        {nic_table}
-    </div>
+		{nic_table}
+	</div>
 
 	<div id="openqrm_logo">
-        <a href="http://www.openqrm.com" target="_BLANK">
-        &nbsp;&nbsp;&nbsp;<img src="/openqrm/base/img/logo.png" width="100" height="48" border="0" alt="Your open-source Cloud computing platform"/>
-        <br>
-        The openQRM Project
-        </a>
-    </div>
+		<a href="http://www.openqrm.com" target="_BLANK">
+		&nbsp;&nbsp;&nbsp;<img src="/openqrm/base/img/logo.png" width="100" height="48" border="0" alt="Your open-source Cloud computing platform"/>
+		<br>
+		CloudPro 4.8
+		</a>
+	</div>
 
 </div>
 

@@ -107,7 +107,7 @@ var $_script = array();
 	* @return string
 	*/
 	function get_string() {
-	
+
 		if(count($this->_style) > 0) {
 			$this->add_meta('Content-Style-Type', 'text/css');
 		}
@@ -121,6 +121,7 @@ var $_script = array();
 		$_strReturn .= implode("\n", $this->_style)."\n";
 		$_strReturn .= implode("\n", $this->_script)."\n";
 		$_strReturn .= '<title>'.$this->title."</title>\n";
+		$_strReturn .= '<meta http-equiv="Content-Type" content="text/html; charset=UTF-8"></meta>';
 		$_strReturn .= "</head>\n";
 
 		return $_strReturn;
@@ -130,11 +131,11 @@ var $_script = array();
 	* @access public
 	* @param $value string
 	* @param $content string
-	* @param $type string [http-equiv, name]	
-	*/	
+	* @param $type string [http-equiv, name]
+	*/
 	function add_meta ($value, $content ,$type = 'http-equiv') {
-		$this->_meta[] = '<meta '.$type.'="'.$value.'" content="'.$content.'">';
-	}
+                $this->_meta[] = '<meta '.$type.'="'.$value.'" content="'.$content.'">';
+ 	}
 	/**
 	* Add external stylesheet to head
 	* @access public
@@ -148,7 +149,7 @@ var $_script = array();
 	* Add external script to head
 	* @access public
 	* @param $path string [url]
-	*/	
+	*/
 	function add_script ($path) {
 		$this->_script[] = '<script src="'.$path.'" type="text/javascript"></script>';
 	}

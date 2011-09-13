@@ -15,6 +15,7 @@
     along with openQRM.  If not, see <http://www.gnu.org/licenses/>.
 
     Copyright 2009, Matthias Rechenburg <matt@openqrm.com>
+    Copyright 2011, Qingye Jiang (John) <qjiang@ieee.org>
 */
 -->
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.1//EN" "http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd">
@@ -57,7 +58,7 @@ a:hover
 <body>
 <div id="eventlist">
 
-<h1>Event List</h1>
+<h1>事件列表</h1>
 
 {event_table}
 

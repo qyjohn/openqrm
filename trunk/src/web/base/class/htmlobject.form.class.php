@@ -1,4 +1,4 @@
-<?
+<?php
 /**
  * @package htmlobject
  *
@@ -59,11 +59,11 @@ var $request = null;
 */
 var $check_request = null;
 
-	
+
 	//---------------------------------------
 	/**
 	 * Constructor
-	 * 
+	 *
 	 * Good to know:
 	 * If form is cleared (inputs are empty) and then submitted,
 	 * form will load preset values and will not appear empty.
@@ -81,13 +81,13 @@ var $check_request = null;
 	 * $data['name']['validate']['regex']         = '/^[a-z0-9~._-]+$/i';
 	 * $data['name']['validate']['errormsg']      = 'string must be a-z0-9~._-';
 	 * // build object
-	 * $data['name']['object']                    = array (); 	
+	 * $data['name']['object']                    = array ();
 	 * $data['name']['object']['type']            = 'htmlobject_input';
 	 * $data['name']['object']['attrib']          = array();
 	 * $data['name']['object']['attrib']['type']  = 'text';
 	 * $data['name']['object']['attrib']['name']  = 'name';
 	 * $data['name']['object']['attrib']['value'] = 'somevalue';
-	 * 
+	 *
 	 * $formbuilder = new htmlobject_formbuilder( $data );
 	 *
 	 * // Actions
@@ -132,15 +132,15 @@ var $check_request = null;
 					!isset($value['validate']['errormsg'])
 				) {
 					debug::add('["'.$key.'"]["validate"]["errormsg"] not set', 'ERROR');
-				}				
-				elseif (isset($value['validate']) && 
+				}
+				elseif (isset($value['validate']) &&
 						$value['validate']['errormsg'] == ''
 				) {
 					debug::add('["'.$key.'"]["validate"]["errormsg"] is empty', 'NOTICE');
 				}
 			}
 		}
-		
+
 		$this->data = $data;
 
 	}
@@ -148,9 +148,9 @@ var $check_request = null;
 	//---------------------------------------
 	/**
 	 * init
-     *
+	 *
 	 * @acess public
-	 * @return array 
+	 * @return array
 	 */
 	//---------------------------------------
 	function init() {
@@ -169,17 +169,17 @@ var $check_request = null;
 			$this->set_check_request();
 		}
 
-	}	
+	}
 	//---------------------------------------
 	/**
 	 * get request values as array
-     *
+	 *
 	 * @acess public
-	 * @return array 
+	 * @return array
 	 */
 	//---------------------------------------
 	function get_request_array() {
-		
+
 		$this->init();
 		if(count($this->request) > 0) {
 			return $this->request;
@@ -187,12 +187,12 @@ var $check_request = null;
 
 	}
 
-	//---------------------------------------	
+	//---------------------------------------
 	/**
 	 * get request values as url params
 	 *
 	 * @acess public
-	 * @return string 
+	 * @return string
 	 */
 	//---------------------------------------
 	function get_request_string() {
@@ -207,17 +207,17 @@ var $check_request = null;
 					if(is_array(eval("return $request;"))) {
 						foreach(eval("return $request;") as $key => $value) {
 							$strReturn .= '&'.$name.'['.$key.']='.$value;
-						} 						
+						}
 					}
 					else {
 						$strReturn .= '&'.$name.'='. eval("return $request;");
 					}
 				}
-			}					
+			}
 		}
 		return $strReturn;
 
-	}	
+	}
 
 	//---------------------------------------
 	/**
@@ -225,7 +225,7 @@ var $check_request = null;
 	 *
 	 * will return
 	 * array[$key] = html element as string
-	 * $key is 
+	 * $key is
 	 *
 	 * @acess public
 	 * @return array of strings
@@ -233,7 +233,7 @@ var $check_request = null;
 	//---------------------------------------
 	function get_template_array() {
 		$this->init();
-		
+
 		$ar = array();
 		foreach ($this->data as $key => $data) {
 			$box = new htmlobject_box();
@@ -243,9 +243,9 @@ var $check_request = null;
 			$ar = array_merge($ar, array($key => $box->get_string()));
 		}
 		return $ar;
-		
+
 	}
-	
+
 	//---------------------------------------
 	/**
 	 * get errors
@@ -296,7 +296,7 @@ var $check_request = null;
 						eval("return $ar = \"$request\";");
 					}
 				}
-			}		
+			}
 		}
 
 		// set request even when Array is
@@ -305,7 +305,7 @@ var $check_request = null;
 		$this->request = $arReturn;
 
 	}
-	
+
 	//---------------------------------------
 	/**
 	 * Check $this->data request
@@ -330,7 +330,7 @@ var $check_request = null;
 				count($this->request) > 0
 			) {
 
-				// set vars				
+				// set vars
 				$regex = $data['validate']['regex'];
 				$name  = $data['object']['attrib']['name'];
 
@@ -348,7 +348,7 @@ var $check_request = null;
 		}
 
 	}
-	
+
 	//---------------------------------------
 	/**
 	 * get html objects
@@ -387,16 +387,16 @@ var $check_request = null;
 				break;
 			}
 
-			// set request			
+			// set request
 			if(	isset($this->request) && count($this->request) > 0) {
 				$request = '$this->request'.$this->string_to_index($name);
 			}
 
 			// build return
-			if(	
+			if(
 				isset($request) &&
 				$request != '' &&
-				isset($html) 
+				isset($html)
 			) {
 				// add request to object
 				switch($object) {
@@ -411,16 +411,16 @@ var $check_request = null;
 					break;
 				}
 				return $html;
-			} 
+			}
 			elseif(isset($html)) {
 				return $html;
 			} else {
 				return '';
-			}			
+			}
 		}
 
 	}
-	
+
 	//---------------------------------------
 	/**
 	 * make html objects
@@ -445,7 +445,7 @@ var $check_request = null;
 	}
 
 	//------- Object Section
-	
+
 	//---------------------------------------
 	/**
 	 * handle htmlobject_input
@@ -470,7 +470,7 @@ var $check_request = null;
 			break;
 			case 'radio':
 				if(
-					eval("return isset($request);") && 
+					eval("return isset($request);") &&
 					eval("return $request;") == $html->value
 				) {
 					$html->checked = true;
@@ -501,7 +501,7 @@ var $check_request = null;
 		return $html;
 
 	}
-	
+
 	//---------------------------------------
 	/**
 	 * handle htmlobject_select
@@ -524,7 +524,7 @@ var $check_request = null;
 		return $html;
 
 	}
-	
+
 	//---------------------------------------
 	/**
 	 * handle htmlobject_textarea
@@ -545,7 +545,7 @@ var $check_request = null;
 		return $html;
 
 	}
-	
+
 	//---------------------------------------
 	/**
 	 * handle label
@@ -579,7 +579,7 @@ var $check_request = null;
 
 	}
 	//-------------------------- Helpers
-	
+
 	//---------------------------------------
 	/**
 	 * get tab_request as html inputs
@@ -592,14 +592,14 @@ var $check_request = null;
 	function get_tab_request_as_input($arValues = array()) {
 
 		$strReturn = '';
-		$arValues = array_merge($this->tab_request, $arValues);				
+		$arValues = array_merge($this->tab_request, $arValues);
 		foreach ($arValues as $key => $value) {
 			$strReturn .= $this->get_input($key, $value, 'hidden');
 		}
 		return $strReturn;
 
-	}	
-	
+	}
+
 	//---------------------------------------
 	/**
 	 * get htmlobject_input as string
@@ -615,15 +615,15 @@ var $check_request = null;
 
 		$value = str_replace('"', '&quot;', $value);
 		$value = str_replace('<', '&lt;', $value);
-		
+
 		$html = new htmlobject_input();
 		$html->name = $name;
 		$html->value = $value;
 		$html->type = $type;
-		
+
 		return $html->get_string();
-	}	
-	
+	}
+
 	//---------------------------------------
 	/**
 	 * get htmlobject_button as string
@@ -642,7 +642,7 @@ var $check_request = null;
 		$html->value = $value;
 		$html->type = 'submit';
 		$html->label = $label;
-		
+
 		return $html->get_string();
 	}
 

@@ -27,7 +27,8 @@
    "http://www.w3.org/TR/html4/frameset.dtd">
 <html>
 	<head>
-		<title>openQRM-Server Chinese Version</title>
+		<title>CloudPro 4.8</title>
+		<meta http-equiv="Content-Type" content="text/html; charset=UTF-8"></meta>
 		<style>
 			.left-border {
 				border:1px solid;
@@ -47,8 +48,8 @@
 		</frameset>
 		<noframes>
 			<body>
-				<h1>openQRM-Server</h1>
-				<p>Please use a browser which supports HTML-frames</p>
+				<h1>CloudPro 4.8</h1>
+				<p>请使用支持HTML Frames的浏览器访问本服务。</p>
 			</body>
 		</noframes>
 	</frameset>

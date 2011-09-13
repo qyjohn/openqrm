@@ -15,6 +15,7 @@
     along with openQRM.  If not, see <http://www.gnu.org/licenses/>.
 
     Copyright 2009, Matthias Rechenburg <matt@openqrm.com>
+    Copyright 2011, Qingye Jiang (John) <qjiang@ieee.org>
 */
 -->
 <style>
@@ -22,5 +23,5 @@
 	width:800px;
 }
 </style>
-<h1>Resource List</h1>
+<h1>资源列表</h1>
 {resource_table}

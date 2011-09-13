@@ -99,16 +99,16 @@ var $selected_by_text = false;
 	 * @return string
 	 */
 	function get_string() {
-	$_strReturn = '';
+	$_str = '';
 		$attribs = $this->get_attribs();
-		$_strReturn = "\n<select$attribs>\n";
-		$_strReturn .= $this->get_options();
-		$_strReturn .= "</select>\n";
-	return $_strReturn;
+		$_str = "\n<select$attribs>\n";
+		$_str .= $this->get_options();
+		$_str .= "</select>\n";
+	return $_str;
 	}
 
 	function get_options() {
-	$_strReturn = '';
+	$_str = '';
 		$count = count($this->text);
 	    if($count > 0){
 	        for ($i=0; $i < $count; $i++) {
@@ -123,12 +123,12 @@ var $selected_by_text = false;
 						$sel =  ' selected="selected"';
 					}
 	        	}
-	        $_strReturn .= "<option value=\"".$this->text[$i][$this->text_index['value']]."\"$sel>".$this->text[$i][$this->text_index['text']]."</option>\n";
+	        $_str .= "<option value=\"".$this->text[$i][$this->text_index['value']]."\"$sel>".$this->text[$i][$this->text_index['text']]."</option>\n";
 	        }
 	    } else {
-	        $_strReturn .= '';
+	        $_str .= '';
 	    }
-	return $_strReturn;
+	return $_str;
 	}
 }
 ?>

@@ -15,12 +15,14 @@
     along with openQRM.  If not, see <http://www.gnu.org/licenses/>.
 
     Copyright 2009, Matthias Rechenburg <matt@openqrm.com>
+    Copyright 2011, Qingye Jiang (John) <qjiang@ieee.org>
 */
 $thisfile = basename($_SERVER['PHP_SELF']);
 $RootDir = $_SERVER["DOCUMENT_ROOT"].'/openqrm/base/';
 $BaseDir = $_SERVER["DOCUMENT_ROOT"].'/openqrm/';
 require_once "$RootDir/include/user.inc.php";
 require_once "$RootDir/class/storage.class.php";
+require_once "$RootDir/class/image.class.php";
 require_once "$RootDir/class/deployment.class.php";
 require_once "$RootDir/include/htmlobject.inc.php";
 
@@ -36,7 +38,7 @@ function redirect($strMsg, $currenttab = 'tab0', $url = '') {
 
 
 if(htmlobject_request('action') != '' && strtolower(OPENQRM_USER_ROLE_NAME) == 'administrator') {
-$strMsg = '';
+	$strMsg = '';
 
 	switch (htmlobject_request('action')) {
 		case 'remove':
@@ -68,7 +70,7 @@ $strMsg = '';
 								'storage_data' => $str,
 								'storage_comment' => $storage->comment,
 							);
-							$str_ident .= htmlobject_input('identifier[]', array('value' => $id), 'hidden');
+							$str_ident .= htmlobject_input('identifier[]', array('value' => $id, 'label' => ''), 'hidden');
 							$args =  array_merge($args, array('id[]' => $id));
 							$checked[] = $id;
 							$i++;
@@ -84,13 +86,13 @@ $strMsg = '';
 						$arHead['storage_comment']['title'] ='';
 
 						$headdata = '<a href="'.$thisfile.'?storage_filter='.htmlobject_request('storage_filter').'"><< cancel</a>';
-						$headdata .= htmlobject_input('action', array('value' => 'remove'), 'hidden');
+						$headdata .= htmlobject_input('action', array('value' => 'remove', 'label' => ''), 'hidden');
 						$headdata .= htmlobject_input('storage_filter', array("value" => htmlobject_request('storage_filter'), "label" => ''), 'hidden');
 						$headdata .= $str_ident;
 						$headdata .= '<br><br>';
 
 						$args =  array_merge($args, array('storage_filter' => htmlobject_request('storage_filter')));
-					
+
 						$table = new htmlobject_table_builder('','','','','','del_');
 						$table->add_headrow($headdata);
 						$table->id = 'Tabelle';
@@ -116,7 +118,25 @@ $strMsg = '';
 					$storage = new storage();
 					if(isset($_REQUEST['delident'])) {
 						foreach($_REQUEST['delident'] as $id) {
-							$strMsg .= $storage->remove($id);
+							// check that there are no images which are still using this storage server
+							$image_is_used_by_storage = "";
+							$remove_error = 0;
+							$image_remove_check = new image();
+							$image_remove_id_list = $image_remove_check->get_ids_by_storage($id);
+							foreach($image_remove_id_list as $image_list) {
+								$image_id = $image_list['image_id'];
+								$image_is_used_by_storage .= $image_id." ";
+								$remove_error = 1;
+							}
+							if ($remove_error == 1) {
+								$strMsg .= "Storage id ".$id." still contains Image id(s): ".$image_is_used_by_storage." <br>";
+								$strMsg .= "Not removing storage id ".$id." !<br>";
+								continue;
+							}
+
+							// here we remove the storage
+							$storage->remove($id);
+							$strMsg .= "Removed storage id ".$id."<br>";
 						}
 						redirect($strMsg);
 					}
@@ -141,7 +161,7 @@ function storage_display() {
 	$storage_tmp = new storage();
 	$table = new htmlobject_db_table('storage_id');
 
-	$disp = '<h1>Storage List</h1>';
+	$disp = '<h1>存储列表</h1>';
 
 	$arHead = array();
 
@@ -154,17 +174,17 @@ function storage_display() {
 	$arHead['storage_icon']['sortable'] = false;
 
 	$arHead['storage_id'] = array();
-	$arHead['storage_id']['title'] ='ID';
+	$arHead['storage_id']['title'] ='编号';
 
 	$arHead['storage_name'] = array();
-	$arHead['storage_name']['title'] ='Name';
+	$arHead['storage_name']['title'] ='名称';
 
 	$arHead['storage_type'] = array();
-	$arHead['storage_type']['title'] ='Type';
+	$arHead['storage_type']['title'] ='类型';
 	$arHead['storage_type']['hidden'] = true;
 
 	$arHead['storage_resource_id'] = array();
-	$arHead['storage_resource_id']['title'] ='Resource';
+	$arHead['storage_resource_id']['title'] ='计算资源';
 	$arHead['storage_resource_id']['hidden'] = true;
 
 	$arHead['storage_data'] = array();
@@ -183,7 +203,7 @@ function storage_display() {
 	$arHead['storage_mgmt']['title'] ='';
 	$arHead['storage_mgmt']['sortable'] = false;
 
-    if(strtolower(OPENQRM_USER_ROLE_NAME) != 'administrator') {
+	if(strtolower(OPENQRM_USER_ROLE_NAME) != 'administrator') {
 		$arHead['storage_edit']['hidden'] = true;
 		$arHead['storage_mgmt']['hidden'] = true;
 	}
@@ -212,14 +232,14 @@ function storage_display() {
 				<b>Type:</b> '.$deployment->storagetype.'<br>
 				<b>Deployment:</b> '.$deployment->storagedescription;
 
-        $storage_edit = '<a href="storage-edit.php?storage_id='.$storage_db["storage_id"].'&currenttab=tab2&storage_filter='.htmlobject_request('storage_filter').'"><img src="../../img/edit.png" width="24" height="24" alt="edit"/> Edit</a>';
-        $storage_mgmt_url = "/openqrm/base/plugins/".$deployment->storagetype."/".$deployment->storagetype."-manager.php?currenttab=tab0&action=select&identifier[]=".$storage->id;
-        $storage_mgmt_file = "/openqrm/base/plugins/".$deployment->storagetype."/".$deployment->storagetype."-manager.php";
-        if (file_exists($_SERVER["DOCUMENT_ROOT"]."/".$storage_mgmt_file)) {
-            $storage_mgmt = '<a href="'.$storage_mgmt_url.'"><img src="../../img/manage.png" width="24" height="24" alt="manage"/> Mgmt</a>';
-        } else {
-            $storage_mgmt = "";
-        }
+		$storage_edit = '<a href="storage-edit.php?storage_id='.$storage_db["storage_id"].'&currenttab=tab2&storage_filter='.htmlobject_request('storage_filter').'"><img src="../../img/edit.png" width="24" height="24" alt="edit"/> Edit</a>';
+		$storage_mgmt_url = "/openqrm/base/plugins/".$deployment->storagetype."/".$deployment->storagetype."-manager.php?currenttab=tab0&action=select&identifier[]=".$storage->id;
+		$storage_mgmt_file = "/openqrm/base/plugins/".$deployment->storagetype."/".$deployment->storagetype."-manager.php";
+		if (file_exists($_SERVER["DOCUMENT_ROOT"]."/".$storage_mgmt_file)) {
+			$storage_mgmt = '<a href="'.$storage_mgmt_url.'"><img src="../../img/manage.png" width="24" height="24" alt="manage"/> Mgmt</a>';
+		} else {
+			$storage_mgmt = "";
+		}
 
 		if (!strlen(htmlobject_request('storage_filter')) || strstr(htmlobject_request('storage_filter'), $deployment->storagetype )) {
 			$arBody[] = array(
@@ -237,14 +257,14 @@ function storage_display() {
 		}
 
 	}
-	
+
 	$deployment = new deployment();
 	$storagetypes = array();
 	$storagetypes[] = array('label' => '', 'value' => '');
 	$storagetypes = array_merge($storagetypes, $deployment->get_storagetype_list());
 
 	$table->id = 'Tabelle';
-	$table->add_headrow(htmlobject_select('storage_filter', $storagetypes, 'Filter by Type', array(htmlobject_request('storage_filter'))));
+	$table->add_headrow(htmlobject_select('storage_filter', $storagetypes, '按类型过滤', array(htmlobject_request('storage_filter'))));
 	$table->css = 'htmlobject_table';
 	$table->border = 1;
 	$table->cellspacing = 0;
@@ -258,7 +278,7 @@ function storage_display() {
 		$table->identifier = 'storage_id';
 	}
 	$table->max = $storage_tmp->get_count();
-	
+
 	return $disp.$table->get_string();
 }
 
@@ -268,9 +288,9 @@ $ar_tabs = array();
 if(isset($arAction)) {
 	$ar_tabs[] = $arAction;
 } else {
-	$ar_tabs[] = array('label' => 'Storage List', 'value' => storage_display(), 'request' => array('storage_filter' => htmlobject_request('storage_filter')));
+	$ar_tabs[] = array('label' => '存储列表', 'value' => storage_display(), 'request' => array('storage_filter' => htmlobject_request('storage_filter')));
 	if(strtolower(OPENQRM_USER_ROLE_NAME) == 'administrator') {
-		$ar_tabs[] = array('label' => 'New Storage', 'target' => 'storage-new.php', 'request' => array('storage_filter' => htmlobject_request('storage_filter')));
+		$ar_tabs[] = array('label' => '创建存储', 'target' => 'storage-new.php', 'request' => array('storage_filter' => htmlobject_request('storage_filter')));
 	}
 }
 

@@ -17,14 +17,14 @@
     Copyright 2009, Matthias Rechenburg <matt@openqrm.com>
 */
 -->
-<h1>openQRM Storage Summary</h1>
+<h1>CloudPro存储资源概览</h1>
 <br>
-All Storage Server : {storage_all}
+所有存储资源: {storage_all}
 <br>
-Storage Server in Error : {storage_error}
+出错存储资源: {storage_error}
 <br>
 <br>
-Top {max_show_storage} Most active Storage Servers  :
+最活跃的 {max_show_storage} 个存储资源:
 <br>
 <br>
 {storage_table}

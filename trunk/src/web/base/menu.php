@@ -15,6 +15,7 @@
     along with openQRM.  If not, see <http://www.gnu.org/licenses/>.
 
     Copyright 2009, Matthias Rechenburg <matt@openqrm.com>
+    Copyright 2011, Qingye Jiang (John) <qjiang@ieee.org>
 */
 
 header("Cache-Control: private");
@@ -38,21 +39,21 @@ global $OPENQRM_SERVER_BASE_DIR;
 <html>
 	<head>
 		<meta http-equiv="cache-control" content="no-cache"></meta>
-		<meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1"></meta>
+		<meta http-equiv="Content-Type" content="text/html; charset=UTF-8"></meta>
 		
 		<link rel="stylesheet" href="css/menu.css" type="text/css"></link>
 		<script src="js/menu.js" type="text/javascript"></script>
 		<link type="text/css" href="/openqrm/base/js/jquery/development-bundle/themes/smoothness/ui.all.css" rel="stylesheet" />
 		
-		<script type="text/javascript" src="http://code.jquery.com/jquery-latest.js"></script>
+		<script type="text/javascript" src="/openqrm/base/js/jquery/js/jquery-1.3.2.min.js"></script>
 
-		<title>Menu</title>
+		<title>CloudPro 4.8</title>
 		
 		<base target="MainFrame"></base>
 	</head>
 	<body>
 		
-		<h3 class="firstHeader" onclick="$('#menuSection_1').slideToggle('slow');">[+] Base</h3>
+		<h3 class="firstHeader" onclick="$('#menuSection_1').slideToggle('slow');">[+] 云平台</h3>
 		<div id="menuSection_1"  class="menuSection">
 		<?php
 			require_once $ClassDir . 'layersmenu.class.php';
@@ -79,7 +80,7 @@ global $OPENQRM_SERVER_BASE_DIR;
 		?>
 		</div>
 
-		<h3 onclick="$('#menuSection_2').slideToggle('slow');">[+] Plugins</h3>
+		<h3 onclick="$('#menuSection_2').slideToggle('slow');">[+] 云插件</h3>
 		<div id="menuSection_2" class="menuSection">
 		<?php
 		
@@ -120,15 +121,17 @@ global $OPENQRM_SERVER_BASE_DIR;
 			$strMenuStructure .= implode('', file($PluginsDir.'aa_plugins/menu.txt'));
 		
 			// define the base plugin sections
-			parse_subsection("Cloud", "cloud");
-			parse_subsection("Deployment", "deployment");
-			parse_subsection("Highavailability", "HA");
-			parse_subsection("Management", "management");
-			parse_subsection("Monitoring", "monitoring");
-			parse_subsection("Network", "network");
-			parse_subsection("Storage", "storage");
-			parse_subsection("Virtualization", "virtualization");
-			parse_subsection("Misc", "misc");
+			parse_subsection("云服务", "cloud");
+			parse_subsection("部署", "deployment");
+			parse_subsection("高可用性", "HA");
+			parse_subsection("管理", "management");
+			parse_subsection("监控", "monitoring");
+			parse_subsection("网络", "network");
+			parse_subsection("存储", "storage");
+			parse_subsection("虚拟化", "virtualization");
+			parse_subsection("杂项", "misc");
+            // and the enterprise plugins
+			parse_subsection("企业版", "enterprise");
 		
 			if($strMenuStructure != '') {
 				$mid2->setMenuStructureString($strMenuStructure);

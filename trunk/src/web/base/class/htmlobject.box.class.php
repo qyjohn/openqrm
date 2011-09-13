@@ -66,7 +66,7 @@ var $css_right = 'right';
 	}
 
 	function get_string() {
-	$_strReturn = '';
+		$_strReturn = '';
 		$this->init_htmlobject();
 		$this->init_htmlobject_box();
 		$_strReturn = '
@@ -76,7 +76,7 @@ var $css_right = 'right';
 		<div style="line-height:0px;height:0px;clear:both;" class="floatbreaker">&#160;</div>
 		</div>
 		';
-	return $_strReturn;
+		return $_strReturn;
 	}
 }
 

@@ -14,5 +14,6 @@
 # along with openQRM.  If not, see <http://www.gnu.org/licenses/>.
 #
 # Copyright 2009, Matthias Rechenburg <matt@openqrm.com>
+# Copyright 2011, Qingye Jiang (John) <qjiang@ieee.org>
 #
-.|Plugin Manager|plugins/aa_plugins/plugin-manager.php|Manage the available Plugins|plugin.png
+.|插件管理器|plugins/aa_plugins/plugin-manager.php|管理可用的插件|plugin.png

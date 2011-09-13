@@ -46,7 +46,7 @@ static protected $_infos = array();
 	//--------------------------------
 	public static function start($panic = false) {
 		if($panic === true) {
-			self::$panic = true; 
+			self::$panic = true;
 		}
 		self::$debug = true;
 	}
@@ -82,8 +82,8 @@ static protected $_infos = array();
 	//--------------------------------
 	public static function add( $msg, $state = 'INFO' ) {
 		if(self::active()) {
-			#if((self::$panic === true) || (self::$panic === false && $state != strtolower('INFO'))) {			
-				$debug = debug_backtrace();		
+			#if((self::$panic === true) || (self::$panic === false && $state != strtolower('INFO'))) {
+				$debug = debug_backtrace();
 				self::$_infos[] = $state.' '.$debug[1]['class'].'->'.$debug[1]['function'].'() '.$msg;
 				#for($i = 2; $i < count($debug); $i++) {
 				#	self::$_infos[] = '---- line '.$debug[$i]['line'].' : '.$debug[$i]['class'].'->'.$debug[$i]['function'].'()';

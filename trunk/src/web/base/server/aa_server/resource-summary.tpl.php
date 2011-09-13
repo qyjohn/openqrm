@@ -17,18 +17,18 @@
     Copyright 2009, Matthias Rechenburg <matt@openqrm.com>
 */
 -->
-<h1>openQRM Resources Summary</h1>
+<h1>CloudPro计算资源概览</h1>
 <br>
-All Resources : {resource_all}
+所有计算资源: {resource_all}
 <br>
-Available Resources :  {resource_available}
+可用计算资源:  {resource_available}
 <br>
-Active Resources : {resource_active}
+活跃计算资源: {resource_active}
 <br>
-Resources in Error state : {resource_error}
+错误计算资源: {resource_error}
 <br>
 <br>
-Top {max_show_resources} Most active Resources  :
+最活跃的 {max_show_resources} 个计算资源:
 <br>
 <br>
 {resource_table}

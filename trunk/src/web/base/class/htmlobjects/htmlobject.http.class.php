@@ -59,22 +59,22 @@ var $request_filter;
 	//-------------------------------------------------
 	function get_request_array($arg) {
 
-		$arReturn = array();
+		$ar = array();
 
 		if(is_array($arg)) {
 			foreach($arg as $key => $value) {
 				if(is_array($value)) {
-					$arReturn[$key] = $this->get_request_array($value);
+					$ar[$key] = $this->get_request_array($value);
 				}
 				if(is_string($value)) {
-					$arReturn[$key] = $this->filter_request($value);
+					$ar[$key] = $this->filter_request($value);
 				}
 			}
 		}
 		if(is_string($arg)) {
-			$arReturn[$key] = $this->filter_request($value);
+			$ar[$key] = $this->filter_request($value);
 		}
-		return $arReturn;
+		return $ar;
 	}
 	//---------------------------------------------------------------
 	/**
@@ -101,8 +101,6 @@ var $request_filter;
 #print_r($matches);
 
 			return $str;
-		} else {
-			#debug::add($arg.' is not type string', 'ERROR');
 		}
 	}
 
@@ -128,16 +126,11 @@ var $request_filter;
 			foreach($arg as $key => $value) {
 				if(isset($value['pattern'])) {
 					if(!isset($value['replace'])) {
-						#debug::add('could not find array key ["replace"]', 'NOTICE');
 						$value['replace'] = '';
 					}
 					$this->request_filter[] = array('pattern' => $value['pattern'], 'replace' => $value['replace']);
-				} else {
-					#debug::add('could not find array key ["pattern"]', 'ERROR');
-				}
+				} 
 			}
-		} else {
-			#debug::add('nothing to do', 'NOTICE');
 		}
 	}
 
@@ -197,7 +190,7 @@ var $request_filter;
 	//-------------------------------------------------	
 	function string_to_index($arg) {
 
-		$strReturn = '';
+		$str = '';
 
 		// replace unindexed array
 		$arg = $this->unindex_array($arg);

@@ -15,12 +15,15 @@
     along with openQRM.  If not, see <http://www.gnu.org/licenses/>.
 
     Copyright 2009, Matthias Rechenburg <matt@openqrm.com>
+    Copyright 2011, Qingye Jiang (John) <qjiang@ieee.org>
+
 */
 
 $thisfile = basename($_SERVER['PHP_SELF']);
 $RootDir = $_SERVER["DOCUMENT_ROOT"].'/openqrm/base/';
 require_once "$RootDir/include/user.inc.php";
 require_once "$RootDir/class/kernel.class.php";
+require_once "$RootDir/class/appliance.class.php";
 require_once "$RootDir/include/htmlobject.inc.php";
 require_once "$RootDir/class/openqrm_server.class.php";
 $openqrm_server = new openqrm_server();
@@ -38,37 +41,97 @@ function redirect($strMsg, $currenttab = 'tab0', $url = '') {
 
 
 if(htmlobject_request('action') != '' && $OPENQRM_USER->role == "administrator") {
-$strMsg = '';
+	$strMsg = '';
 
 	switch (htmlobject_request('action')) {
-		case 'remove':
+		case '删除':
 			$kernel = new kernel();
-            if(isset($_REQUEST['identifier'])) {
-                foreach($_REQUEST['identifier'] as $id) {
-                    $strMsg .= $kernel->remove($id);
-                }
-            }
+			if(isset($_REQUEST['identifier'])) {
+				foreach($_REQUEST['identifier'] as $id) {
+					// check that this is not the default kernel
+					if ($id == 1) {
+						$strMsg .= "Not removing the default kernel!<br>";
+						continue;
+					}
+					// check that this kernel is not in use any more
+					$kernel_is_used_by_appliance = "";
+					$remove_error = 0;
+					$appliance = new appliance();
+					$appliance_id_list = $appliance->get_all_ids();
+					foreach($appliance_id_list as $appliance_list) {
+						$appliance_id = $appliance_list['appliance_id'];
+						$app_kernel_remove_check = new appliance();
+						$app_kernel_remove_check->get_instance_by_id($appliance_id);
+						if ($app_kernel_remove_check->kernelid == $id) {
+							$kernel_is_used_by_appliance .= $appliance_id." ";
+							$remove_error = 1;
+						}
+					}
+					if ($remove_error == 1) {
+						$strMsg .= "Kernel id ".$id." is used by appliance(s): ".$kernel_is_used_by_appliance." <br>";
+						$strMsg .= "Not removing kernel id ".$id." !<br>";
+						continue;
+					}
+
+					$strMsg .= $kernel->remove($id);
+				}
+			}
 			redirect($strMsg);
 			break;
 
-		case 'set-default':
+		case '默认':
 			$kernel = new kernel();
-            if(isset($_REQUEST['identifier'])) {
-                foreach($_REQUEST['identifier'] as $id) {
-                    // update default kernel in db
-                    $kernel->get_instance_by_id($id);
-                    $ar_kernel_update = array(
-                        'kernel_name' => "default",
-                        'kernel_version' => $kernel->version,
-                        'kernel_capabilities' => $kernel->capabilities,
-                    );
-                    $kernel->update(1, $ar_kernel_update);
-                    // send set-default kernel command to openQRM
-                    $openqrm_server->send_command("openqrm_server_set_default_kernel $kernel->name");
-                    $strMsg .= "Set kernel ".$kernel->name." as the default kernel";
-                }
-                redirect($strMsg);
-            }
+			if(isset($_REQUEST['identifier'])) {
+				foreach($_REQUEST['identifier'] as $id) {
+					// update default kernel in db
+					$kernel->get_instance_by_id($id);
+					$ar_kernel_update = array(
+						'kernel_name' => "default",
+						'kernel_version' => $kernel->version,
+						'kernel_capabilities' => $kernel->capabilities,
+					);
+					$kernel->update(1, $ar_kernel_update);
+					// send set-default kernel command to openQRM
+					$openqrm_server->send_command("openqrm_server_set_default_kernel $kernel->name");
+					$strMsg .= "Set kernel ".$kernel->name." as the default kernel";
+					break;
+				}
+				redirect($strMsg);
+			}
+			break;
+
+		case '升级':
+			$kernel_id = htmlobject_request("kernel_id");
+			$kernel_comment = htmlobject_request("kernel_comment");
+
+			// check that this kernel is not in use any more
+			$kernel_is_used_by_appliance = "";
+			$update_error = 0;
+			$appliance = new appliance();
+			$appliance_id_list = $appliance->get_all_ids();
+			foreach($appliance_id_list as $appliance_list) {
+				$appliance_id = $appliance_list['appliance_id'];
+				$app_kernel_update_check = new appliance();
+				$app_kernel_update_check->get_instance_by_id($appliance_id);
+				if (!strcmp($app_kernel_update_check->state, "stopped")) {
+					continue;
+				}
+				if ($app_kernel_update_check->kernelid == $kernel_id) {
+					$kernel_is_used_by_appliance .= $appliance_id." ";
+					$update_error = 1;
+				}
+			}
+			if ($update_error == 1) {
+				$strMsg .= "Kernel id ".$kernel_id." is used by appliance(s): ".$kernel_is_used_by_appliance." <br>";
+				$strMsg .= "Not updating kernel id ".$kernel_id." !<br>";
+			} else {
+				$kernel = new kernel();
+				$kernel_fields = array();
+				$kernel_fields['kernel_comment'] = $kernel_comment;
+				$kernel->update($kernel_id, $kernel_fields);
+				$strMsg .= "Updated kernel id ".$kernel_id." <br>";
+			}
+			redirect($strMsg);
 			break;
 
 	}
@@ -85,7 +148,7 @@ function kernel_display() {
 	$kernel_tmp = new kernel();
 	$table = new htmlobject_db_table('kernel_id');
 
-	$disp = '<h1>Kernel List</h1>';
+	$disp = '<h1>内核列表</h1>';
 	$disp .= '<br>';
 
 	$arHead = array();
@@ -93,16 +156,16 @@ function kernel_display() {
 	$arHead['kernel_icon']['title'] ='';
 
 	$arHead['kernel_id'] = array();
-	$arHead['kernel_id']['title'] ='ID';
+	$arHead['kernel_id']['title'] ='编号';
 
 	$arHead['kernel_name'] = array();
-	$arHead['kernel_name']['title'] ='Name';
+	$arHead['kernel_name']['title'] ='名称';
 
 	$arHead['kernel_version'] = array();
-	$arHead['kernel_version']['title'] ='Version';
+	$arHead['kernel_version']['title'] ='版本';
 
-	$arHead['kernel_capabilities'] = array();
-	$arHead['kernel_capabilities']['title'] ='Capabilities';
+	$arHead['kernel_comment'] = array();
+	$arHead['kernel_comment']['title'] ='说明';
 
 	$arBody = array();
 	$kernel_array = $kernel_tmp->display_overview($table->offset, $table->limit, $table->sort, $table->order);
@@ -116,7 +179,7 @@ function kernel_display() {
 			'kernel_id' => $kernel_db["kernel_id"],
 			'kernel_name' => $kernel_db["kernel_name"],
 			'kernel_version' => $kernel_db["kernel_version"],
-			'kernel_capabilities' => $kernel_db["kernel_capabilities"],
+			'kernel_comment' => $kernel_db["kernel_comment"],
 		);
 
 	}
@@ -129,60 +192,62 @@ function kernel_display() {
 	$table->form_action = $thisfile;
 	$table->head = $arHead;
 	$table->body = $arBody;
+	$table->identifier_disabled = array(1);
 	if ($OPENQRM_USER->role == "administrator") {
-		$table->bottom = array('remove', 'edit', 'set-default');
+		$table->bottom = array('编辑', '默认', '删除');
 		$table->identifier = 'kernel_id';
 	}
-        $kernel_max = $kernel_tmp->get_count();
+		$kernel_max = $kernel_tmp->get_count();
 	$table->max = $kernel_max - 1;
 	#$table->limit = 10;
-	
+
 	return $disp.$table->get_string();
 }
 
 
 function kernel_form() {
 
-	$disp = "<h1>New Kernel</h1>";
+	$disp = "<h1>创建内核</h1>";
 	$disp = $disp."<br>";
 	$disp = $disp."<br>";
-	$disp = $disp."New kernels should be added on the openqrm server with the following command:<br>";
-    $disp = $disp."<br>";
+	$disp = $disp."<b>向openqrm服务器添加新内核的命令下：</b><br>";
+	$disp = $disp."<br>";
 	$disp = $disp."<br>/usr/share/openqrm/bin/openqrm kernel add -n name -v version -u username -p password [-l location] [-i initramfs/ext2] [-t path-to-initrd-template-file]<br>";
 	$disp = $disp."<br>";
-	$disp = $disp."<b>name</b> can be any identifier as long as it has no spaces or other special characters; it is used as part of the filename.<br>";
-	$disp = $disp."<b>version</b> should be the version for the kernel you want to install. If the filenames are called vmlinuz-2.6.26-2-amd64 then 2.6.26-2-amd64 is the version of this kernel.<br>";
-	$disp = $disp."<b>username</b> and <b>password</b> are the credentials to openqrm itself.<br>";
-	$disp = $disp."<b>location</b> is the root directory for the kernel you want to install. The files that are used are \${location}/boot/vmlinuz-\${version}, \${location}/boot/initrd.img-\${version} and \${location}/lib/modules/\${version}/*<br>";
-	$disp = $disp."<b>initramfs/ext2</b> should specify the type of initrd image you want to generate. Most people want to use <b>initramfs</b> here.<br>";
-	$disp = $disp."<b>path-to-initrd-template-file</b> should point to an openqrm initrd template. These can be found in the openqrm base dir under etc/templates.<br>";
+	$disp = $disp."<b>name</b> 内核的名称，是一个不含空格或者其他特殊字符的字符串，该字符串被用作内核文件名的一部分。<br>";
+	$disp = $disp."<b>version</b> 内核的版本号。例如，假设内核的文件名为 vmlinuz-2.6.26-2-amd64 ，则 2.6.26-2-amd64 就是该内核的版本号。<br>";
+	$disp = $disp."<b>username</b> 和 <b>password</b> 是您登陆进入openqrm的用户名和密码。<br>";
+	$disp = $disp."<b>location</b> 是安装该内核的根目录。内核文件的全路径为 \${location}/boot/vmlinuz-\${version}, \${location}/boot/initrd.img-\${version} and \${location}/lib/modules/\${version}/* 。<br>";
+	$disp = $disp."<b>initramfs/ext2</b> initrd映像文件的文件系统类型。最常用的文件系统为 <b>initramfs</b> 。<br>";
+	$disp = $disp."<b>path-to-initrd-template-file</b> 一个initrd模版的全路径。这些模版可以在openqrm的base目录下的 etc/templates 目录内。<br>";
 	$disp = $disp."<br>";
-	$disp = $disp."Example:<br>";
+	$disp = $disp."例如：<br>";
 	$disp = $disp."/usr/share/openqrm/bin/openqrm kernel add -n openqrm-kernel-1 -v 2.6.29 -u openqrm -p openqrm -i initramfs -l / -t /usr/share/openqrm/etc/templates/openqrm-initrd-template.debian.x86_64.tgz<br>";
 	$disp = $disp."<br>";
- 	return $disp;
+	return $disp;
 }
 
 
 function kernel_edit($kernel_id) {
-
+	global $thisfile;
 	if (!strlen($kernel_id))  {
-		echo "No Kernel selected!";
+		echo "没有选中任何内核！";
 		exit(0);
 	}
 
 	$kernel = new kernel();
 	$kernel->get_instance_by_id($kernel_id);
 
-	$disp = "<h1>Edit Kernel</h1>";
-	$disp = $disp."<form action='kernel-action.php' method=post>";
+	$disp = "<h1>编辑内核</h1>";
+	$disp = $disp."<form action='".$thisfile."' method=post>";
 	$disp = $disp."<br>";
 	$disp = $disp."<br>";
-	$disp = $disp.htmlobject_input('kernel_name', array("value" => $kernel->name, "label" => 'Insert Kernel name'), 'text', 20);
-	$disp = $disp.htmlobject_input('kernel_version', array("value" => $kernel->version, "label" => 'Insert Kernel version'), 'text', 20);
+	$disp = $disp."<b>".$kernel->name."</b><br>";
+	$disp = $disp.htmlobject_input('kernel_comment', array("value" => $kernel->comment, "label" => '说明'), 'text', 100);
+	//	$disp = $disp.htmlobject_input('kernel_version', array("value" => $kernel->version, "label" => ' Kernel version'), 'text', 20);
 	$disp = $disp."<input type=hidden name=kernel_id value=$kernel_id>";
-	$disp = $disp."<input type=hidden name=kernel_command value='update'>";
-	$disp = $disp."<input type=submit value='Update'>";
+	$disp = $disp."<input type=hidden name=action value='update'>";
+	$disp = $disp."<input type=submit value='更新'>";
 	$disp = $disp."";
 	$disp = $disp."";
 	$disp = $disp."";
@@ -199,29 +264,30 @@ function kernel_edit($kernel_id) {
 $output = array();
 if($OPENQRM_USER->role == "administrator") {
 	if(htmlobject_request('action') != '') {
-        if(isset($_REQUEST['identifier'])) {
-            switch (htmlobject_request('action')) {
-                case 'edit':
-                    foreach($_REQUEST['identifier'] as $id) {
-                        $output[] = array('label' => 'Edit Kernel', 'value' => kernel_edit($id));
-                        break;
-                    }
-                    break;
-            }
-        } else {
-            $output[] = array('label' => 'Kernel-Admin', 'value' => kernel_display());
-            $output[] = array('label' => 'New', 'value' => kernel_form());
-        }
+		if(isset($_REQUEST['identifier'])) {
+			switch (htmlobject_request('action')) {
+				case '编辑':
+					foreach($_REQUEST['identifier'] as $id) {
+						$output[] = array('label' => '编辑内核', 'value' => kernel_edit($id));
+						break;
+					}
+					break;
+			}
+		} else {
+			$output[] = array('label' => '管理内核', 'value' => kernel_display());
+			$output[] = array('label' => '创建内核', 'value' => kernel_form());
+		}
 	} else {
-        $output[] = array('label' => 'Kernel-Admin', 'value' => kernel_display());
-        $output[] = array('label' => 'New', 'value' => kernel_form());
-    }
+		$output[] = array('label' => '管理内核', 'value' => kernel_display());
+		$output[] = array('label' => '创建内核', 'value' => kernel_form());
+	}
 }
 
 
 ?>
 <link rel="stylesheet" type="text/css" href="../../css/htmlobject.css" />
 <link rel="stylesheet" type="text/css" href="kernel.css" />
+
 <?php
 echo htmlobject_tabmenu($output);
 ?>

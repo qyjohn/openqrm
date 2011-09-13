@@ -15,14 +15,14 @@
 #
 # Copyright 2009, Matthias Rechenburg <matt@openqrm.com>
 #
-.|Documentation
-..|Introduction|server/zz_documentation/introduction.php
-...|Glossary|server/zz_documentation/glossary.php
-...|Concept|server/zz_documentation/concept.php
-...|Architecture|server/zz_documentation/architecture.php
-..|Requirements|server/zz_documentation/requirements.php
-..|Installation|server/zz_documentation/installation.php
-..|HowTo|server/zz_documentation/howtos.php
-...|Quick Start|server/zz_documentation/quickstart.php
-..|Plugins|server/zz_documentation/plugins.php
-..|Development|server/zz_documentation/development.php
+.|文档
+..|介绍|server/zz_documentation/introduction.php
+...|相关词条|server/zz_documentation/glossary.php
+...|基本概念|server/zz_documentation/concept.php
+...|系统构架|server/zz_documentation/architecture.php
+..|安装要求|server/zz_documentation/requirements.php
+..|安装配置|server/zz_documentation/installation.php
+..|实战教程|server/zz_documentation/howtos.php
+...|快速入门|server/zz_documentation/quickstart.php
+..|插件集成|server/zz_documentation/plugins.php
+..|二次开发|server/zz_documentation/development.php

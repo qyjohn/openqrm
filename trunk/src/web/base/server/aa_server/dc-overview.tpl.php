@@ -23,114 +23,114 @@
 <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
 <script type="text/javascript">
 
-	    function updateProgressBars() {
+		function updateProgressBars() {
 
 		$.ajax({
-		    url : "dc-overview.php?action=get_dc_status",
-		    type: "POST",
-		    cache: false,
-		    async: false,
-		    dataType: "html",
-		    success : function (data) {
-		        var data_array = data.split(',');
-		        $("#progressbar_dc_load_overall_val").html(data_array[0]);
-		        $("#progressbar_dc_load_overall").progressbar("option", "value", data_array[0]*10);
+			url : "dc-overview.php?action=get_dc_status",
+			type: "POST",
+			cache: false,
+			async: false,
+			dataType: "html",
+			success : function (data) {
+				var data_array = data.split(',');
+				$("#progressbar_dc_load_overall_val").html(data_array[0]);
+				$("#progressbar_dc_load_overall").progressbar("option", "value", data_array[0]*10);
 
-		        $("#progressbar_storage_load_overall_val").html(data_array[1]);
-		        $("#progressbar_storage_load_overall").progressbar("option", "value", data_array[1]*10);
-		        $("#progressbar_storage_load_peak_val").html(data_array[2]);
-		        $("#progressbar_storage_load_peak").progressbar("option", "value", data_array[2]*10);
+				$("#progressbar_storage_load_overall_val").html(data_array[1]);
+				$("#progressbar_storage_load_overall").progressbar("option", "value", data_array[1]*10);
+				$("#progressbar_storage_load_peak_val").html(data_array[2]);
+				$("#progressbar_storage_load_peak").progressbar("option", "value", data_array[2]*10);
 
-		        $("#progressbar_appliances_load_overall_val").html(data_array[3]);
-		        $("#progressbar_appliances_load_overall").progressbar("option", "value", data_array[3]*10);
-		        $("#progressbar_appliances_load_peak_val").html(data_array[4]);
-		        $("#progressbar_appliances_load_peak").progressbar("option", "value", data_array[4]*10);
+				$("#progressbar_appliances_load_overall_val").html(data_array[3]);
+				$("#progressbar_appliances_load_overall").progressbar("option", "value", data_array[3]*10);
+				$("#progressbar_appliances_load_peak_val").html(data_array[4]);
+				$("#progressbar_appliances_load_peak").progressbar("option", "value", data_array[4]*10);
 
-		        $("#resources_all").html(data_array[5]);
-		        $("#resources_all_physical").html(data_array[6]);
-		        $("#resources_all_virtual").html(data_array[7]);
+				$("#resources_all").html(data_array[5]);
+				$("#resources_all_physical").html(data_array[6]);
+				$("#resources_all_virtual").html(data_array[7]);
 
-		        $("#resources_available").html(data_array[8]);
-		        $("#resources_available_physical").html(data_array[9]);
-		        $("#resources_available_virtual").html(data_array[10]);
-		        $("#resources_error").html(data_array[11]);
+				$("#resources_available").html(data_array[8]);
+				$("#resources_available_physical").html(data_array[9]);
+				$("#resources_available_virtual").html(data_array[10]);
+				$("#resources_error").html(data_array[11]);
 
-		        $("#appliance_error").html(data_array[12]);
+				$("#appliance_error").html(data_array[12]);
 
-		        $("#storage_error").html(data_array[13]);
-		    }
+				$("#storage_error").html(data_array[13]);
+			}
 		});
 
 
 		$.ajax({
-		    url : "dc-overview.php?action=get_event_status",
-		    type: "POST",
-		    cache: false,
-		    async: false,
-		    dataType: "html",
-		    success : function (data) {
-		        $("#events_summary").html(data);
+			url : "dc-overview.php?action=get_event_status",
+			type: "POST",
+			cache: false,
+			async: false,
+			dataType: "html",
+			success : function (data) {
+				$("#events_summary").html(data);
 
-		    }
+			}
 		});
 
 		$.ajax({
-		    url : "dc-overview.php?action=get_appliance_status",
-		    type: "POST",
-		    cache: false,
-		    async: false,
-		    dataType: "html",
-		    success : function (data) {
-		        $("#appliance_summary").html(data);
+			url : "dc-overview.php?action=get_appliance_status",
+			type: "POST",
+			cache: false,
+			async: false,
+			dataType: "html",
+			success : function (data) {
+				$("#appliance_summary").html(data);
 
-		    }
+			}
 		});
 
 		$.ajax({
-		    url : "dc-overview.php?action=get_resource_status",
-		    type: "POST",
-		    cache: false,
-		    async: false,
-		    dataType: "html",
-		    success : function (data) {
-		        $("#resource_summary").html(data);
+			url : "dc-overview.php?action=get_resource_status",
+			type: "POST",
+			cache: false,
+			async: false,
+			dataType: "html",
+			success : function (data) {
+				$("#resource_summary").html(data);
 
-		    }
+			}
 		});
 
 		$.ajax({
-		    url : "dc-overview.php?action=get_storage_status",
-		    type: "POST",
-		    cache: false,
-		    async: false,
-		    dataType: "html",
-		    success : function (data) {
-		        $("#storage_summary").html(data);
+			url : "dc-overview.php?action=get_storage_status",
+			type: "POST",
+			cache: false,
+			async: false,
+			dataType: "html",
+			success : function (data) {
+				$("#storage_summary").html(data);
 
-		    }
+			}
 		});
 
 		$.ajax({
-		    url : "dc-overview.php?action=get_cloud_status",
-		    type: "POST",
-		    cache: false,
-		    async: false,
-		    dataType: "html",
-		    success : function (data) {
-		        $("#cloud_summary").html(data);
+			url : "dc-overview.php?action=get_cloud_status",
+			type: "POST",
+			cache: false,
+			async: false,
+			dataType: "html",
+			success : function (data) {
+				$("#cloud_summary").html(data);
 
-		    }
+			}
 		});
 
 		setTimeout(updateProgressBars, 5000);
 
-	    }
+		}
 
 
 
 
 		window.onload = function() {
-		
+
 			$("#progressbar_dc_load_overall").progressbar({ value: 0 });
 			$("#progressbar_dc_load_peak").progressbar({ value: 0 });
 
@@ -151,7 +151,7 @@
 					rotationSpeed: 0.5
 				}
 			);
-			
+
 			$.ImageBox.init(
 				{
 					loaderSRC: 'img/loading.gif',
@@ -175,7 +175,7 @@
 		img {
 			border: none;
 		}
-		
+
 		h3.resources, h3.appliances, h3.storage {
 			background: no-repeat;
 			padding: 5px 0 10px 40px;
@@ -272,65 +272,65 @@
 		#carousel a .label {
 			display: block;
 			clear: both;
-			
+
 		}
-		
+
 	</style>
 </head>
 
 <body>
-	<h1>openQRM Dashboard</h1>
+	<h1>CloudPro 4.8仪表盘</h1>
 	<div id="carousel">
 		<a href="img/events_overview.gif" title="<div id=events_summary>...loading</div>" rel="imagebox">
 			<img src="img/iconEvents.png" title="Data-Center Events" width="30%" />
-			<span class="label">Events</span>
+			<span class="label">事件</span>
 		</a>
 		<a href="img/storage_overview.gif" title="<div id=storage_summary>...loading</div>" rel="imagebox">
 			<img src="img/iconStorage.png" title="Storage Network" width="30%" />
-			<span class="label">Storage</span>
+			<span class="label">存储</span>
 		</a>
 		<a href="img/appliances_overview.gif" title="<div id=appliance_summary>...loading</div>" rel="imagebox">
 			<img src="img/iconAppliances.png" title="Appliances" width="30%" />
-			<span class="label">Appliances</span>
+			<span class="label">器件</span>
 		</a>
 		<a href="img/cloud_overview.gif" title="<div id=cloud_summary>...loading</div>" rel="imagebox">
 			<img src="img/iconCloud.png" title="openQRM Cloud" width="30%" />
-			<span class="label">Cloud</span>
+			<span class="label">云服务</span>
 		</a>
 		<a href="img/resources_overview.gif" title="<div id=resource_summary>...loading</div>" rel="imagebox">
 			<img src="img/iconResources.png" title="Data-Center Resources" width="30%" />
-			<span class="label">Resources</span>
+			<span class="label">计算</span>
 		</a>
 	</div>
 
 	<br />
-	Data-Center Load (overall): <div id="progressbar_dc_load_overall_val"></div>
+	数据中心整体负载：<div id="progressbar_dc_load_overall_val"></div>
 	<div id="progressbar_dc_load_overall"></div>
-	
-	<h3 class="resources">Resource overview</h3>
-	Resources (overall): <div id="resources_all"></div>
-	Resources (physical): <div id="resources_all_physical"></div>
-	Resources (virtual): <div id="resources_all_virtual"></div>
-	Available Resources (overall): <div id="resources_available"></div>
-	Available Resources (physical): <div id="resources_available_physical"></div>
-	Available Resources (virtual): <div id="resources_available_virtual"></div>
-	Resources in error (overall): <div id="resources_error"></div>
-	
+
+	<h3 class="resources">计算资源：</h3>
+	全部计算资源：<div id="resources_all"></div>
+	物理计算资源：<div id="resources_all_physical"></div>
+	虚拟计算资源：<div id="resources_all_virtual"></div>
+	可用计算资源：<div id="resources_available"></div>
+	可用物理计算资源: <div id="resources_available_physical"></div>
+	可用虚拟计算资源: <div id="resources_available_virtual"></div>
+	出错计算资源: <div id="resources_error"></div>
+
 	<div class="left" style="display: block; width: 45%; float: left;">
-		<h3 class="appliances">Active Appliances</h3>
-		Load (overall): <div id="progressbar_appliances_load_overall_val"></div>
+		<h3 class="appliances">活跃器件</h3>
+		平均负载: <div id="progressbar_appliances_load_overall_val"></div>
 		<div id="progressbar_appliances_load_overall"></div>
-		Load (peak): <div id="progressbar_appliances_load_peak_val"></div>
+		高峰负载: <div id="progressbar_appliances_load_peak_val"></div>
 		<div id="progressbar_appliances_load_peak"></div>
-		Errors (overall): <div id="appliance_error"></div>
+		全部错误：<div id="appliance_error"></div>
 	</div>
 	<div class="right" style="display: block; width: 45%; float: right;">
-		<h3 class="storage">Storage Network</h3>
-		Load (overall): <div id="progressbar_storage_load_overall_val"></div>
+		<h3 class="storage">存储网络</h3>
+		平均负载: <div id="progressbar_storage_load_overall_val"></div>
 		<div id="progressbar_storage_load_overall"></div>
-		Load (peak): <div id="progressbar_storage_load_peak_val"></div>
+		高峰负载: <div id="progressbar_storage_load_peak_val"></div>
 		<div id="progressbar_storage_load_peak"></div>
-		Errors (overall): <div id="storage_error"></div>
+		全部错误: <div id="storage_error"></div>
 	</div>
 
 </body>

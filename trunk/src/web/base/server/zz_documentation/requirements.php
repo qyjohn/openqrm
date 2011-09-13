@@ -24,51 +24,51 @@ require_once "$RootDir/include/htmlobject.inc.php";
 
 function documentation_requirements() {
 
-	$disp = "<h1>Requirements</h1>";
+	$disp = "<h1>安装要求</h1>";
 	$disp = $disp."<br>";
-	$disp = $disp."openQRM-server is fully scalable and supports a distributed setup using a remote data-base";
-	$disp = $disp." and remote storage-servers. This sections explains the requirements on a 'standard' and an 'advanced' setup.";
+	$disp = $disp."OpenQRM使用了可扩展的构架设计，可以利用远程数据库和远程服务器进行分布式安装。本章节简单介绍对标准安装和高级安装的系统要求。";
 	$disp = $disp."<br>";
-	$disp = $disp."Standard setup :";
+	$disp = $disp."<br>";
+	$disp = $disp."标准安装：";
 	$disp = $disp."<ul>";
 	$disp = $disp."<li>";
-	$disp = $disp."one linux box to install openQRM-server on";
+	$disp = $disp."一台专用的Linux服务器，用于安装OpenQRM服务";
 	$disp = $disp."</li><li>";
-	$disp = $disp."one or more physical systems to be managed by openQRM";
+	$disp = $disp."一台或者多台被OpenQRM所管理的计算节点";
 	$disp = $disp."<br>";
-	$disp = $disp."(for limited testing this also can be (full) virtualized systems e.g. via VMware or QEMU)";
+	$disp = $disp."（在服务器资源有限的情况下，也可以使用全虚拟化的系统 - 例如VMWare或者QEMU虚拟机 - 来作为计算节点。）";
 	$disp = $disp."</li>";
 	$disp = $disp."</ul>";
 	$disp = $disp."<br>";
 	$disp = $disp."<br>";
-	$disp = $disp."Advanced (recommended) setup :";
+	$disp = $disp."高级安装（推荐）：";
 	$disp = $disp."<ul>";
 	$disp = $disp."<li>";
-	$disp = $disp."one linux box to install openQRM-server on";
+	$disp = $disp."一台专用的Linux服务器，用于安装OpenQRM服务";
 	$disp = $disp."<br>";
-	$disp = $disp."(for a HA setup of the openQRM-server two systems are needed)";
+	$disp = $disp."（如果要求OpenQRM服务的高可用性，则需要两台专用的OpenQRM服务器。）";
 	$disp = $disp."</li><li>";
-	$disp = $disp."a high-available database-server (remote)";
+	$disp = $disp."一台高可用的数据库服务器（远程）";
 	$disp = $disp."</li><li>";
-	$disp = $disp."one or more high-available storage-servers";
+	$disp = $disp."一台或者多台高可用的存储服务器";
 	$disp = $disp."</li><li>";
-	$disp = $disp."one or more physical systems to be managed by openQRM";
+	$disp = $disp."一台或者多台被OpenQRM所管理的计算节点";
 	$disp = $disp."</li>";
 	$disp = $disp."</ul>";
 	$disp = $disp."<br>";
 	$disp = $disp."<br>";
 	$disp = $disp."<br>";
-	$disp = $disp."General system requirements for openQRM-server :";
+	$disp = $disp."对OpenQRM服务器的一般性要求：";
 	$disp = $disp."<ul>";
 	$disp = $disp."<li>";
-	$disp = $disp."1 GB ram (or more)";
+	$disp = $disp."1 GB 内存（或者更多）";
 	$disp = $disp."</li><li>";
-	$disp = $disp."A data-base (can be MySql, Postgres, Oracle or DB2)";
+	$disp = $disp."一个数据库（MySQL, Postgres, Oracle或者DB2）";
 	$disp = $disp."</li>";
 	$disp = $disp."</ul>";
 	$disp = $disp."<br>";
 	$disp = $disp."<br>";
-	$disp = $disp."All other (e.g. package-) dependencies are solved by openQRM automatically !";
+	$disp = $disp."在安装过程中遇到的软件依赖性问题，会由OpenQRM安装程序自动解决。";
 	$disp = $disp."<br>";
 	$disp = $disp."<br>";
 	return $disp;
@@ -78,7 +78,7 @@ function documentation_requirements() {
 
 
 $output = array();
-$output[] = array('label' => 'Requirements', 'value' => documentation_requirements());
+$output[] = array('label' => '安装要求', 'value' => documentation_requirements());
 
 ?>
 <link rel="stylesheet" type="text/css" href="../../css/htmlobject.css" />

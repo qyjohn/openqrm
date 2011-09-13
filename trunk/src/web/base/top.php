@@ -46,7 +46,7 @@
 * Visit http://www.dynamicdrive.com/ for this script and 100s more.
 ***********************************************/
 
-var weekdaystxt=["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"]
+var weekdaystxt=["星期日", "星期一", "星期二", "星期三", "星期四", "星期五", "星期六"]
 
 function showLocalTime(container, servermode, offsetMinutes){
 	if (!document.getElementById || !document.getElementById(container)) return
@@ -95,9 +95,9 @@ function formatField(num, isHour) {
 </div>
 
 <div class="top">
-	<a id="Event_box" href="server/event/event-overview.php?currenttab=tab1" target="MainFrame">Error(s) <span id="events_critical"></span></a>
-	<a id="Support_box" href="http://www.openqrm-enterprise.com" target="_BLANK">Support</a>
-	<a id="Docu_box" href="server/zz_documentation/introduction.php" target="MainFrame">Documentation</a>
+	<a id="Event_box" href="server/event/event-overview.php?currenttab=tab1" target="MainFrame">错误信息<span id="events_critical"></span></a>
+	<a id="Support_box" href="http://www.openqrm-enterprise.com" target="_BLANK">服务</a>
+	<a id="Docu_box" href="server/zz_documentation/introduction.php" target="MainFrame">文档</a>
 	<a id="Login_box" href="server/user/user.php" target="MainFrame"><?php echo OPENQRM_USER_NAME; ?></a>
 	<div id="Watch">
 		<span id="timecontainer"></span>
@@ -110,17 +110,17 @@ function formatField(num, isHour) {
 
 <div class="main">
 	<div class="div_box" id="Appliance_box">
-		<div class="appliances headline">Appliances</div>
-		<div class="appliances active">active <span id="appliances_active">&#160;</span></div>
-		<div class="appliances total">total <span id="appliances_total">&#160;</span></div>
+		<div class="appliances headline">器件概览</div>
+		<div class="appliances active">活跃 <span id="appliances_active">&#160;</span></div>
+		<div class="appliances total">全部 <span id="appliances_total">&#160;</span></div>
 		<div class="floatbreaker">&#160;</div>
 	</div>
 	<div class="div_box" id="Resource_box">
-		<div class="resources headline">Resources</div>
-		<div class="resources active">active <span id="resources_active">&#160;</span></div>
-		<div class="resources error">error <span id="resources_error">&#160;</span></div>
-		<div class="resources off">off <span id="resources_off">&#160;</span></div>
-		<div class="resources total">total <span id="resources_total">&#160;</span></div>
+		<div class="resources headline">资源概览</div>
+		<div class="resources active">活跃 <span id="resources_active">&#160;</span></div>
+		<div class="resources error">错误 <span id="resources_error">&#160;</span></div>
+		<div class="resources off">关机 <span id="resources_off">&#160;</span></div>
+		<div class="resources total">全部 <span id="resources_total">&#160;</span></div>
 		<div class="floatbreaker">&#160;</div>
 	</div>
 	

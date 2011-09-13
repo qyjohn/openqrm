@@ -1,4 +1,4 @@
-<?
+<?php
 /**
  * @package htmlobjects
  *
@@ -75,43 +75,101 @@ var $elements = array();
 	 */
 	function get_string() {
 		$str = '';
-		$arr = $this->get_template_array();
-		foreach($arr as $key => $value) {
-			if($key === 'formbuilder') {
-				foreach($value as $val) {
-					$str .= $val;
-				}
+		$arr = $this->get_object();
+		foreach($arr as $value) {
+			if(is_object($value)) {
+				$str .= $value->get_string();
 			} else {
 				$str .= $value;
 			}
 		}
 		$attribs = $this->get_attribs();
-		$_strReturn = '';
-		$_strReturn .= "\n<form$attribs>\n";
-		$_strReturn .= $str;
-		$_strReturn .= "\n</form>\n";
-		return $_strReturn;
+		$_str  = '';
+		$_str .= "\n<form$attribs>\n";
+		$_str .= $str;
+		$_str .= "\n</form>\n";
+		return $_str;
 	}
 
 	function add($object, $key = null) {
 		$this->elements[$key] = $object;
 	}
 
-	function get_template_array() {
-		$arr = array();
-		foreach($this->elements as $key => $value) {
-			if(is_object($value)){	
+	//---------------------------------------
+	/**
+	 * get array for htmlobject_template
+	 *
+	 * return array($this->elements[$key] => htmlobject)
+	 *
+	 * @access public
+	 * @return array of objects
+	 */
+	//---------------------------------------
+	function get_object() {
+		$a = array();
+    	$k = array_keys($this->elements);
+    	$c = count($k);
+		reset($this->elements);
+		for($i = 0; $i < $c; ++$i) {
+			$v = $this->elements[$k[$i]];
+			if(is_object($v)){	
 				if(
-					$value instanceof htmlobject_formbuilder ||
-					$value instanceof htmlobject_formbuilder_debug
+					$v instanceof htmlobject_formbuilder ||
+					$v instanceof htmlobject_formbuilder_debug
 				) {	
-					$arr[$key] = $value->get_template_array();
+					$params = $v->get_object();
+					foreach($params as $key1 => $value1) {
+						$a[$key1] = $value1;
+					}
 				} else {
-					$arr[$key] = $value->get_string();
+					$a[$k[$i]] = $v;
 				}
 			}
 		}
-		return $arr;
+		return $a;
+	}
+
+	//---------------------------------------
+	/**
+	 * get grouped array for htmlobject_template
+	 * 
+	 * 
+	 * return array($this->elements[$key] => htmlobject,
+	 * 				param => array(htmlobject))
+	 *
+	 * @access public
+	 * @param params array(param => expression)
+	 * @return array of objects
+	 */
+	//---------------------------------------
+	function group_object( $params, $tostring = false ) {
+
+		$obj = $this->get_object();
+		$a   = array();
+		$k   = array_keys($obj);
+		$c   = count($k);
+		reset($obj);
+		for($i = 0; $i < $c; ++$i) {
+			foreach($params as $param => $replace) {
+				if( strpos($k[$i], $replace) !== false ) {
+					$v = $obj[$k[$i]];
+					if($tostring === true) { $v = $v->get_string(); }
+					$a[$param][$k[$i]] = $v;
+					unset($obj[$k[$i]]);
+				}
+			}
+		}
+
+		$k = array_keys($obj);
+		$c = count($k);
+		reset($obj);
+		for($i = 0; $i < $c; ++$i) {
+			$v = $obj[$k[$i]];
+			if($tostring === true) { $v = $v->get_string(); }
+			$a[$k[$i]] = $v;
+		}
+
+		return $a;
 	}
 
 }

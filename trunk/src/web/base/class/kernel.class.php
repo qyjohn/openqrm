@@ -34,7 +34,9 @@ class kernel {
 var $id = '';
 var $name = '';
 var $version = '';
+var $comment = '';
 var $capabilities = '';
+
 
 // ---------------------------------------------------------------------------------
 // methods to create an instance of a kernel object filled from the db
@@ -58,6 +60,7 @@ function get_instance($id, $name) {
 		$this->name = $kernel["kernel_name"];
 		$this->version = $kernel["kernel_version"];
 		$this->capabilities = $kernel["kernel_capabilities"];
+		$this->comment = $kernel["kernel_comment"];
 	}
 	return $this;
 }
@@ -206,7 +209,7 @@ function display_overview($offset, $limit, $sort, $order) {
 			$recordSet->MoveNext();
 		}
 		$recordSet->Close();
-	}		
+	}
 	return $kernel_array;
 }
 

@@ -1,26 +1,34 @@
 
 a:link {
-    text-decoration: none;
-    color: black;
+	text-decoration: none;
+	color: black;
 }
 a:visited {
-        text-decoration: none;
-        color: black;
+	text-decoration: none;
+	color: black;
 }
 a:active {
-        text-decoration: none;
-        color: black;
+	text-decoration: none;
+	color: black;
 }
 
 img {
-    border:none;
+	border:none;
 }
 
+.htmlobject_table {
+	width: 800px;
+}
 .htmlobject_tab_box {
 	width:700px;
 }
 .htmlobject_td {
 	padding:5px !important;
+}
+.htmlobject_td.image_icon {
+	text-align:center;
+	width:25px;
+	vertical-align:top;
 }
 .htmlobject_td.image_id {
 	text-align:center;
@@ -29,27 +37,27 @@ img {
 }
 .htmlobject_td.image_name {
 	text-align:left;
-	width:110px;
+	width:220px;
 	vertical-align:top;
 }
 .htmlobject_td.image_version {
 	text-align:left;
-	width:110px;
+	width:100px;
 	vertical-align:top;
 }
 .htmlobject_td.image_type {
 	text-align:left;
-	width:310px;
+	width:220px;
 	vertical-align:top;
 }
 .htmlobject_td.image_comment {
 	text-align:left;
-	width:110px;
+	width:200px;
 	vertical-align:top;
 }
-.htmlobject_td.image_capabilities {
+.htmlobject_td.image_edit {
 	text-align:left;
-	width:320px;
+	width:80px;
 	vertical-align:top;
 }
 .htmlobject_td.identifier {

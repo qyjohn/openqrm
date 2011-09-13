@@ -66,6 +66,12 @@ class htmlobject_formbuilder_debug extends htmlobject_formbuilder
 			) {
 				$error[] = array('NOTICE', '["'.$key.'"]["validate"]["errormsg"] is empty');
 			}
+			if(isset($value['static']) && 
+				$value['static'] === true &&
+				!isset($value['object']['attrib']['value'])
+			) {
+				$error[] = array('ERROR', '["'.$key.'"] is static but no value is given');
+			}
 		}
 
 		if($error) {

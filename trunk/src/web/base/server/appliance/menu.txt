@@ -15,6 +15,6 @@
 #
 # Copyright 2009, Matthias Rechenburg <matt@openqrm.com>
 #
-.|Appliances
-..|New|server/appliance/appliance-new.php?currenttab=tab1
-..|List|server/appliance/appliance-index.php
+.|器件
+..|创建|server/appliance/appliance-new.php?currenttab=tab1
+..|查看|server/appliance/appliance-index.php

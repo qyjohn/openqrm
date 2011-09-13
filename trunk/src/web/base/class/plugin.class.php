@@ -20,10 +20,10 @@
     Copyright 2009, Matthias Rechenburg <matt@openqrm.com>
 */
 
-	$RootDir = $_SERVER["DOCUMENT_ROOT"].'/openqrm/base/';
-	require_once ($RootDir.'include/openqrm-server-config.php');
-	require_once "$RootDir/class/folder.class.php";
-	require_once "$RootDir/class/event.class.php";
+$RootDir = $_SERVER["DOCUMENT_ROOT"].'/openqrm/base/';
+require_once ($RootDir.'include/openqrm-server-config.php');
+require_once "$RootDir/class/folder.class.php";
+require_once "$RootDir/class/event.class.php";
 
 /**
  * @package openQRM
@@ -140,7 +140,7 @@ var $_event;
 
 	//--------------------------------------------------
 	/**
-	* get plugin config 
+	* get plugin config
 	* @access public
 	* @param string $plugin_name
 	* @return array

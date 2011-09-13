@@ -39,19 +39,20 @@ function html_elements() {
 global $user;
 
 $GLOBALS['html_id'] = htmlobject_input('id', $user->id, 'hidden', 5);
-$GLOBALS['html_name'] = htmlobject_input('name', $user->name, 'text', 20);
-$GLOBALS['html_password'] = htmlobject_input('password', array("label" => 'Password', "value" => ''), 'password', 20);
-$GLOBALS['html_retype_password'] = htmlobject_input('retype_password', array("label" => 'Retype Password', "value" => ''), 'password', 20);
-$GLOBALS['html_gender'] = htmlobject_select('gender', $user->get_gender_list(), 'Gender', array($user->gender['value']));
-$GLOBALS['html_first_name'] = htmlobject_input('first_name', array("label" => 'First Name', "value" => $user->first_name['value']), 'text', 50);
-$GLOBALS['html_last_name'] = htmlobject_input('last_name',  array("label" => 'Last Name', "value" => $user->last_name['value']), 'text', 50);
-$GLOBALS['html_department'] = htmlobject_input('department',  array("label" => 'Department', "value" => $user->department['value']), 'text', 50);
-$GLOBALS['html_office'] = htmlobject_input('office',   array("label" => 'Office', "value" => $user->office['value']), 'text', 50);
-$GLOBALS['html_role'] = htmlobject_select('role', $user->get_role_list(), 'Role', array($user->role['value']));
-$GLOBALS['html_last_update_time'] = htmlobject_input('last_update_time',   array("label" => 'Update', "value" => $user->last_update_time['value']), 'text', 50);
-$GLOBALS['html_description'] = htmlobject_textarea('description',   array("label" => 'Description', "value" => $user->description['value']));
-$GLOBALS['html_capabilities'] = htmlobject_textarea('capabilities',   array("label" => 'Capabilities', "value" => $user->capabilities['value']));
-$GLOBALS['html_state'] = htmlobject_input('state',  array("label" => 'State', "value" => $user->state['value']), 'text', 20);
+// $GLOBALS['html_name'] = htmlobject_input('name', $user->name, 'text', 20);
+$GLOBALS['html_name'] = htmlobject_input('name', '帐号', 'text', 20);
+$GLOBALS['html_password'] = htmlobject_input('password', array("label" => '设置密码', "value" => ''), 'password', 20);
+$GLOBALS['html_retype_password'] = htmlobject_input('retype_password', array("label" => '重输密码', "value" => ''), 'password', 20);
+$GLOBALS['html_gender'] = htmlobject_select('gender', $user->get_gender_list(), '性别', array($user->gender['value']));
+$GLOBALS['html_first_name'] = htmlobject_input('first_name', array("label" => '名', "value" => $user->first_name['value']), 'text', 50);
+$GLOBALS['html_last_name'] = htmlobject_input('last_name',  array("label" => '姓', "value" => $user->last_name['value']), 'text', 50);
+$GLOBALS['html_department'] = htmlobject_input('department',  array("label" => '部门', "value" => $user->department['value']), 'text', 50);
+$GLOBALS['html_office'] = htmlobject_input('office',   array("label" => '办公室', "value" => $user->office['value']), 'text', 50);
+$GLOBALS['html_role'] = htmlobject_select('role', $user->get_role_list(), '角色', array($user->role['value']));
+$GLOBALS['html_last_update_time'] = htmlobject_input('last_update_time',   array("label" => '更新', "value" => $user->last_update_time['value']), 'text', 50);
+$GLOBALS['html_description'] = htmlobject_textarea('description',   array("label" => '用户描述', "value" => $user->description['value']));
+$GLOBALS['html_capabilities'] = htmlobject_textarea('capabilities',   array("label" => '用户权限', "value" => $user->capabilities['value']));
+$GLOBALS['html_state'] = htmlobject_input('state',  array("label" => '状态', "value" => $user->state['value']), 'text', 20);
 
 }
 
@@ -66,7 +67,7 @@ $account_output = '
 <input type="hidden" name="name" value="'.htmlobject_request('name').'">
 <center>
 <br><br>
-Really delete user <strong>'.htmlobject_request('name').'</strong> ?
+确认要删除用户 <strong>'.htmlobject_request('name').'</strong> 吗?
 <br><br>
 <br><br>
 <input type="submit" value="ok" class="button">
@@ -85,9 +86,9 @@ html_elements();
 $switch = '
 <table>
 <tr>
-<td><label for="action_up">update</label></td>
+<td><label for="action_up">更新</label></td>
 <td><input type="radio" name="action" id="action_up" value="user_update" checked></td>
-<td><label for="action_del">delete</label></td>
+<td><label for="action_del">删除</label></td>
 <td><input type="radio" name="action" id="action_del" value="user_delete"></td>
 <td><input type="submit" class="button"></td>
 </tr>
@@ -119,7 +120,7 @@ $switch
 }
 
 $output = array();
-$output[] = array('label' => 'Account', 'value' => $account_output);
+$output[] = array('label' => '用户帐号', 'value' => $account_output);
 
 if (strstr($OPENQRM_USER->role, "administrator")) {
 
@@ -170,7 +171,7 @@ if (strstr($OPENQRM_USER->role, "administrator")) {
 	</table>
 	</form>
 	";
-	$output[] = array('label' => 'Edit User', 'value' => $edit_user_output);
+	$output[] = array('label' => '编辑用户', 'value' => $edit_user_output);
 
 	// Restet user to recive empty form
 	//---------------------------------------------------------
@@ -210,10 +211,10 @@ if (strstr($OPENQRM_USER->role, "administrator")) {
 	<input type=\"submit\" class=\"button\">
 	</form>
 	";
-	$output[] = array('label' => 'Add User', 'value' => $add_user_output);
+	$output[] = array('label' => '添加用户', 'value' => $add_user_output);
 }
 
-echo htmlobject_head('User Administration');
+echo htmlobject_head('用户管理');
 
 ?>
 <body>
@@ -227,7 +228,17 @@ echo htmlobject_head('User Administration');
 </style>
 
 <?php
+
+// if ldap is enabled do not allow access the the openQRM user administration
+if (file_exists("$RootDir/plugins/ldap/.running")) {
+	unset($output);
+	$output[] = array('label' => '禁用', 'value' => "本系统启用了LDAP身份认证。OpenQRM用户管理功能被禁用。");
+
+}
+
 echo htmlobject_tabmenu($output);
+
+
 ?>
 
 </body>

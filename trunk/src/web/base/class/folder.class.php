@@ -36,21 +36,21 @@ var $arExcludedFiles = array('.', '..');
 	//-------------------------------------------------------------------
 	function getFolderContent($path, $excludes = '') {
 
-	if($excludes != '') {
-		$arExcludedFiles = array_merge($this->arExcludedFiles, $excludes);
-	} else {
-		$arExcludedFiles = $this->arExcludedFiles;
-	}
+		if($excludes != '') {
+			$arExcludedFiles = array_merge($this->arExcludedFiles, $excludes);
+		} else {
+			$arExcludedFiles = $this->arExcludedFiles;
+		}
 
 		$handle = opendir ("$path/.");
-	    while (false != ($file = readdir ($handle))) {
-	    	if (in_array($file, $arExcludedFiles) == FALSE){
-	    		if (is_file("$path/$file")== TRUE) {
-	               $myFile = new File("$path/$file"); 
-	               $this->files[] = $myFile;
-	    		}		
-	    	}	
-	    }
+		while (false != ($file = readdir ($handle))) {
+			if (in_array($file, $arExcludedFiles) == FALSE){
+				if (is_file("$path/$file")== TRUE) {
+				   $myFile = new File("$path/$file");
+				   $this->files[] = $myFile;
+				}
+			}
+		}
 	}
 	
 	//-------------------------------------------------------------------
@@ -59,19 +59,19 @@ var $arExcludedFiles = array('.', '..');
 	//-------------------------------------------------------------------
 	function getFolders($path, $excludes = '') {
 
-	if($excludes != '') {
-		$arExcludedFiles = array_merge($this->arExcludedFiles, $excludes);
-	} else {
-		$arExcludedFiles = $this->arExcludedFiles;
-	}
+		if($excludes != '') {
+			$arExcludedFiles = array_merge($this->arExcludedFiles, $excludes);
+		} else {
+			$arExcludedFiles = $this->arExcludedFiles;
+		}
 		$handle = opendir ("$path/.");
-	    while (false != ($file = readdir ($handle))) {
-	    	if (in_array($file, $arExcludedFiles) == FALSE){
-	    		if (is_dir("$path/$file")== TRUE) {
+		while (false != ($file = readdir ($handle))) {
+			if (in_array($file, $arExcludedFiles) == FALSE){
+				if (is_dir("$path/$file")== TRUE) {
 					$this->folders[] = $file;
-	    		}		
-	    	}	
-	    }
+				}
+			}
+		}
 		sort($this->folders);
 	}
 }

@@ -22,9 +22,9 @@
 	"http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 <html>
 <head>
-	<title>Menu</title>
+	<title>CloudPro 4.8</title>
 	<meta http-equiv="cache-control" content="no-cache"></meta>
-	<meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1"></meta>
+	<meta http-equiv="Content-Type" content="text/html; charset=UTF-8"></meta>
 	<link rel="stylesheet" href="css/menu.css" type="text/css"></link>
 </head>
 <body>

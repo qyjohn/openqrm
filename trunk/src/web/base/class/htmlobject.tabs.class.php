@@ -113,7 +113,7 @@ var $_tabs = array();
 	//----------------------------------------------------------------------------------------
 	function htmlobject_tabmenu($arr, $prefix = 'currenttab') {
 		$this->prefix = $prefix;
-		$this->_set($arr);	
+		$this->_set($arr);
 	}
 
 	//----------------------------------------------------------------------------------------
@@ -122,11 +122,11 @@ var $_tabs = array();
 	* @access private
 	* @param array $arr
 	*/
-	//----------------------------------------------------------------------------------------	
+	//----------------------------------------------------------------------------------------
 	function _set($arr) {
 		$i = 0;
 		foreach ($arr as $val) {
-			
+
 			$identifier = $this->prefix.$this->prefix_tab.$i;
 
 			if(array_key_exists('value', $val)) {
@@ -159,11 +159,11 @@ var $_tabs = array();
 	* @param string $currenttab
 	* @return string
 	*/
-	//----------------------------------------------------------------------------------------	
+	//----------------------------------------------------------------------------------------
 	function _get_tabs($currenttab) {
 		$thisfile = basename($_SERVER['PHP_SELF']);
 		$_strReturn = "\n<div $this->_init_htmlobject>\n";
-		$_strReturn .= "<ul>\n";	
+		$_strReturn .= "<ul>\n";
 		foreach($this->_tabs as $tab) {
 			$css = '';
 			if($tab['id'] == $this->prefix.$this->prefix_tab.$currenttab) { $css = ' class="'.$this->tabcss.'"'; }
@@ -185,8 +185,8 @@ var $_tabs = array();
 		$_strReturn .= "</ul>\n";
 		$_strReturn .= "</div>\n";
 		$_strReturn .= "<div style=\"line-height:0px;clear:both;\">&#160;</div>\n";
-		
-	return $_strReturn;
+
+		return $_strReturn;
 	}
 
 	//----------------------------------------------------------------------------------------
@@ -195,9 +195,9 @@ var $_tabs = array();
 	* @access private
 	* @return string
 	*/
-	//----------------------------------------------------------------------------------------	
+	//----------------------------------------------------------------------------------------
 	function _get_js() {
-	$_strReturn = '';
+		$_strReturn = '';
 		$thisfile = basename($_SERVER['PHP_SELF']);
 		$_strReturn .= "\n<script>\n";
 		$_strReturn .= "function ".$this->prefix."Toggle(id) {\n";
@@ -209,10 +209,10 @@ var $_tabs = array();
 		}
 		$_strReturn .= "document.getElementById(id).style.display = 'block';\n";
 		$_strReturn .= "document.getElementById('tab_'+id).className = '".$this->tabcss."';\n";
-		$_strReturn .= "}\n";	
+		$_strReturn .= "}\n";
 		$_strReturn .= "</script>\n";
-		
-	return $_strReturn;
+
+		return $_strReturn;
 	}
 
 	//----------------------------------------------------------------------------------------
@@ -222,9 +222,9 @@ var $_tabs = array();
 	* @param string $currenttab
 	* @return string
 	*/
-	//----------------------------------------------------------------------------------------	
+	//----------------------------------------------------------------------------------------
 	function _get_css($currenttab) {
-	$_strReturn = '';
+		$_strReturn = '';
 
 		$_strReturn .= "\n<style>\n";
 		foreach($this->_tabs as $tab) {
@@ -232,8 +232,8 @@ var $_tabs = array();
 			else { $_strReturn .= "#".$tab['id']." { display: none; }\n"; }
 		}
 		$_strReturn .= "</style>\n";
-		
-	return $_strReturn;
+
+		return $_strReturn;
 	}
 
 	//----------------------------------------------------------------------------------------
@@ -242,26 +242,26 @@ var $_tabs = array();
 	* @access private
 	* @return string
 	*/
-	//----------------------------------------------------------------------------------------	
+	//----------------------------------------------------------------------------------------
 	function _get_messagebox() {
-	$_strReturn = '';
-	    if($this->get_request($this->message_param) != "") {
+		$_strReturn = '';
+		if($this->get_request($this->message_param) != "") {
 
 			$this->http_request_replace = array_merge($this->message_replace, $this->http_request_replace);
 			$msg = $this->get_request($this->message_param);
-		
-		    $_strReturn .= '';
-		    $_strReturn .= '<div class="'.$this->message_css.'" id="'.$this->prefix.'msgBox">'.$msg.'</div>';
-		    $_strReturn .= '<script>';
-		    $_strReturn .= 'var '.$this->prefix.'aktiv = window.setInterval("'.$this->prefix.'msgBox()", '.$this->message_time.');';
-		    $_strReturn .= 'function '.$this->prefix.'msgBox() {';
-		    $_strReturn .= '    document.getElementById(\''.$this->prefix.'msgBox\').style.display = \'none\';';
-		    $_strReturn .= '    window.clearInterval('.$this->prefix.'aktiv);';
-		    $_strReturn .= '}';
-		    $_strReturn .= '</script>';
-		    $_strReturn .= '';
-	    }
-	return $_strReturn;
+
+			$_strReturn .= '';
+			$_strReturn .= '<div class="'.$this->message_css.'" id="'.$this->prefix.'msgBox">'.$msg.'</div>';
+			$_strReturn .= '<script>';
+			$_strReturn .= 'var '.$this->prefix.'aktiv = window.setInterval("'.$this->prefix.'msgBox()", '.$this->message_time.');';
+			$_strReturn .= 'function '.$this->prefix.'msgBox() {';
+			$_strReturn .= '    document.getElementById(\''.$this->prefix.'msgBox\').style.display = \'none\';';
+			$_strReturn .= '    window.clearInterval('.$this->prefix.'aktiv);';
+			$_strReturn .= '}';
+			$_strReturn .= '</script>';
+			$_strReturn .= '';
+		}
+		return $_strReturn;
 	}
 
 	//----------------------------------------------------------------------------------------
@@ -271,12 +271,12 @@ var $_tabs = array();
 	* @param array $arr
 	* @return string
 	*/
-	//----------------------------------------------------------------------------------------	
+	//----------------------------------------------------------------------------------------
 	function get_string() {
-	$_strReturn = '';
+		$_strReturn = '';
 		($this->form_action != '') ? $_strReturn .= '<form action="'.$this->form_action.'" method="POST">' : null;
 		if(count($this->_tabs) > 0) {
-			$this->init_htmlobject();	
+			$this->init_htmlobject();
 			if(isset($_REQUEST[$this->prefix]) && $_REQUEST[$this->prefix] != '') {
 				$currenttab = str_replace($this->prefix_tab, '', $_REQUEST[$this->prefix]);
 			} else {
@@ -291,10 +291,10 @@ var $_tabs = array();
 					$_strReturn .= $tab['value'];
 				}
 			}
-		}	
+		}
 		($this->form_action != '') ? $_strReturn .= '</form>' : null;
-		
-	return $_strReturn;
+
+		return $_strReturn;
 	}
 }
 ?>
