@@ -27,7 +27,7 @@
    "http://www.w3.org/TR/html4/frameset.dtd">
 <html>
 	<head>
-		<title>openQRM-Server</title>
+		<title>openQRM-Server Chinese Version</title>
 		<style>
 			.left-border {
 				border:1px solid;
